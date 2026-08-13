@@ -1,6 +1,6 @@
 import pulp
 
-from src.m1_capacity import allocate_capacity
+from api.engine.capacity import allocate_capacity
 
 
 def test_allocate_capacity_known_optimum_coverage_and_min_binding():

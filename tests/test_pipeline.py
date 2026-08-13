@@ -1,8 +1,8 @@
 import pandas as pd
 import pytest
 
-from src.m7_replacement import workstation_factors
-from src.pipeline import assignment_stage, run_pipeline, _reassigned_tickets
+from api.engine.replacement import workstation_factors
+from api.engine.pipeline import assignment_stage, run_pipeline, _reassigned_tickets
 
 
 def _scarcity_fixture():

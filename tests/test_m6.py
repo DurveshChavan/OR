@@ -2,7 +2,7 @@ import math
 
 import pytest
 
-from src.m6_cpm_pert import (
+from api.engine.cpm_pert import (
     build_network, forward_backward, pert_expected, pert_variance,
     project_completion_probability,
 )

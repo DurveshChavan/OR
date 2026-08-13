@@ -1,0 +1,11 @@
+pandas
+numpy
+scipy
+pulp>=3.0,<4.0
+networkx
+matplotlib
+streamlit
+pytest
+ucimlrepo
+
+# fastapi, uvicorn: add when api/main.py is implemented

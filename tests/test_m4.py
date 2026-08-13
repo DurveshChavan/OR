@@ -1,6 +1,6 @@
 import pytest
 
-from src.m4_sequencing import johnson_two_machine, two_jobs_m_machines
+from api.engine.sequencing import johnson_two_machine, two_jobs_m_machines
 
 
 def test_johnson_two_machine_known_sequence_and_makespan():

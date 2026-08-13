@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from src.m3_assignment import build_cost_matrix, pad_to_square, assign, INFEASIBLE
+from api.engine.assignment import build_cost_matrix, pad_to_square, assign, INFEASIBLE
 
 
 def test_assign_3x3_diagonal_dominant_known_optimum():

@@ -1,7 +1,7 @@
 import pandas as pd
 import pytest
 
-from src.m7_replacement import (
+from api.engine.replacement import (
     deteriorating_replacement, group_vs_individual, degradation_factor,
     workstation_factors,
 )

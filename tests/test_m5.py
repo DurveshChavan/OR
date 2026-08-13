@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from src.m5_decision import (
+from api.engine.decision import (
     emv, maximax, maximin, laplace, hurwicz, minimax_regret, decision_tree,
     saddle_point, dominance, graphical_2xn, mixed_strategy_lp,
 )
