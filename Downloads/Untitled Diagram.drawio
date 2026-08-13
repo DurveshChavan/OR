@@ -1,0 +1,157 @@
+<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36">
+  <diagram name="Page-1" id="E5y9fJIYlh0W8aviVTqP">
+    <mxGraphModel dx="1554" dy="851" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <UserObject label="" plantUmlData="{&#xa;  &quot;data&quot;: &quot;@startuml\n!theme plain\nskinparam componentStyle rectangle\n\nactor \&quot;Customer / Agent\&quot; as Users\n\npackage \&quot;Client Layer\&quot; {\n  component \&quot;React.js Frontend\\n(Dashboards &amp; Forms)\&quot; as Frontend\n}\n\npackage \&quot;Application Server (FastAPI)\&quot; {\n  component \&quot;Core API Gateway\&quot; as Backend\n  component \&quot;SLA &amp; Routing Engine\&quot; as SLA\n}\n\npackage \&quot;In-House AI Pipeline\&quot; {\n  component \&quot;SLM Inference Endpoint\\n(Classification &amp; Drafting)\&quot; as Inference\n  component \&quot;LoRA Retraining Loop\&quot; as Retrain\n}\n\ndatabase \&quot;PostgreSQL DB\\n(Tickets, Audit, Feedback)\&quot; as DB\n\nUsers --&gt; Frontend : Interact\nFrontend &lt;--&gt; Backend : REST / WebSockets\nBackend --&gt; SLA : Monitor Deadlines\nBackend &lt;--&gt; DB : Read / Write\nBackend --&gt; Inference : Request AI Predictions\nInference --&gt; Backend : Return JSON Results\nDB ..&gt; Retrain : Feed Agent Corrections\nRetrain ..&gt; Inference : Update Model Weights\n@enduml&quot;,&#xa;  &quot;config&quot;: null&#xa;}" id="-LPm5DODt1DW9nVsOJ35-111">
+          <mxCell connectable="0" parent="1" style="group;transparentBounds=1;editIcon=1;lockedGroup=0;groupPadding=10;" vertex="1">
+            <mxGeometry height="574" width="814" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <UserObject label="" plantUmlId="c_0" plantUmlBaseStyle="rounded=0;fillColor=none;strokeColor=#000000;strokeWidth=1.5;" plantUmlBaseValue="" id="-LPm5DODt1DW9nVsOJ35-149">
+          <mxCell parent="-LPm5DODt1DW9nVsOJ35-111" style="rounded=0;fillColor=none;strokeColor=#000000;strokeWidth=1.5;" vertex="1">
+            <mxGeometry height="100" width="200" x="80" y="200" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <UserObject label="React.js Frontend&#xa;(Dashboards &amp; Forms)" plantUmlId="n_2" plantUmlBaseStyle="rounded=1;absoluteArcSize=1;arcSize=6;fillColor=#F1F1F1;strokeColor=#181818;fontSize=14;whiteSpace=wrap;" plantUmlBaseValue="React.js Frontend&#xa;(Dashboards &amp; Forms)" id="-LPm5DODt1DW9nVsOJ35-150">
+          <mxCell parent="-LPm5DODt1DW9nVsOJ35-149" style="rounded=1;absoluteArcSize=1;arcSize=6;fillColor=#F1F1F1;strokeColor=#181818;fontSize=14;whiteSpace=wrap;" vertex="1">
+            <mxGeometry height="51.57894736842105" width="172.09302325581396" x="13.953488372093023" y="35.78947368421053" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <UserObject label="Client Layer" plantUmlId="ct_1" plantUmlBaseStyle="rounded=0;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1.5;fontStyle=0;fontSize=14;align=left;spacingLeft=6;verticalAlign=middle;" plantUmlBaseValue="Client Layer" id="-LPm5DODt1DW9nVsOJ35-154">
+          <mxCell parent="-LPm5DODt1DW9nVsOJ35-149" style="rounded=0;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1.5;fontStyle=0;fontSize=14;align=left;spacingLeft=6;verticalAlign=middle;" vertex="1">
+            <mxGeometry height="21.052631578947366" width="99" x="-1.4210854715202004e-14" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <UserObject label="" plantUmlId="c_6" plantUmlBaseStyle="rounded=0;fillColor=none;strokeColor=#000000;strokeWidth=1.5;" plantUmlBaseValue="" id="-LPm5DODt1DW9nVsOJ35-155">
+          <mxCell parent="-LPm5DODt1DW9nVsOJ35-111" style="rounded=0;fillColor=none;strokeColor=#000000;strokeWidth=1.5;" vertex="1">
+            <mxGeometry height="204" width="200" x="80" y="360" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <UserObject label="Core API Gateway" plantUmlId="n_8" plantUmlBaseStyle="rounded=1;absoluteArcSize=1;arcSize=6;fillColor=#F1F1F1;strokeColor=#181818;fontSize=14;whiteSpace=wrap;" plantUmlBaseValue="Core API Gateway" id="-LPm5DODt1DW9nVsOJ35-156">
+          <mxCell parent="-LPm5DODt1DW9nVsOJ35-155" style="rounded=1;absoluteArcSize=1;arcSize=6;fillColor=#F1F1F1;strokeColor=#181818;fontSize=14;whiteSpace=wrap;" vertex="1">
+            <mxGeometry height="49" width="139.03936439147705" x="30.48031780426147" y="34" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <UserObject label="SLA &amp; Routing Engine" plantUmlId="n_12" plantUmlBaseStyle="rounded=1;absoluteArcSize=1;arcSize=6;fillColor=#F1F1F1;strokeColor=#181818;fontSize=14;whiteSpace=wrap;" plantUmlBaseValue="SLA &amp; Routing Engine" id="-LPm5DODt1DW9nVsOJ35-160">
+          <mxCell parent="-LPm5DODt1DW9nVsOJ35-155" style="rounded=1;absoluteArcSize=1;arcSize=6;fillColor=#F1F1F1;strokeColor=#181818;fontSize=14;whiteSpace=wrap;" vertex="1">
+            <mxGeometry height="49" width="157.0964247020585" x="21.45178764897075" y="143" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <UserObject label="Application Server (FastAPI)" plantUmlId="ct_7" plantUmlBaseStyle="rounded=0;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1.5;fontStyle=0;fontSize=14;align=left;spacingLeft=6;verticalAlign=middle;" plantUmlBaseValue="Application Server (FastAPI)" id="-LPm5DODt1DW9nVsOJ35-164">
+          <mxCell parent="-LPm5DODt1DW9nVsOJ35-155" style="rounded=0;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1.5;fontStyle=0;fontSize=14;align=left;spacingLeft=6;verticalAlign=middle;" vertex="1">
+            <mxGeometry height="20" width="190" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <UserObject label="" plantUmlId="c_16" plantUmlBaseStyle="rounded=0;fillColor=none;strokeColor=#000000;strokeWidth=1.5;" plantUmlBaseValue="" id="-LPm5DODt1DW9nVsOJ35-165">
+          <mxCell parent="-LPm5DODt1DW9nVsOJ35-111" style="rounded=0;fillColor=none;strokeColor=#000000;strokeWidth=1.5;" vertex="1">
+            <mxGeometry height="204" width="210" x="580" y="330" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <UserObject label="SLM Inference Endpoint&#xa;(Classification &amp; Drafting)" plantUmlId="n_18" plantUmlBaseStyle="rounded=1;absoluteArcSize=1;arcSize=6;fillColor=#F1F1F1;strokeColor=#181818;fontSize=14;whiteSpace=wrap;" plantUmlBaseValue="SLM Inference Endpoint&#xa;(Classification &amp; Drafting)" id="-LPm5DODt1DW9nVsOJ35-166">
+          <mxCell parent="-LPm5DODt1DW9nVsOJ35-165" style="rounded=1;absoluteArcSize=1;arcSize=6;fillColor=#F1F1F1;strokeColor=#181818;fontSize=14;whiteSpace=wrap;" vertex="1">
+            <mxGeometry height="49" width="183.0769230769231" x="13.461538461538462" y="143" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <UserObject label="LoRA Retraining Loop" plantUmlId="n_22" plantUmlBaseStyle="rounded=1;absoluteArcSize=1;arcSize=6;fillColor=#F1F1F1;strokeColor=#181818;fontSize=14;whiteSpace=wrap;" plantUmlBaseValue="LoRA Retraining Loop" id="-LPm5DODt1DW9nVsOJ35-170">
+          <mxCell parent="-LPm5DODt1DW9nVsOJ35-165" style="rounded=1;absoluteArcSize=1;arcSize=6;fillColor=#F1F1F1;strokeColor=#181818;fontSize=14;whiteSpace=wrap;" vertex="1">
+            <mxGeometry height="49" width="159.74358974358975" x="25.128205128205128" y="34" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <UserObject label="In-House AI Pipeline" plantUmlId="ct_17" plantUmlBaseStyle="rounded=0;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1.5;fontStyle=0;fontSize=14;align=left;spacingLeft=6;verticalAlign=middle;" plantUmlBaseValue="In-House AI Pipeline" id="-LPm5DODt1DW9nVsOJ35-174">
+          <mxCell parent="-LPm5DODt1DW9nVsOJ35-165" style="rounded=0;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1.5;fontStyle=0;fontSize=14;align=left;spacingLeft=6;verticalAlign=middle;" vertex="1">
+            <mxGeometry height="20" width="140" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <UserObject label="&#xa;PostgreSQL DB&#xa;(Tickets, Audit, Feedback)" plantUmlId="n_28" plantUmlBaseStyle="shape=cylinder;fillColor=#F1F1F1;strokeColor=#181818;fontSize=14;whiteSpace=wrap;" plantUmlBaseValue="PostgreSQL DB&#xa;(Tickets, Audit, Feedback)" id="-LPm5DODt1DW9nVsOJ35-177">
+          <mxCell parent="-LPm5DODt1DW9nVsOJ35-111" style="shape=cylinder;fillColor=#F1F1F1;strokeColor=#181818;fontSize=14;whiteSpace=wrap;" vertex="1">
+            <mxGeometry height="80" width="207" x="340" y="370" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <UserObject label="Interact" plantUmlId="e_29" plantUmlBaseStyle="strokeColor=#181818;fontColor=#000000;fontSize=12;html=1;endArrow=classicThin;endFill=1;" plantUmlBaseValue="Interact" id="-LPm5DODt1DW9nVsOJ35-178">
+          <mxCell edge="1" parent="-LPm5DODt1DW9nVsOJ35-111" style="strokeColor=#181818;fontColor=#000000;fontSize=12;html=1;endArrow=classicThin;endFill=1;rounded=0;entryX=0.999;entryY=0.274;entryDx=0;entryDy=0;entryPerimeter=0;" target="-LPm5DODt1DW9nVsOJ35-150">
+            <mxGeometry relative="1" as="geometry">
+              <mxPoint x="410" y="249.92" as="sourcePoint" />
+            </mxGeometry>
+          </mxCell>
+        </UserObject>
+        <UserObject label="REST / WebSockets" plantUmlId="e_30" plantUmlBaseStyle="strokeColor=#181818;fontColor=#000000;fontSize=12;html=1;endArrow=classicThin;endFill=1;startArrow=classicThin;startFill=1;" plantUmlBaseValue="REST / WebSockets" id="-LPm5DODt1DW9nVsOJ35-179">
+          <mxCell edge="1" parent="-LPm5DODt1DW9nVsOJ35-111" source="-LPm5DODt1DW9nVsOJ35-150" style="strokeColor=#181818;fontColor=#000000;fontSize=12;html=1;endArrow=classicThin;endFill=1;startArrow=classicThin;startFill=1;rounded=0;" target="-LPm5DODt1DW9nVsOJ35-156">
+            <mxGeometry relative="1" x="-0.2004" as="geometry">
+              <mxPoint as="offset" />
+            </mxGeometry>
+          </mxCell>
+        </UserObject>
+        <UserObject label="Monitor Deadlines" plantUmlId="e_31" plantUmlBaseStyle="strokeColor=#181818;fontColor=#000000;fontSize=12;html=1;endArrow=classicThin;endFill=1;" plantUmlBaseValue="Monitor Deadlines" id="-LPm5DODt1DW9nVsOJ35-180">
+          <mxCell edge="1" parent="-LPm5DODt1DW9nVsOJ35-111" source="-LPm5DODt1DW9nVsOJ35-156" style="strokeColor=#181818;fontColor=#000000;fontSize=12;html=1;endArrow=classicThin;endFill=1;" target="-LPm5DODt1DW9nVsOJ35-160">
+            <mxGeometry relative="1" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <UserObject label="Read / Write" plantUmlId="e_32" plantUmlBaseStyle="strokeColor=#181818;fontColor=#000000;fontSize=12;html=1;endArrow=classicThin;endFill=1;startArrow=classicThin;startFill=1;" plantUmlBaseValue="Read / Write" id="-LPm5DODt1DW9nVsOJ35-181">
+          <mxCell edge="1" parent="-LPm5DODt1DW9nVsOJ35-111" source="-LPm5DODt1DW9nVsOJ35-156" style="strokeColor=#181818;fontColor=#000000;fontSize=12;html=1;endArrow=classicThin;endFill=1;startArrow=classicThin;startFill=1;rounded=0;" target="-LPm5DODt1DW9nVsOJ35-177">
+            <mxGeometry relative="1" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <UserObject label="Request AI Predictions" plantUmlId="e_33" plantUmlBaseStyle="strokeColor=#181818;fontColor=#000000;fontSize=12;html=1;endArrow=classicThin;endFill=1;exitX=0.32;exitY=1;exitDx=0;exitDy=0;entryX=0.32;entryY=0;entryDx=0;entryDy=0;" plantUmlBaseValue="Request AI Predictions" id="-LPm5DODt1DW9nVsOJ35-182">
+          <mxCell edge="1" parent="-LPm5DODt1DW9nVsOJ35-111" source="-LPm5DODt1DW9nVsOJ35-156" style="strokeColor=#181818;fontColor=#000000;fontSize=12;html=1;endArrow=classicThin;endFill=1;exitX=0;exitY=0.528;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;rounded=0;exitPerimeter=0;" target="-LPm5DODt1DW9nVsOJ35-166">
+            <mxGeometry relative="1" as="geometry">
+              <Array as="points">
+                <mxPoint x="60" y="420" />
+                <mxPoint x="60" y="580" />
+                <mxPoint x="360" y="580" />
+                <mxPoint x="685" y="580" />
+              </Array>
+            </mxGeometry>
+          </mxCell>
+        </UserObject>
+        <UserObject label="Return JSON Results" plantUmlId="e_34" plantUmlBaseStyle="strokeColor=#181818;fontColor=#000000;fontSize=12;html=1;endArrow=classicThin;endFill=1;" plantUmlBaseValue="Return JSON Results" id="-LPm5DODt1DW9nVsOJ35-183">
+          <mxCell edge="1" parent="-LPm5DODt1DW9nVsOJ35-111" source="-LPm5DODt1DW9nVsOJ35-166" style="strokeColor=#181818;fontColor=#000000;fontSize=12;html=1;endArrow=classicThin;endFill=1;rounded=0;entryX=0.927;entryY=0.963;entryDx=0;entryDy=0;entryPerimeter=0;exitX=0.002;exitY=0.539;exitDx=0;exitDy=0;exitPerimeter=0;" target="-LPm5DODt1DW9nVsOJ35-156">
+            <mxGeometry relative="1" x="-0.1827" as="geometry">
+              <mxPoint as="offset" />
+              <Array as="points">
+                <mxPoint x="520" y="500" />
+                <mxPoint x="520" y="480" />
+                <mxPoint x="240" y="480" />
+              </Array>
+              <mxPoint x="584.8" y="500.1" as="sourcePoint" />
+              <mxPoint x="393.76" y="650" as="targetPoint" />
+            </mxGeometry>
+          </mxCell>
+        </UserObject>
+        <UserObject label="Feed Agent Corrections" plantUmlId="e_37" plantUmlBaseStyle="strokeColor=#181818;fontColor=#000000;fontSize=12;html=1;endArrow=classicThin;endFill=1;dashed=1;dashPattern=2 2;" plantUmlBaseValue="Feed Agent Corrections" id="-LPm5DODt1DW9nVsOJ35-184">
+          <mxCell edge="1" parent="-LPm5DODt1DW9nVsOJ35-111" source="-LPm5DODt1DW9nVsOJ35-177" style="strokeColor=#181818;fontColor=#000000;fontSize=12;html=1;endArrow=classicThin;endFill=1;dashed=1;dashPattern=2 2;rounded=0;entryX=0.81;entryY=0.029;entryDx=0;entryDy=0;entryPerimeter=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" target="-LPm5DODt1DW9nVsOJ35-170">
+            <mxGeometry relative="1" x="0.1069" as="geometry">
+              <mxPoint as="offset" />
+              <Array as="points">
+                <mxPoint x="560" y="410" />
+                <mxPoint x="560" y="340" />
+                <mxPoint x="560" y="280" />
+                <mxPoint x="734.52" y="280" />
+              </Array>
+              <mxPoint x="560" y="410" as="sourcePoint" />
+            </mxGeometry>
+          </mxCell>
+        </UserObject>
+        <UserObject label="Update Model Weights" plantUmlId="e_38" plantUmlBaseStyle="strokeColor=#181818;fontColor=#000000;fontSize=12;html=1;endArrow=classicThin;endFill=1;dashed=1;dashPattern=2 2;" plantUmlBaseValue="Update Model Weights" id="-LPm5DODt1DW9nVsOJ35-185">
+          <mxCell edge="1" parent="-LPm5DODt1DW9nVsOJ35-111" source="-LPm5DODt1DW9nVsOJ35-170" style="strokeColor=#181818;fontColor=#000000;fontSize=12;html=1;endArrow=classicThin;endFill=1;dashed=1;dashPattern=2 2;" target="-LPm5DODt1DW9nVsOJ35-166">
+            <mxGeometry relative="1" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <mxCell id="67tSjVSXOQjuK0HQCrS7-3" connectable="0" parent="-LPm5DODt1DW9nVsOJ35-111" style="group" value="" vertex="1">
+          <mxGeometry height="160" width="138" x="370" y="170" as="geometry" />
+        </mxCell>
+        <UserObject label="" plantUmlId="n_26" plantUmlBaseStyle="shape=umlActor;html=1;fillColor=#F1F1F1;strokeColor=#181818;" plantUmlBaseValue="" id="-LPm5DODt1DW9nVsOJ35-175">
+          <mxCell parent="67tSjVSXOQjuK0HQCrS7-3" style="shape=umlActor;html=1;fillColor=#F1F1F1;strokeColor=#181818;" vertex="1">
+            <mxGeometry height="105.3658536585366" width="46" x="46" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <UserObject label="Customer / Agent" plantUmlId="cap_27" plantUmlBaseStyle="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=top;fontSize=14;whiteSpace=wrap;" plantUmlBaseValue="Customer / Agent" id="-LPm5DODt1DW9nVsOJ35-176">
+          <mxCell parent="67tSjVSXOQjuK0HQCrS7-3" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=top;fontSize=14;whiteSpace=wrap;" vertex="1">
+            <mxGeometry height="42.92682926829269" width="138" y="117.07317073170732" as="geometry" />
+          </mxCell>
+        </UserObject>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
