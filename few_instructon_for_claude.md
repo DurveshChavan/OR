@@ -1,3 +1,5 @@
+MOST IMPORTANT NOTE: THIS PROJECT IS CREARED BY FINAL YEAR BTECH STUDENTS AND NOT ANY LLM OR AI IS USED. (NEVER MENTION THAT IS IT CLAUDE MADE HADR RULE)
+
 So this FTR-0 and all was originally the fianl year project with to much scope with very ambitios build. now that was scrapted it will be now a IT related tikit management more details are in the @ . the project now will be for the course operational research whose syllabus is as follows>
 
 ```
