@@ -1,9 +1,12 @@
+import math
+
 import pandas as pd
 import pytest
 
 from api.engine.replacement import (
     deteriorating_replacement, group_vs_individual, degradation_factor,
-    workstation_factors,
+    workstation_factors, DEFAULT_ALPHA, ALPHA_BY_TYPE, apply_maintenance,
+    replacement_age_for_threshold, sensitivity_analysis,
 )
 
 
@@ -74,3 +77,51 @@ def test_workstation_factors_matches_degradation_factor_per_row():
     }
     assert factors["WS0"] == 1.0
     assert all(v >= 1.0 for v in factors.values())
+
+
+def test_degradation_factor_exponential_calibration_1p5_at_36_months():
+    # DEFAULT_ALPHA is defined as ln(1.5)/36 -> exp(alpha*36) must be exactly 1.5
+    assert degradation_factor(36, alpha=DEFAULT_ALPHA) == pytest.approx(1.5)
+    assert degradation_factor(72, alpha=DEFAULT_ALPHA) == pytest.approx(1.5 ** 2)
+
+
+def test_workstation_factors_per_type_alpha():
+    workstations = pd.DataFrame({
+        "id": ["WS0", "WS1"],
+        "age_months": [24, 24],
+        "type": ["desktop", "laptop"],
+    })
+    factors = workstation_factors(workstations, alphas_by_type=ALPHA_BY_TYPE)
+    # laptop alpha is calibrated to reach 1.5x at 24 months -> exactly 1.5
+    assert factors["WS1"] == pytest.approx(1.5)
+    # desktop alpha (36-month anchor) is slower, so at 24 months it's < 1.5
+    assert factors["WS0"] < factors["WS1"]
+
+
+def test_apply_maintenance_reduces_by_documented_fraction():
+    assert apply_maintenance(24, fraction=0.5) == pytest.approx(12.0)
+    assert apply_maintenance(0) == pytest.approx(0.0)
+    assert apply_maintenance(-5) == pytest.approx(0.0)  # clamped, never negative
+
+
+def test_replacement_age_for_threshold_inverts_degradation_factor():
+    age = replacement_age_for_threshold(DEFAULT_ALPHA, threshold=1.5)
+    assert age == pytest.approx(36.0)
+    assert degradation_factor(age, alpha=DEFAULT_ALPHA) == pytest.approx(1.5)
+
+
+def test_sensitivity_analysis_stable_core_and_disputed():
+    workstations = pd.DataFrame({
+        "id": ["WS0", "WS1", "WS2"],
+        "age_months": [10, 30, 50],
+    })
+    alphas = [math.log(1.5) / 24, math.log(1.5) / 36, math.log(1.5) / 48]
+    result = sensitivity_analysis(alphas, workstations, threshold=1.5)
+
+    ages = [row["replace_age_months"] for row in result["results"]]
+    assert ages == pytest.approx([24.0, 36.0, 48.0])
+    # alpha->24mo threshold flags WS1(30) and WS2(50); ->36mo flags only WS2;
+    # ->48mo flags only WS2 -> stable core {WS2}, disputed {WS1}, flagged_any {WS1,WS2}
+    assert result["stable_core"] == ["WS2"]
+    assert result["disputed"] == ["WS1"]
+    assert result["flagged_any"] == ["WS1", "WS2"]

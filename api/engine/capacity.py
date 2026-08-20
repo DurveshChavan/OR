@@ -21,6 +21,20 @@ def allocate_capacity(demand_by_skill, cost_by_skill, budget, min_per_skill, thr
     one agent clears in the planning window) is required to turn `demand_s`
     into the coverage lower bound `ceil(demand_s / throughput_s)`, so it is
     threaded in as an explicit per-skill argument alongside `demand_by_skill`.
+
+    Hand method: this is small enough to solve by hand as a bounded-
+    variable LP -- since cost_by_skill are all positive, the cheapest
+    feasible plan just sets each agents_s to its binding lower bound,
+    max(min_per_skill_s, coverage_s), then checks the summed cost against
+    budget; PuLP's branch-and-bound simplex reaches the same answer
+    generally, including cases where that shortcut doesn't apply.
+
+    Data source: `demand_by_skill` is derive_priority_mix/category_volumes
+    scaled to the planning window; `throughput_by_skill` comes from the
+    synthetic agent table's capacity field; `cost_by_skill`, `budget`, and
+    `min_per_skill` are CONFIG business-policy assumptions (no UCI-498
+    cost or budget field exists) -- see pipeline.py's size_capacity for
+    exactly how each is assembled at runtime.
     """
     skills = list(demand_by_skill)
     prob = pulp.LpProblem("capacity_allocation", pulp.LpMinimize)

@@ -1,6 +1,7 @@
 import numpy as np
 import pytest
 
+from api.engine import transport
 from api.engine.transport import (
     nwcr, least_cost, vam, modi, solve_transport_pulp, transport_cost, _balance,
 )
@@ -49,16 +50,34 @@ def test_pulp_optimum_matches_hand_optimum():
 def test_modi_from_nwcr_reaches_pulp_optimum():
     start = nwcr(SUPPLY, DEMAND)
     assert transport_cost(start, COST) == 196.0  # confirm it starts suboptimal
-    _, improved_cost = modi(start, COST)
+    result = modi(start, COST)
     pulp_cost = solve_transport_pulp(SUPPLY, DEMAND, COST)["total_cost"]
-    assert improved_cost == pytest.approx(pulp_cost)
+    assert result["total_cost"] == pytest.approx(pulp_cost)
 
 
 def test_modi_from_vam_stays_at_pulp_optimum():
     start = vam(SUPPLY, DEMAND, COST)
-    _, improved_cost = modi(start, COST)
+    result = modi(start, COST)
     pulp_cost = solve_transport_pulp(SUPPLY, DEMAND, COST)["total_cost"]
-    assert improved_cost == pytest.approx(pulp_cost)
+    assert result["total_cost"] == pytest.approx(pulp_cost)
+
+
+def test_modi_converges_on_textbook_case():
+    start = nwcr(SUPPLY, DEMAND)
+    result = modi(start, COST)
+    assert result["converged"] is True
+
+
+def test_modi_warns_and_flags_unconverged_when_iteration_cap_hit(monkeypatch):
+    # NWCR starts at 196 on this instance; the true optimum is 124, which
+    # takes more than one pivot to reach, so capping at 1 iteration
+    # guarantees the loop exhausts its budget without converging.
+    monkeypatch.setattr(transport, "MODI_MAX_ITERATIONS", 1)
+    start = nwcr(SUPPLY, DEMAND)
+    with pytest.warns(UserWarning, match="did not converge"):
+        result = transport.modi(start, COST)
+    assert result["converged"] is False
+    assert result["total_cost"] == pytest.approx(160.0)  # after exactly one pivot from 196
 
 
 def test_balance_adds_dummy_when_supply_exceeds_demand():
@@ -89,3 +108,17 @@ def test_unbalanced_problem_solved_via_pulp_and_nwcr_feasible():
 
     alloc = nwcr(supply, demand)
     assert _row_col_sums_match(alloc, [10, 10], [15, 5])
+
+
+def test_original_pipeline_regional_instance_textbook_case():
+    """The 3-region ticket-routing instance pipeline.py used before it
+    switched to data-derived supplies (see api/engine/pipeline.py's
+    CONFIG and distribute_regions) -- kept here as a standing
+    verification case now that it no longer lives in application code.
+    """
+    supply, demand = [30, 25, 20], [28, 27, 20]
+    cost = [[4, 6, 8], [6, 4, 7], [9, 7, 5]]
+    result = solve_transport_pulp(supply, demand, cost)
+    # PuLP-optimal allocation (28,2,0)/(0,25,0)/(0,0,20):
+    # 28*4 + 2*6 + 25*4 + 20*5 = 112+12+100+100 = 324
+    assert result["total_cost"] == pytest.approx(324.0)

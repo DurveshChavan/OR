@@ -8,4 +8,7 @@ streamlit
 pytest
 ucimlrepo
 
-# fastapi, uvicorn: add when api/main.py is implemented
+# approved exception to the frozen stack: api/main.py needs these to serve
+# the engine over HTTP. pydantic arrives transitively with fastapi.
+fastapi
+uvicorn

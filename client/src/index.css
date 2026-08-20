@@ -1,0 +1,88 @@
+/* Hallmark · genre: modern-minimal · macrostructure: Workbench (app family)
+ * theme: Cobalt · design-system: design.md · designed-as-app
+ * nav: N3 side-rail (adapted: functional 8-route app rail, not a marketing
+ *      scroll-dot rail — see design.md § Nav adaptation) · footer: none (app shell)
+ */
+@import "tailwindcss";
+@import "./tokens.css";
+
+@theme inline {
+  --color-paper: var(--color-paper);
+  --color-paper-2: var(--color-paper-2);
+  --color-surface: var(--color-surface);
+  --color-ink: var(--color-ink);
+  --color-ink-2: var(--color-ink-2);
+  --color-muted: var(--color-muted);
+  --color-rule: var(--color-rule);
+  --color-rule-2: var(--color-rule-2);
+  --color-accent: var(--color-accent);
+  --color-accent-ink: var(--color-accent-ink);
+  --color-accent-soft: var(--color-accent-soft);
+  --color-focus: var(--color-focus);
+  --color-graphite: var(--color-graphite);
+  --color-graphite-ink: var(--color-graphite-ink);
+  --color-good: var(--color-good);
+  --color-good-soft: var(--color-good-soft);
+  --color-risk: var(--color-risk);
+  --color-risk-soft: var(--color-risk-soft);
+  --color-critical: var(--color-critical);
+  --color-critical-soft: var(--color-critical-soft);
+  --color-data-neutral: var(--color-data-neutral);
+
+  --font-display: var(--font-display);
+  --font-body: var(--font-body);
+  --font-mono: var(--font-mono);
+
+  --radius-control: var(--radius-control);
+  --radius-card: var(--radius-card);
+  --radius-pill: var(--radius-pill);
+
+  --ease-out: var(--ease-out);
+}
+
+html,
+body {
+  overflow-x: clip;
+}
+
+body {
+  background: var(--color-paper);
+  color: var(--color-ink-2);
+  font-family: var(--font-body);
+  font-variant-numeric: tabular-nums;
+}
+
+h1,
+h2,
+h3,
+.font-display {
+  font-family: var(--font-display);
+  letter-spacing: -0.02em;
+}
+
+.font-mono-label {
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+  transition: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  /* a spinner strobing at 0.01ms is worse than no motion at all; the
+     "Loading..." label already carries the state, so just freeze it */
+  .animate-spin {
+    animation: none !important;
+  }
+}

@@ -1,3 +1,5 @@
+import time
+
 import numpy as np
 import pandas as pd
 import pytest
@@ -99,3 +101,46 @@ def test_degradation_factor_changes_optimal_assignment():
     assert degraded["total_cost"] == pytest.approx(23.0)
 
     assert served_baseline != served_degraded
+
+
+def test_degradation_factor_aligns_by_ticket_not_by_workstation_order():
+    # Two tickets share WS1 (factor 2.0), one sits on WS2 (factor 3.0).
+    # A vectorized implementation that indexes the degradation vector by
+    # unique-workstation position instead of mapping each ticket's own
+    # workstation_id would silently scramble which factor lands on which
+    # row -- this fixture has enough tickets-per-workstation variation to
+    # catch that (the single-ticket-per-workstation fixture above cannot).
+    tickets = pd.DataFrame({
+        "id": ["T1", "T2", "T3"],
+        "skill": ["network"] * 3,
+        "base_resolution_minutes": [10, 20, 30],
+        "workstation_id": ["WS1", "WS1", "WS2"],
+    })
+    agents = pd.DataFrame({"id": ["A1"], "skill": ["network"]})
+
+    matrix = build_cost_matrix(tickets, agents, degradation={"WS1": 2.0, "WS2": 3.0})
+    assert matrix[:, 0] == pytest.approx([20.0, 40.0, 90.0])
+
+
+def test_build_cost_matrix_200x200_under_half_second():
+    rng = np.random.default_rng(42)
+    n = 200
+    skills = ["network", "hardware", "software", "access"]
+    tickets = pd.DataFrame({
+        "id": [f"T{i}" for i in range(n)],
+        "skill": rng.choice(skills, size=n),
+        "base_resolution_minutes": rng.uniform(5, 60, size=n),
+        "workstation_id": [f"WS{i % 50}" for i in range(n)],
+    })
+    agents = pd.DataFrame({
+        "id": [f"A{i}" for i in range(n)],
+        "skill": rng.choice(skills, size=n),
+    })
+    degradation = {f"WS{i}": 1.0 + 0.01 * i for i in range(50)}
+
+    start = time.perf_counter()
+    matrix = build_cost_matrix(tickets, agents, degradation=degradation)
+    elapsed = time.perf_counter() - start
+
+    assert matrix.shape == (n, n)
+    assert elapsed < 0.5  # generous bound; vectorized build should be near-instant

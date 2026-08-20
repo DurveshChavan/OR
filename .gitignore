@@ -6,3 +6,5 @@ node_modules/
 *.pyc
 notes/
 .pytest_cache/
+client/dist/
+client/.hallmark/

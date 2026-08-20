@@ -11,7 +11,19 @@ def johnson_two_machine(jobs):
     """Johnson's rule: repeatedly take the remaining job with the smallest
     single processing time; if that time is on machine 1, schedule it as
     early as possible, if on machine 2, as late as possible. `jobs` is
-    {name: (t1, t2)}."""
+    {name: (t1, t2)}.
+
+    Hand method: exactly the loop above, worked by hand -- scan the
+    two-column (t1, t2) table for its single smallest entry, place that
+    job at the front of the sequence if the entry was in the t1 column,
+    at the back if in t2, cross the job out, repeat on the shrinking
+    table.
+
+    Data source: `jobs` is built by the caller (pipeline.py's
+    sequence_tickets) from each ticket's base_resolution_minutes split
+    into a triage stage and a fix stage by _triage_share, the empirical
+    triage/fix time ratio derived from real priority-1 incident durations.
+    """
     remaining = dict(jobs)
     n = len(jobs)
     sequence = [None] * n
@@ -77,6 +89,19 @@ def two_jobs_m_machines(job1_times, job2_times):
     by segment alone loses that hand-off and can under- or over-count D.
     The unit grid sidesteps this: every cell is a 1x1 square, so a
     diagonal step always lines up with its neighbours exactly.
+
+    Hand method: draw the same (T1 x T2) grid on paper, shade every unit
+    square where job1 and job2 would occupy the same machine at once
+    (forbidden for the path), then find the longest monotone staircase
+    path from (0,0) to (T1,T2) that only steps diagonally through
+    unshaded squares -- its diagonal length is D, elapsed_time = T1+T2-D.
+
+    Data source: `job1_times`/`job2_times` are caller-supplied
+    (machine_id, duration) sequences -- syllabus demonstration of the
+    2-job/m-machine graphical method, exercised only in tests/test_m4.py;
+    no runtime scenario in this project produces a genuine 2-job
+    m-machine instance (see johnson_two_machine's docstring for the
+    n-job/2-machine case this project's schedule actually uses).
     """
     machine_at_1 = []
     for machine, duration in job1_times:
