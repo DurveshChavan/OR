@@ -12,3 +12,12 @@ ucimlrepo
 # the engine over HTTP. pydantic arrives transitively with fastapi.
 fastapi
 uvicorn
+
+# Version-2 application only (api/app_v2/). These are scoped to the new
+# package: the Operations Research engine in api/engine/ keeps the frozen
+# stack above and still has no database, no ORM and no ML dependency.
+sqlalchemy>=2.0,<3.0
+alembic
+argon2-cffi
+psycopg[binary]        # PostgreSQL driver; SQLite needs nothing extra
+httpx                  # FastAPI TestClient transport
