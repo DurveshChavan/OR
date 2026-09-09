@@ -435,8 +435,13 @@ def get_assignment(aged: bool = False):
     degradation = _state["degradation_factors"] if aged else None
 
     result = assignment_stage(tickets, funded_agents, degradation=degradation)
+    # An infeasible staffing solve leaves agents_per_skill as None (see
+    # capacity.allocate_capacity's non-Optimal branch); the funded pool is then
+    # empty and there is nothing to check, so treat it as the empty plan rather
+    # than letting select_funded_agents call .items() on None.
     _assert_no_unfunded_agent(
-        result["pairs"], funded_agents, _state["agents"], _state["staffing"]["agents_per_skill"]
+        result["pairs"], funded_agents, _state["agents"],
+        _state["staffing"]["agents_per_skill"] or {},
     )
 
     pairs = [
@@ -452,9 +457,12 @@ def get_assignment(aged: bool = False):
 
     ticket_ids = [str(v) for v in tickets["id"]]
     agent_ids = [str(v) for v in funded_agents["id"]]
+    # assignment_stage returns matrix=None when either side of the assignment is
+    # empty -- which is what an infeasible staffing solve leaves behind (no
+    # funded agents). Report the empty matrix rather than iterating None.
     matrix = [
         [None if v >= INFEASIBLE else float(v) for v in row]
-        for row in result["matrix"]
+        for row in (result["matrix"] if result["matrix"] is not None else [])
     ]
 
     return AssignmentResponse(

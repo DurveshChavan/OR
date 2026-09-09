@@ -121,3 +121,33 @@ def test_distribution_get_and_post_override():
     )
     assert override.status_code == 200
     assert override.json()["demand"] == [10, 10, 10]
+
+
+def test_infeasible_staffing_budget_does_not_break_downstream_routes():
+    """A budget too small to fund anyone is a legitimate user input on the
+    Staffing Planner, and allocate_capacity answers it with status=Infeasible
+    and agents_per_skill=None. Every downstream route must still respond
+    instead of raising on that None (previously /api/assignment died with
+    AttributeError, then with TypeError on the empty cost matrix).
+    """
+    client.post("/api/scenario", json=SCENARIO_BODY)
+
+    infeasible = client.post("/api/staffing", json={"budget": 1.0})
+    assert infeasible.status_code == 200
+    assert infeasible.json()["status"] == "Infeasible"
+
+    for route in (
+        "/api/assignment", "/api/schedule", "/api/escalations",
+        "/api/hardware", "/api/comparison", "/api/distribution",
+    ):
+        assert client.get(route).status_code == 200, route
+
+    assignment = client.get("/api/assignment").json()
+    assert assignment["pairs"] == []
+    assert assignment["matrix"] == []
+    assert assignment["n_tickets_served"] == 0
+
+    # and the scenario recovers once a workable budget is supplied again
+    recovered = client.post("/api/staffing", json={"budget": 9000.0})
+    assert recovered.json()["status"] == "Optimal"
+    assert client.get("/api/assignment").json()["n_tickets_served"] > 0
