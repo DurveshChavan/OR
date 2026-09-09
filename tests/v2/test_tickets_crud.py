@@ -63,7 +63,7 @@ def test_creation_writes_its_events_in_the_same_transaction(
     assert stored.risk_model_version is None
 
 
-def test_a_failed_creation_leaves_no_ticket_behind(client, db, signed_in, make_policy):
+def test_a_duplicate_external_reference_is_refused(client, db, signed_in, make_policy):
     signed_in("dispatcher")
     make_policy(priority=2)
     _create(client, external_reference="INC-TEST-DUP")
@@ -78,6 +78,43 @@ def test_a_failed_creation_leaves_no_ticket_behind(client, db, signed_in, make_p
         .count()
     )
     assert matching == 1
+
+
+def test_a_failure_after_the_insert_leaves_no_ticket_behind(
+    client, db, signed_in, make_policy, monkeypatch
+):
+    """The creation transaction is all-or-nothing.
+
+    The ticket row is flushed before its events are written, so a failure in
+    between is the case that matters: spec C.3 requires the ticket to disappear
+    with it. Phase 2 adds risk scoring into this same transaction and inherits
+    this guarantee, so it is tested now with a forced failure rather than
+    assumed.
+    """
+    from api.app_v2.services import tickets as ticket_service
+
+    signed_in("dispatcher")
+    make_policy(priority=2)
+    before = db.query(models.Ticket).count()
+
+    def _explode(*args, **kwargs):
+        raise RuntimeError("event write failed")
+
+    monkeypatch.setattr(ticket_service.events, "record", _explode)
+
+    try:
+        _create(client, external_reference="INC-TEST-ROLLBACK")
+    except RuntimeError:
+        pass  # the client re-raises the unhandled error rather than returning 500
+
+    db.rollback()
+    assert db.query(models.Ticket).count() == before
+    assert (
+        db.query(models.Ticket)
+        .filter(models.Ticket.external_reference == "INC-TEST-ROLLBACK")
+        .count()
+        == 0
+    )
 
 
 def test_patch_records_only_the_fields_that_changed(client, signed_in, make_policy):
@@ -143,8 +180,16 @@ def test_unknown_ticket_returns_the_error_envelope(client, signed_in):
     assert response.json()["error"]["code"] == "TICKET_NOT_FOUND"
 
 
-def test_state_and_history_survive_a_restart(client, engine, signed_in, make_policy):
-    """The point of the phase: nothing lives in process memory."""
+def test_state_and_history_survive_a_restart(
+    client, engine, database_url, signed_in, make_policy
+):
+    """The point of the phase: nothing lives in process memory.
+
+    The first engine is disposed and a second one is opened against the same
+    URL, so the second application talks to the database through new
+    connections. Reusing the original engine would prove only that one open
+    handle still holds the rows, which is not the claim.
+    """
     signed_in("dispatcher")
     make_policy(priority=2)
     ticket_id = _create(client).json()["ticket"]["id"]
@@ -152,9 +197,12 @@ def test_state_and_history_survive_a_restart(client, engine, signed_in, make_pol
     from fastapi.testclient import TestClient
 
     from api.app_v2.db import session as session_module
+    from api.app_v2.db.session import make_engine
     from api.app_v2.main import app
 
-    session_module.set_engine(engine)
+    engine.dispose()
+    reopened = make_engine(database_url)
+    session_module.set_engine(reopened)
     with TestClient(app) as restarted:
         restarted.post(
             "/api/v2/login",
@@ -162,6 +210,8 @@ def test_state_and_history_survive_a_restart(client, engine, signed_in, make_pol
         )
         ticket = restarted.get("/api/v2/tickets/%s" % ticket_id)
         events = restarted.get("/api/v2/tickets/%s/events" % ticket_id)
+
+    reopened.dispose()
 
     assert ticket.status_code == 200
     assert ticket.json()["ticket"]["id"] == ticket_id

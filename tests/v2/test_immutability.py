@@ -10,6 +10,14 @@ import sqlalchemy as sa
 from api.app_v2.db import models
 
 
+#: Both dialects raise a message containing this phrase, and nothing else in the
+#: schema does. Matching on it distinguishes the trigger from the other reasons
+#: a statement can fail - a foreign key on ticket_events would reject a decision
+#: delete just as loudly, and the test would look green while the trigger was
+#: missing.
+APPEND_ONLY_MESSAGE = "append-only"
+
+
 def _raw_update_rejected(engine, table, row_id, column, value):
     statement = sa.text(
         "UPDATE %s SET %s = :value WHERE id = :row_id" % (table, column)
@@ -17,8 +25,8 @@ def _raw_update_rejected(engine, table, row_id, column, value):
     with engine.begin() as connection:
         try:
             connection.execute(statement, {"value": value, "row_id": row_id})
-        except sa.exc.DatabaseError:
-            return True
+        except sa.exc.DatabaseError as exc:
+            return APPEND_ONLY_MESSAGE in str(exc)
     return False
 
 
@@ -27,8 +35,8 @@ def _raw_delete_rejected(engine, table, row_id):
     with engine.begin() as connection:
         try:
             connection.execute(statement, {"row_id": row_id})
-        except sa.exc.DatabaseError:
-            return True
+        except sa.exc.DatabaseError as exc:
+            return APPEND_ONLY_MESSAGE in str(exc)
     return False
 
 
@@ -75,3 +83,23 @@ def test_a_ticket_row_is_still_updatable(db, make_ticket):
     db.commit()
     db.refresh(ticket)
     assert ticket.status == "assigned"
+
+
+def test_a_decision_delete_is_stopped_by_the_trigger_not_a_foreign_key(
+    engine, make_ticket, make_agent, make_decision
+):
+    """A decision with no events referring to it is still undeletable."""
+    decision = make_decision(make_ticket(), make_agent())
+    statement = sa.text("DELETE FROM assignment_decisions WHERE id = :row_id")
+    with engine.begin() as connection:
+        referring_events = connection.execute(
+            sa.text("SELECT count(*) FROM ticket_events WHERE decision_id = :row_id"),
+            {"row_id": decision.id},
+        ).scalar()
+        assert referring_events == 0
+        try:
+            connection.execute(statement, {"row_id": decision.id})
+        except sa.exc.DatabaseError as exc:
+            assert APPEND_ONLY_MESSAGE in str(exc)
+            return
+    raise AssertionError("an unreferenced decision row was deleted")
