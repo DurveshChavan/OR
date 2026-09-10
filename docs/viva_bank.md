@@ -57,11 +57,19 @@ It can only decide a comparison that is otherwise exactly equal, it is the same
 on every machine, and the tie-break policy version is stored in each decision.
 
 **A8. Show that you can still do the hand methods.**
-`legacy/viva_methods.ipynb` — VAM and MODI on a small transportation instance
-cross-checked against the PuLP optimum, a hand-solved Hungarian 3×3, Johnson's
-rule on a small job set, EMV and minimax regret on a payoff table, a CPM forward
-and backward pass with ES/EF/LS/LF and slack, and the deteriorating-item
-replacement table. Each cell states the expected answer before it runs the code.
+Two places, both live. The `/methods` section runs every technique with its
+inputs exposed, so any of them can be re-solved on paper against the screen:
+VAM and MODI on a transportation instance cross-checked against the PuLP
+optimum, the Hungarian method, Johnson's rule, EMV and minimax regret, a CPM
+forward and backward pass with ES/EF/LS/LF and slack, and the deteriorating-item
+replacement table.
+
+The worked instances themselves are in the test docstrings, where the expected
+answer is written out before the code runs: the 2×2 Hungarian instance in
+`tests/servicedesk/test_dispatch_domain.py`, and the year-by-year average-cost
+table plus the group-versus-individual renewal recursion in
+`tests/servicedesk/test_hardware.py`. A notebook would have been a third copy of
+the same arithmetic that nothing checks.
 
 **A9. Where is the LP?**
 `api/engine/capacity.py`, PuLP with CBC — the staffing/capacity allocation

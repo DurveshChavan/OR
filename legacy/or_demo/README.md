@@ -20,7 +20,7 @@ still tested on every commit:
 | Legacy FastAPI routes (no OR logic) | `api/main.py` |
 | Legacy React pages | `client/src/pages/`, `client/src/components/`, `client/src/hooks/` |
 | Legacy tests | `tests/test_m*.py`, `tests/test_pipeline.py`, `tests/test_api.py` |
-| Worked examples for the oral exam | `legacy/viva_methods.ipynb` |
+| Worked examples for the oral exam | test docstrings in `tests/test_m*.py` and `tests/servicedesk/test_hardware.py` |
 | Pre-cutover state | git tag `legacy-or-final` (local, at `b82a7cc`) |
 
 ## Running them

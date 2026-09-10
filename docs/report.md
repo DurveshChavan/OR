@@ -388,6 +388,17 @@ examination is prepared against. The application calls it rather than
 reimplementing it, because a second definition of a number that is checked by
 hand is a second number.
 
+**What "the machine is getting slower" means here.** The question the project
+is answering — which machines need attention because they are degrading — has no
+telemetry behind it, so it is answered where it can honestly be answered: in the
+running-cost series. A machine that costs more to keep running each year is a
+machine that is slower, breaks more often and takes more hands, and a rising
+running cost against a falling resale value is exactly the condition the
+deteriorating-item method exists to price. WS-1004's entered series runs 4,000
+in year 1 to 32,000 in year 5, and the advisor says so in the sentence beside
+the verdict, from those figures and no others. No slowness score is invented,
+no failure is predicted, and the incident log contributes nothing to it.
+
 **Tickets connect to machines only when a person says so.**
 `tickets.machine_id` is set through one endpoint, by a signed-in user, and the
 history records who did it. The advisor counts those links — how many tickets,
@@ -461,9 +472,18 @@ loop.
 ## 10. Operations Research content, for the oral examination
 
 The eight syllabus modules stay runnable and hand-verifiable in `api/engine/`,
-with worked instances in `legacy/viva_methods.ipynb` and the module-to-unit
-table in `legacy/or_demo/README.md`. The service desk imports nothing from them and
-takes no number from them.
+each on its own page under `/methods`, with the module-to-unit table in
+`legacy/or_demo/README.md`. The worked instances are not in a notebook: each one
+lives in the docstring of the test that checks it, so the expected answer is
+written out by hand before the code runs and a regression in the arithmetic
+fails the suite rather than sitting unread in a saved cell.
+
+The service desk takes exactly one number from the engine — the average annual
+cost table behind the Hardware screen, computed by `api/engine/replacement.py`.
+That is deliberate: reimplementing the deteriorating-item method inside the
+application would create a second definition of a figure the examiner checks by
+hand. Nothing else in the product reads the engine, and dispatch reads none of
+it.
 
 The technique that carries into the production build is **assignment**: the same
 Hungarian method the syllabus covers, applied per priority tier to a cost matrix
@@ -479,7 +499,7 @@ Reported here rather than left implied by a green-looking checklist.
 
 | Item | Status |
 |---|---|
-| Legacy demo runnable at its previous routes | **Closed.** Moved to `/legacy`; all seven old paths redirect; verified in a browser with the legacy API live. |
+| Method pages runnable at their previous routes | **Closed.** They are the `/methods` section; all seven old paths and `/legacy` redirect there; verified in a browser with the engine process live. |
 | Service-desk SQLite demo works fully offline | **Closed.** Full path driven end to end; no step touches the network. |
 | Audit-trigger rejection proven in SQLite | **Closed.** `ticket_events is append-only`. |
 | Model cards, metrics and manifests exist | **Closed.** |

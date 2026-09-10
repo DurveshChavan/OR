@@ -186,6 +186,7 @@ def explain(advice: dict, evidence: MachineEvidence) -> str:
         advice["optimal_replacement_year"],
         abs(advice["months_until_due"]),
     )
+    sentence += _degradation_clause(advice["table"])
     if evidence.linked_tickets:
         sentence += (
             " %d ticket(s) have been linked to it by hand, %d still open, %d "
@@ -199,6 +200,31 @@ def explain(advice: dict, evidence: MachineEvidence) -> str:
     else:
         sentence += " No ticket has been linked to it, so the register figures stand alone."
     return sentence + " Figures supplied by the operator: %s." % advice["source_note"]
+
+
+def _degradation_clause(table: list) -> str:
+    """Name what a rising running cost means, in the operator's own figures.
+
+    A machine that costs more to keep running each year is a machine getting
+    worse - slower, more often broken, more hands on it. That is the whole
+    premise of the deteriorating-item method, and it is the only degradation
+    signal this project has, because no dataset available to it carries hardware
+    telemetry. So it is stated from the entered series rather than inferred from
+    anything: first year against last, and nothing at all when the series is
+    flat or falling.
+    """
+    per_year = []
+    previous = 0.0
+    for year in table:
+        per_year.append(year["cumulative_running_cost"] - previous)
+        previous = year["cumulative_running_cost"]
+    if len(per_year) < 2 or per_year[-1] <= per_year[0]:
+        return ""
+    return (
+        " Its recorded running cost rises from %.0f in year 1 to %.0f in year %d,"
+        " which is the operator's own measure of the machine degrading."
+        % (per_year[0], per_year[-1], table[-1]["year"])
+    )
 
 
 def evidence_for(db: DbSession, machine: models.Machine) -> MachineEvidence:

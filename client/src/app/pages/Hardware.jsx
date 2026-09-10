@@ -181,7 +181,7 @@ function MachineAdvice({ machineId, onClose }) {
   return (
     <Section
       title={`${row.asset_tag} — average annual cost`}
-      note="The syllabus method: for replacement at the end of year n, total cost is purchase minus resale at n plus running cost accumulated to n, and the average is that total divided by n. The optimal year is the one where the average stops falling."
+      note="The syllabus method: for replacement at the end of year n, total cost is purchase minus resale at n plus running cost accumulated to n, and the average is that total divided by n. The optimal year is the one where the average stops falling. A running cost that climbs year on year is what a machine getting slower and more troublesome looks like in the operator's own records — it is the reason the average turns."
       actions={
         <Button size="sm" onClick={onClose}>
           Close

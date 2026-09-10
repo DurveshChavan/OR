@@ -309,3 +309,51 @@ def test_replacement_advice_does_not_touch_dispatch(
     assert after["recommended_agent"]["id"] == before["recommended_agent"]["id"]
     assert after["risk_probability"] == before["risk_probability"]
     assert after["reason"] == before["reason"]
+
+
+def test_the_reason_names_a_rising_running_cost_as_degradation(client, signed_in):
+    """The only degradation signal this project has is the entered cost series.
+
+    RUNNING climbs 1000 -> 5000 across four years, so the sentence must say so
+    in those figures. It is the honest answer to "which machines are getting
+    slower": no telemetry exists, but a machine that costs five times as much
+    to keep running in year 4 as in year 1 is a machine that is deteriorating,
+    and that is what the method prices.
+    """
+    signed_in("manager")
+    created = client.post(
+        "/api/machines",
+        json={
+            "asset_tag": "WS-DEGRADE-1",
+            "purchase_cost": PURCHASE,
+            "scrap_value_by_year": SCRAP,
+            "running_cost_by_year": RUNNING,
+            "source_note": "asset register export, 2026-09",
+        },
+    )
+    assert created.status_code == 201, created.text
+    reason = client.get(
+        "/api/machines/%s/replacement-advice" % created.json()["machine"]["id"]
+    ).json()["advice"]["reason"]
+    assert "running cost rises from 1000 in year 1 to 5000 in year 4" in reason
+    assert "degrading" in reason
+
+
+def test_a_flat_running_cost_makes_no_degradation_claim(client, signed_in):
+    """Nothing is asserted about a machine whose figures do not assert it."""
+    signed_in("manager")
+    created = client.post(
+        "/api/machines",
+        json={
+            "asset_tag": "WS-DEGRADE-2",
+            "purchase_cost": PURCHASE,
+            "scrap_value_by_year": SCRAP,
+            "running_cost_by_year": [2000.0, 2000.0, 2000.0, 2000.0],
+            "source_note": "asset register export, 2026-09",
+        },
+    )
+    assert created.status_code == 201, created.text
+    reason = client.get(
+        "/api/machines/%s/replacement-advice" % created.json()["machine"]["id"]
+    ).json()["advice"]["reason"]
+    assert "degrading" not in reason
