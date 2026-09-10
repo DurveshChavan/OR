@@ -48,6 +48,13 @@ DEMO_AGENTS = (
     ("Resolver 34 (demo)", 3, [("hardware", 1.0, True), ("desktop", 1.1, False)]),
 )
 
+#: The set is chosen so that one batch of recommendations reaches every
+#: outcome the application can produce, rather than only the happy one. With
+#: nine network slots across the roster, ten network tickets guarantee at least
+#: one ``queued`` decision; INC-DEMO-0012 needs a skill nobody holds, which is
+#: the ``no_eligible_agent`` outcome; INC-DEMO-0007 and INC-DEMO-0008 open far
+#: enough in the past to be overdue when they are seeded, so Risk Radar has a
+#: recovery group and the demo does not have to wait for one.
 DEMO_TICKETS = (
     # reference, priority, skill, category, minutes since opening
     ("INC-DEMO-0001", 1, "network", "Network", 25),
@@ -56,6 +63,14 @@ DEMO_TICKETS = (
     ("INC-DEMO-0004", 3, "hardware", "Hardware", 30),
     ("INC-DEMO-0005", 3, "desktop", "Desktop", 400),
     ("INC-DEMO-0006", 4, "network", "Network", 15),
+    ("INC-DEMO-0007", 1, "network", "Network", 200),
+    ("INC-DEMO-0008", 2, "network", "Network", 320),
+    ("INC-DEMO-0009", 3, "network", "Network", 45),
+    ("INC-DEMO-0010", 3, "network", "Network", 60),
+    ("INC-DEMO-0011", 4, "network", "Network", 120),
+    ("INC-DEMO-0012", 2, "mainframe", "Mainframe", 35),
+    ("INC-DEMO-0013", 3, "network", "Network", 10),
+    ("INC-DEMO-0014", 4, "network", "Network", 5),
 )
 
 DEMO_USERS = (

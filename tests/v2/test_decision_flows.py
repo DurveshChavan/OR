@@ -636,3 +636,47 @@ def test_the_full_history_survives_a_restart(
     fresh_engine.dispose()
     assert "ASSIGNMENT_RECOMMENDED" in types
     assert "ASSIGNMENT_ACCEPTED" in types
+
+
+def test_a_decision_stores_the_alternatives_the_solve_priced(
+    client, db, signed_in, make_policy, skilled_agent, open_ticket
+):
+    """The ticket page shows alternatives from the payload, so they must be in it.
+
+    Two resolvers hold the skill and one ticket is dispatched, so exactly one
+    eligible resolver is left over. Its stored entry has to carry the projection
+    and the cost the solve computed for it, not a placeholder.
+    """
+    signed_in("dispatcher")
+    make_policy(priority=2)
+    fast = skilled_agent("Resolver Fast", multiplier=0.5)
+    slow = skilled_agent("Resolver Slow", multiplier=2.0)
+    ticket = open_ticket()
+
+    decision_id = recommend(client, [ticket.id]).json()["decisions"][0]["decision_id"]
+    payload = client.get("/api/v2/assignment-decisions/%s" % decision_id).json()
+    chosen = payload["candidate_payload"]["chosen"]
+    alternatives = payload["candidate_payload"]["alternatives"]
+
+    assert chosen["agent_id"] == fast.id
+    assert [entry["agent_id"] for entry in alternatives] == [slow.id]
+    assert alternatives[0]["display_name"] == "Resolver Slow"
+    assert alternatives[0]["total_cost"] > chosen["total_cost"]
+    assert alternatives[0]["projected_finish_in_minutes"] > 0
+    assert payload["candidate_payload"]["alternatives_note"]
+
+
+def test_a_ticket_nobody_can_work_stores_no_alternatives(
+    client, db, signed_in, make_policy, skilled_agent, open_ticket
+):
+    signed_in("dispatcher")
+    make_policy(priority=2)
+    skilled_agent("Resolver Network", skill="network")
+    ticket = open_ticket(skill="mainframe")
+
+    decision = recommend(client, [ticket.id]).json()["decisions"][0]
+    assert decision["state"] == "no_eligible_agent"
+    detail = client.get(
+        "/api/v2/assignment-decisions/%s" % decision["decision_id"]
+    ).json()
+    assert detail["candidate_payload"]["alternatives"] == []

@@ -9,8 +9,21 @@ import WorkQueue from "./pages/WorkQueue";
 import EscalationAdvisor from "./pages/EscalationAdvisor";
 import MajorIncident from "./pages/MajorIncident";
 import HardwareHealth from "./pages/HardwareHealth";
+import V2App from "./v2/V2App";
 
 export default function App() {
+  return (
+    <Routes>
+      {/* Version 2 brings its own shell: its own nav, its own sign-in gate and
+          its own banners. The legacy Operations Research demo below stays the
+          default route and is untouched until the phase 5 cutover. */}
+      <Route path="/v2/*" element={<V2App />} />
+      <Route path="/*" element={<LegacyApp />} />
+    </Routes>
+  );
+}
+
+function LegacyApp() {
   return (
     <div className="min-h-screen bg-paper">
       <TopNav />

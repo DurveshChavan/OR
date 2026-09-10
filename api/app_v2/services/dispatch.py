@@ -396,7 +396,26 @@ def build_cost_matrix(views: Sequence[TicketView], slots: Sequence[SlotView],
 def solve_tier(views: Sequence[TicketView], slots: Sequence[SlotView],
                policies: Dict[int, PolicyRates],
                speeds: Dict[Tuple[str, str], float]) -> Dict[str, Candidate]:
-    """Hungarian assignment for one priority tier.
+    """The chosen candidate per ticket. See :func:`solve_tier_with_candidates`."""
+    chosen, _priced = solve_tier_with_candidates(views, slots, policies, speeds)
+    return chosen
+
+
+def solve_tier_with_candidates(
+    views: Sequence[TicketView], slots: Sequence[SlotView],
+    policies: Dict[int, PolicyRates], speeds: Dict[Tuple[str, str], float],
+) -> Tuple[Dict[str, Candidate], Dict[str, List[Candidate]]]:
+    """Hungarian assignment for one priority tier, plus every priced cell.
+
+    The second return value is the ticket's own row of the cost matrix: what
+    each slot would have cost *this* ticket, at the same moment, under the same
+    policy. It is what the interface shows as ranked alternatives.
+
+    One thing that row is not: it is not a claim that swapping to the runner-up
+    leaves the rest of the tier unchanged. The Hungarian step optimises the whole
+    tier at once, so a cheaper-looking cell may be cheaper only because another
+    ticket is currently holding a slot it needs. The stored payload says so in
+    ``alternatives_note`` and the client repeats it.
 
     Columns always outnumber or equal rows, because the caller pads with visible
     queue columns. That padding is what makes "no ticket is silently dropped" a
@@ -406,18 +425,56 @@ def solve_tier(views: Sequence[TicketView], slots: Sequence[SlotView],
     optimum, and the same cost function produces it.
     """
     if not views:
-        return {}
+        return {}, {}
     if len(slots) < len(views):
         raise ValueError(
             "cost matrix has %d slots for %d tickets; pad with queue slots first"
             % (len(slots), len(views))
         )
     matrix, grid = build_cost_matrix(views, slots, policies, speeds)
+    priced = {view.ticket_id: list(grid[row]) for row, view in enumerate(views)}
     if len(views) == 1:
         column = int(np.argmin(matrix[0]))
-        return {views[0].ticket_id: grid[0][column]}
+        return {views[0].ticket_id: grid[0][column]}, priced
     rows, columns = linear_sum_assignment(matrix)
-    return {views[int(r)].ticket_id: grid[int(r)][int(c)] for r, c in zip(rows, columns)}
+    chosen = {views[int(r)].ticket_id: grid[int(r)][int(c)] for r, c in zip(rows, columns)}
+    return chosen, priced
+
+
+#: How many alternatives a stored decision keeps. A dispatcher choosing an
+#: override reads a short list; the full row stays derivable from the cost model
+#: and the agents of that moment, and the chosen candidate is stored in full.
+MAX_STORED_ALTERNATIVES = 5
+
+ALTERNATIVES_NOTE = (
+    "Row cost for this ticket alone, at the moment of the solve. The batch "
+    "optimum may still differ: a cheaper cell here can belong to a slot another "
+    "ticket in the same tier is holding."
+)
+
+
+def ranked_alternatives(priced_row: Sequence[Candidate], chosen: Candidate,
+                        limit: int = MAX_STORED_ALTERNATIVES) -> List[Candidate]:
+    """The next-cheapest permitted resolvers for one ticket, one row per agent.
+
+    Prohibited cells and queue columns are dropped: neither is a resolver a
+    dispatcher could override to. An agent holding several free slots appears
+    once, at that agent's cheapest slot, because two slots of one resolver are
+    not two alternatives.
+    """
+    best_per_agent: Dict[str, Candidate] = {}
+    for candidate in priced_row:
+        if candidate is None or candidate.is_queue_slot or not candidate.eligible:
+            continue
+        if candidate.agent_id is None or candidate.agent_id == chosen.agent_id:
+            continue
+        held = best_per_agent.get(candidate.agent_id)
+        if held is None or candidate.total_cost < held.total_cost:
+            best_per_agent[candidate.agent_id] = candidate
+    ordered = sorted(
+        best_per_agent.values(), key=lambda c: (c.total_cost, c.agent_id)
+    )
+    return ordered[:limit]
 
 
 def queue_slots(count: int, start_index: int = 0) -> List[SlotView]:

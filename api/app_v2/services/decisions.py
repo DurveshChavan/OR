@@ -80,7 +80,9 @@ def recommend(db: DbSession, actor: models.User, ticket_ids: Sequence[str],
         tier_views = dispatch.tier_order(tier_views, policies)
         slots = dispatch.stable_slot_order(remaining_slots)
         padded = slots + dispatch.queue_slots(len(tier_views), start_index=len(slots))
-        chosen = dispatch.solve_tier(tier_views, padded, policies, speeds)
+        chosen, priced = dispatch.solve_tier_with_candidates(
+            tier_views, padded, policies, speeds
+        )
 
         consumed = set()
         for view in tier_views:
@@ -89,6 +91,9 @@ def recommend(db: DbSession, actor: models.User, ticket_ids: Sequence[str],
             written[ticket.id] = _write_candidate_decision(
                 db, actor, ticket, view, candidate, policies[tier],
                 scores[ticket.id], eligible_counts[ticket.id], batch_id, as_of,
+                alternatives=dispatch.ranked_alternatives(
+                    priced[view.ticket_id], candidate
+                ),
             )
             if not candidate.is_queue_slot:
                 consumed.add((candidate.agent_id, candidate.slot_index))
@@ -207,9 +212,9 @@ def _free_slots(capacities, as_of) -> List[dispatch.SlotView]:
 
 
 def _write_candidate_decision(db, actor, ticket, view, candidate, policy, score,
-                              eligible_count, batch_id, as_of):
+                              eligible_count, batch_id, as_of, alternatives=()):
     """Persist one solved candidate as a decision plus its event."""
-    payload = _candidate_payload(view, candidate, policy, eligible_count)
+    payload = _candidate_payload(view, candidate, policy, eligible_count, alternatives)
 
     if candidate.is_queue_slot:
         reason = reasons.queued_reason(ticket.required_skill, eligible_count, 0)
@@ -251,7 +256,8 @@ def _write_candidate_decision(db, actor, ticket, view, candidate, policy, score,
 def _write_no_eligible_agent(db, actor, ticket, score, policy, batch_id):
     reason = reasons.no_eligible_agent_reason(ticket.required_skill)
     payload = {
-        "candidates": [],
+        "alternatives": [],
+        "alternatives_note": dispatch.ALTERNATIVES_NOTE,
         "eligible_agent_count": 0,
         "required_skill": ticket.required_skill,
         "tie_break_policy_version": dispatch.TIE_BREAK_POLICY_VERSION,
@@ -291,14 +297,22 @@ def _insert_decision(db, ticket, state, agent_id, score, policy, payload, reason
     return decision
 
 
-def _candidate_payload(view, chosen, policy, eligible_count) -> dict:
+def _candidate_payload(view, chosen, policy, eligible_count, alternatives=()) -> dict:
     """Everything the solve saw for this ticket, plus what it chose.
+
+    ``alternatives`` is the rest of this ticket's own matrix row, cheapest
+    first, one entry per eligible resolver. It is stored rather than recomputed
+    for display because a recomputed alternative would be priced against a later
+    moment's availability and would not be the comparison the solve actually
+    made.
 
     No hidden outcome and no future field (spec C.2): the payload holds inputs,
     cost components and the tie-break value, and nothing that could only be known
     after the work was done.
     """
     return {
+        "alternatives": [candidate.as_payload() for candidate in alternatives],
+        "alternatives_note": dispatch.ALTERNATIVES_NOTE,
         "as_of_due_in_minutes": round(view.due_in_minutes, 3),
         "chosen": chosen.as_payload(),
         "eligible_agent_count": eligible_count,

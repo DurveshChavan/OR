@@ -335,3 +335,105 @@ def test_an_overdue_ticket_is_not_starved_by_a_fresher_one():
     fresh = ticket("ticket-fresh", due_in=200.0, risk=0.9)
     ordered = dispatch.tier_order([fresh, overdue], POLICIES)
     assert ordered[0].ticket_id == "ticket-overdue"
+
+
+# --- the alternatives a dispatcher reads before overriding ------------------
+
+
+def test_alternatives_are_the_rest_of_this_ticket_s_own_row():
+    """A-FAST is chosen at 25.0, so the only alternative is A-SLOW at 930.0.
+
+    Both numbers are the ones worked out in this module's docstring, which is
+    what makes this a check of the cost model rather than of the sort call.
+    """
+    chosen, priced = dispatch.solve_tier_with_candidates(
+        [TICKET_A], [FAST, SLOW], POLICIES, SPEEDS
+    )
+    picked = chosen["ticket-a"]
+    assert picked.agent_id == "agent-fast"
+    assert picked.total_cost == approx(25.0 + picked.tie_break)
+
+    alternatives = dispatch.ranked_alternatives(priced["ticket-a"], picked)
+    assert [candidate.agent_id for candidate in alternatives] == ["agent-slow"]
+    assert alternatives[0].total_cost == approx(930.0 + alternatives[0].tie_break)
+
+
+def test_alternatives_are_cheapest_first_and_never_include_the_chosen_agent():
+    middling = dispatch.SlotView(
+        agent_id="agent-middle",
+        slot_index=0,
+        display_name="agent-middle",
+        speed_multiplier=1.0,
+        available_in_minutes=10.0,
+    )
+    speeds = dict(SPEEDS)
+    speeds[("ticket-a", "agent-middle")] = 1.0
+    chosen, priced = dispatch.solve_tier_with_candidates(
+        [TICKET_A], [FAST, SLOW, middling], POLICIES, speeds
+    )
+    picked = chosen["ticket-a"]
+    alternatives = dispatch.ranked_alternatives(priced["ticket-a"], picked)
+
+    assert picked.agent_id not in [candidate.agent_id for candidate in alternatives]
+    costs = [candidate.total_cost for candidate in alternatives]
+    assert costs == sorted(costs)
+    # agent-middle waits 10 minutes against agent-slow's 30, so it is cheaper.
+    assert [candidate.agent_id for candidate in alternatives] == [
+        "agent-middle",
+        "agent-slow",
+    ]
+
+
+def test_a_prohibited_pairing_is_not_offered_as_an_alternative():
+    """An override target has to be someone the skill rules actually allow."""
+    speeds = {("ticket-a", "agent-slow"): 1.0}
+    chosen, priced = dispatch.solve_tier_with_candidates(
+        [TICKET_A], [FAST, SLOW], POLICIES, speeds
+    )
+    alternatives = dispatch.ranked_alternatives(priced["ticket-a"], chosen["ticket-a"])
+    assert alternatives == []
+
+
+def test_a_queue_column_is_never_an_alternative():
+    slots = [FAST] + dispatch.queue_slots(1, start_index=1)
+    chosen, priced = dispatch.solve_tier_with_candidates(
+        [TICKET_A], slots, POLICIES, SPEEDS
+    )
+    alternatives = dispatch.ranked_alternatives(priced["ticket-a"], chosen["ticket-a"])
+    assert all(not candidate.is_queue_slot for candidate in alternatives)
+    assert alternatives == []
+
+
+def test_two_free_slots_of_one_resolver_are_one_alternative():
+    """Two slots of the same person are two units of capacity, not two options."""
+    second_slow = dispatch.SlotView(
+        agent_id="agent-slow",
+        slot_index=1,
+        display_name="agent-slow",
+        speed_multiplier=1.0,
+        available_in_minutes=30.0,
+    )
+    chosen, priced = dispatch.solve_tier_with_candidates(
+        [TICKET_A], [FAST, SLOW, second_slow], POLICIES, SPEEDS
+    )
+    alternatives = dispatch.ranked_alternatives(priced["ticket-a"], chosen["ticket-a"])
+    assert [candidate.agent_id for candidate in alternatives] == ["agent-slow"]
+
+
+def test_the_stored_alternative_list_is_capped():
+    slots = [
+        dispatch.SlotView(
+            agent_id="agent-%02d" % index,
+            slot_index=0,
+            display_name="agent-%02d" % index,
+            speed_multiplier=1.0,
+            available_in_minutes=float(index),
+        )
+        for index in range(dispatch.MAX_STORED_ALTERNATIVES + 3)
+    ]
+    speeds = {("ticket-a", one.agent_id): 1.0 for one in slots}
+    chosen, priced = dispatch.solve_tier_with_candidates(
+        [TICKET_A], slots, POLICIES, speeds
+    )
+    alternatives = dispatch.ranked_alternatives(priced["ticket-a"], chosen["ticket-a"])
+    assert len(alternatives) == dispatch.MAX_STORED_ALTERNATIVES
