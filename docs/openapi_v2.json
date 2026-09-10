@@ -559,6 +559,106 @@
         "title": "EventOut",
         "type": "object"
       },
+      "GroupReplacementRequest": {
+        "description": "Inputs for the group-versus-individual comparison, all operator-supplied.",
+        "properties": {
+          "failure_prob_by_period": {
+            "items": {
+              "type": "number"
+            },
+            "minItems": 1,
+            "title": "Failure Prob By Period",
+            "type": "array"
+          },
+          "group_replace_cost": {
+            "exclusiveMinimum": 0.0,
+            "title": "Group Replace Cost",
+            "type": "number"
+          },
+          "n_items": {
+            "minimum": 1.0,
+            "title": "N Items",
+            "type": "integer"
+          },
+          "unit_replace_cost": {
+            "exclusiveMinimum": 0.0,
+            "title": "Unit Replace Cost",
+            "type": "number"
+          }
+        },
+        "required": [
+          "n_items",
+          "failure_prob_by_period",
+          "unit_replace_cost",
+          "group_replace_cost"
+        ],
+        "title": "GroupReplacementRequest",
+        "type": "object"
+      },
+      "GroupReplacementResponse": {
+        "properties": {
+          "cheaper_policy": {
+            "title": "Cheaper Policy",
+            "type": "string"
+          },
+          "group_table": {
+            "items": {
+              "$ref": "#/components/schemas/GroupTableRow"
+            },
+            "title": "Group Table",
+            "type": "array"
+          },
+          "individual_average_cost": {
+            "title": "Individual Average Cost",
+            "type": "number"
+          },
+          "n_items": {
+            "title": "N Items",
+            "type": "integer"
+          },
+          "optimal_group_average_cost": {
+            "title": "Optimal Group Average Cost",
+            "type": "number"
+          },
+          "optimal_group_interval": {
+            "title": "Optimal Group Interval",
+            "type": "integer"
+          },
+          "request_id": {
+            "title": "Request Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "n_items",
+          "individual_average_cost",
+          "optimal_group_interval",
+          "optimal_group_average_cost",
+          "cheaper_policy",
+          "group_table",
+          "request_id"
+        ],
+        "title": "GroupReplacementResponse",
+        "type": "object"
+      },
+      "GroupTableRow": {
+        "properties": {
+          "average_cost": {
+            "title": "Average Cost",
+            "type": "number"
+          },
+          "interval": {
+            "title": "Interval",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "interval",
+          "average_cost"
+        ],
+        "title": "GroupTableRow",
+        "type": "object"
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -680,6 +780,343 @@
         "title": "LogoutResponse",
         "type": "object"
       },
+      "MachineCreate": {
+        "description": "A machine an operator is putting on the register.\n\n``source_note`` is required for the same reason the SLA policy rows carry\none: every figure below is typed in from an organisation's own records, and\na screen full of costs with no stated origin is indistinguishable from a\nscreen full of invented ones.",
+        "properties": {
+          "age_months": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Age Months",
+            "type": "integer"
+          },
+          "asset_tag": {
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Asset Tag",
+            "type": "string"
+          },
+          "is_active": {
+            "default": true,
+            "title": "Is Active",
+            "type": "boolean"
+          },
+          "location": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Location"
+          },
+          "machine_type": {
+            "default": "desktop",
+            "title": "Machine Type",
+            "type": "string"
+          },
+          "purchase_cost": {
+            "exclusiveMinimum": 0.0,
+            "title": "Purchase Cost",
+            "type": "number"
+          },
+          "running_cost_by_year": {
+            "items": {
+              "type": "number"
+            },
+            "minItems": 1,
+            "title": "Running Cost By Year",
+            "type": "array"
+          },
+          "scrap_value_by_year": {
+            "items": {
+              "type": "number"
+            },
+            "minItems": 1,
+            "title": "Scrap Value By Year",
+            "type": "array"
+          },
+          "source_note": {
+            "minLength": 1,
+            "title": "Source Note",
+            "type": "string"
+          }
+        },
+        "required": [
+          "asset_tag",
+          "purchase_cost",
+          "scrap_value_by_year",
+          "running_cost_by_year",
+          "source_note"
+        ],
+        "title": "MachineCreate",
+        "type": "object"
+      },
+      "MachineEvidenceOut": {
+        "description": "Tickets a person linked to this machine. Counted, never inferred.",
+        "properties": {
+          "hardware_category_tickets": {
+            "title": "Hardware Category Tickets",
+            "type": "integer"
+          },
+          "linked_tickets": {
+            "title": "Linked Tickets",
+            "type": "integer"
+          },
+          "mean_risk_probability": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mean Risk Probability"
+          },
+          "open_linked_tickets": {
+            "title": "Open Linked Tickets",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "linked_tickets",
+          "open_linked_tickets",
+          "hardware_category_tickets",
+          "mean_risk_probability"
+        ],
+        "title": "MachineEvidenceOut",
+        "type": "object"
+      },
+      "MachineListResponse": {
+        "properties": {
+          "machines": {
+            "items": {
+              "$ref": "#/components/schemas/MachineOut"
+            },
+            "title": "Machines",
+            "type": "array"
+          },
+          "request_id": {
+            "title": "Request Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "machines",
+          "request_id"
+        ],
+        "title": "MachineListResponse",
+        "type": "object"
+      },
+      "MachineOut": {
+        "properties": {
+          "age_months": {
+            "title": "Age Months",
+            "type": "integer"
+          },
+          "age_recorded_at": {
+            "format": "date-time",
+            "title": "Age Recorded At",
+            "type": "string"
+          },
+          "asset_tag": {
+            "title": "Asset Tag",
+            "type": "string"
+          },
+          "current_age_months": {
+            "title": "Current Age Months",
+            "type": "number"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "is_active": {
+            "title": "Is Active",
+            "type": "boolean"
+          },
+          "linked_tickets": {
+            "title": "Linked Tickets",
+            "type": "integer"
+          },
+          "location": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Location"
+          },
+          "machine_type": {
+            "title": "Machine Type",
+            "type": "string"
+          },
+          "purchase_cost": {
+            "title": "Purchase Cost",
+            "type": "number"
+          },
+          "running_cost_by_year": {
+            "items": {
+              "type": "number"
+            },
+            "title": "Running Cost By Year",
+            "type": "array"
+          },
+          "scrap_value_by_year": {
+            "items": {
+              "type": "number"
+            },
+            "title": "Scrap Value By Year",
+            "type": "array"
+          },
+          "source_note": {
+            "title": "Source Note",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "asset_tag",
+          "location",
+          "machine_type",
+          "age_months",
+          "age_recorded_at",
+          "current_age_months",
+          "purchase_cost",
+          "scrap_value_by_year",
+          "running_cost_by_year",
+          "is_active",
+          "source_note",
+          "linked_tickets"
+        ],
+        "title": "MachineOut",
+        "type": "object"
+      },
+      "MachinePatch": {
+        "properties": {
+          "age_months": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Age Months"
+          },
+          "is_active": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Active"
+          },
+          "location": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Location"
+          },
+          "machine_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Machine Type"
+          },
+          "purchase_cost": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Purchase Cost"
+          },
+          "running_cost_by_year": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "number"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Running Cost By Year"
+          },
+          "scrap_value_by_year": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "number"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Scrap Value By Year"
+          },
+          "source_note": {
+            "anyOf": [
+              {
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Note"
+          }
+        },
+        "title": "MachinePatch",
+        "type": "object"
+      },
+      "MachineResponse": {
+        "properties": {
+          "machine": {
+            "$ref": "#/components/schemas/MachineOut"
+          },
+          "request_id": {
+            "title": "Request Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "machine",
+          "request_id"
+        ],
+        "title": "MachineResponse",
+        "type": "object"
+      },
       "OverrideRequest": {
         "properties": {
           "agent_id": {
@@ -732,6 +1169,144 @@
           "ticket_ids"
         ],
         "title": "RecommendationRequest",
+        "type": "object"
+      },
+      "ReplacementAdviceListResponse": {
+        "properties": {
+          "advice": {
+            "items": {
+              "$ref": "#/components/schemas/ReplacementAdviceOut"
+            },
+            "title": "Advice",
+            "type": "array"
+          },
+          "as_of": {
+            "format": "date-time",
+            "title": "As Of",
+            "type": "string"
+          },
+          "request_id": {
+            "title": "Request Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "advice",
+          "as_of",
+          "request_id"
+        ],
+        "title": "ReplacementAdviceListResponse",
+        "type": "object"
+      },
+      "ReplacementAdviceOut": {
+        "properties": {
+          "age_months": {
+            "title": "Age Months",
+            "type": "number"
+          },
+          "asset_tag": {
+            "title": "Asset Tag",
+            "type": "string"
+          },
+          "evidence": {
+            "$ref": "#/components/schemas/MachineEvidenceOut"
+          },
+          "machine_id": {
+            "title": "Machine Id",
+            "type": "string"
+          },
+          "months_until_due": {
+            "title": "Months Until Due",
+            "type": "number"
+          },
+          "optimal_average_cost": {
+            "title": "Optimal Average Cost",
+            "type": "number"
+          },
+          "optimal_replacement_year": {
+            "title": "Optimal Replacement Year",
+            "type": "integer"
+          },
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          },
+          "source_note": {
+            "title": "Source Note",
+            "type": "string"
+          },
+          "table": {
+            "items": {
+              "$ref": "#/components/schemas/ReplacementTableRow"
+            },
+            "title": "Table",
+            "type": "array"
+          },
+          "verdict": {
+            "title": "Verdict",
+            "type": "string"
+          }
+        },
+        "required": [
+          "machine_id",
+          "asset_tag",
+          "age_months",
+          "optimal_replacement_year",
+          "optimal_average_cost",
+          "months_until_due",
+          "verdict",
+          "table",
+          "evidence",
+          "reason",
+          "source_note"
+        ],
+        "title": "ReplacementAdviceOut",
+        "type": "object"
+      },
+      "ReplacementAdviceResponse": {
+        "properties": {
+          "advice": {
+            "$ref": "#/components/schemas/ReplacementAdviceOut"
+          },
+          "request_id": {
+            "title": "Request Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "advice",
+          "request_id"
+        ],
+        "title": "ReplacementAdviceResponse",
+        "type": "object"
+      },
+      "ReplacementTableRow": {
+        "description": "One year of the average-cost table, kept so it can be checked by hand.",
+        "properties": {
+          "average_cost": {
+            "title": "Average Cost",
+            "type": "number"
+          },
+          "cumulative_running_cost": {
+            "title": "Cumulative Running Cost",
+            "type": "number"
+          },
+          "total_cost": {
+            "title": "Total Cost",
+            "type": "number"
+          },
+          "year": {
+            "title": "Year",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "year",
+          "cumulative_running_cost",
+          "total_cost",
+          "average_cost"
+        ],
+        "title": "ReplacementTableRow",
         "type": "object"
       },
       "RescoreRequest": {
@@ -1297,6 +1872,24 @@
         "title": "TicketListResponse",
         "type": "object"
       },
+      "TicketMachineLink": {
+        "description": "Attach a ticket to a machine, or detach it.\n\nA null ``machine_id`` clears the link. This is a person stating which\nmachine a ticket is about; nothing derives it, and dispatch never reads it.",
+        "properties": {
+          "machine_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Machine Id"
+          }
+        },
+        "title": "TicketMachineLink",
+        "type": "object"
+      },
       "TicketOut": {
         "properties": {
           "category": {
@@ -1374,6 +1967,17 @@
               }
             ],
             "title": "Location"
+          },
+          "machine_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Machine Id"
           },
           "opened_at": {
             "format": "date-time",
@@ -1461,6 +2065,7 @@
           "opened_at",
           "sla_due_at",
           "current_assignee_id",
+          "machine_id",
           "risk_probability",
           "risk_model_version",
           "last_scored_at",
@@ -2048,6 +2653,183 @@
         ]
       }
     },
+    "/api/v2/machines": {
+      "get": {
+        "operationId": "list_machines_api_v2_machines_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "active_only",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Active Only",
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MachineListResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Machines",
+        "tags": [
+          "hardware"
+        ]
+      },
+      "post": {
+        "operationId": "create_machine_api_v2_machines_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MachineCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MachineResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Machine",
+        "tags": [
+          "hardware"
+        ]
+      }
+    },
+    "/api/v2/machines/{machine_id}": {
+      "patch": {
+        "description": "Edit register figures.\n\nRe-recording the age also re-stamps ``age_recorded_at``, so the advisor ages\nthe new figure forward from today rather than from whenever the row was\nfirst written.",
+        "operationId": "patch_machine_api_v2_machines__machine_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "machine_id",
+            "required": true,
+            "schema": {
+              "title": "Machine Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MachinePatch"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MachineResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Patch Machine",
+        "tags": [
+          "hardware"
+        ]
+      }
+    },
+    "/api/v2/machines/{machine_id}/replacement-advice": {
+      "get": {
+        "operationId": "machine_advice_api_v2_machines__machine_id__replacement_advice_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "machine_id",
+            "required": true,
+            "schema": {
+              "title": "Machine Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReplacementAdviceResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Machine Advice",
+        "tags": [
+          "hardware"
+        ]
+      }
+    },
     "/api/v2/me": {
       "get": {
         "description": "Who the cookie belongs to. The client uses this to restore its session.",
@@ -2067,6 +2849,92 @@
         "summary": "Whoami",
         "tags": [
           "auth"
+        ]
+      }
+    },
+    "/api/v2/replacement-advice": {
+      "get": {
+        "description": "Advice for the whole register, most overdue first.\n\nThe ordering is by how far past its optimal replacement year a machine is,\nwhich is a number in the response rather than a judgement made here.",
+        "operationId": "fleet_advice_api_v2_replacement_advice_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "active_only",
+            "required": false,
+            "schema": {
+              "default": true,
+              "title": "Active Only",
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReplacementAdviceListResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Fleet Advice",
+        "tags": [
+          "hardware"
+        ]
+      }
+    },
+    "/api/v2/replacement-advice/group": {
+      "post": {
+        "description": "Group replacement against replace-on-failure for a fleet of like items.",
+        "operationId": "group_advice_api_v2_replacement_advice_group_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GroupReplacementRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GroupReplacementResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Group Advice",
+        "tags": [
+          "hardware"
         ]
       }
     },
@@ -2618,6 +3486,59 @@
           }
         },
         "summary": "List Events",
+        "tags": [
+          "tickets"
+        ]
+      }
+    },
+    "/api/v2/tickets/{ticket_id}/machine": {
+      "put": {
+        "description": "State which machine this ticket is about, or clear that statement.\n\nThis is the only way a ticket and a machine are ever connected. No column in\nthe source event log links an incident to an asset, so the link is a\nperson's assertion and the history records who made it. Nothing in scoring\nor dispatch reads the field: linking a machine changes what the replacement\nadvisor counts, and nothing else.",
+        "operationId": "link_machine_api_v2_tickets__ticket_id__machine_put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "ticket_id",
+            "required": true,
+            "schema": {
+              "title": "Ticket Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TicketMachineLink"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TicketResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Link Machine",
         "tags": [
           "tickets"
         ]

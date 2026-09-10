@@ -12,6 +12,9 @@ EXPECTED_TABLES = {
     "tickets",
     "assignment_decisions",
     "ticket_events",
+    # Added by revision 0003: the operator-maintained machine register the
+    # replacement advisor reads. It holds no mined or predicted value.
+    "machines",
 }
 
 #: Tables the review explicitly decided not to create. Their absence is a
@@ -19,7 +22,7 @@ EXPECTED_TABLES = {
 FORBIDDEN_TABLES = {"assignments", "assignment_runs", "model_versions"}
 
 
-def test_head_creates_exactly_the_eight_tables(engine):
+def test_head_creates_exactly_the_declared_tables(engine):
     tables = set(sa.inspect(engine).get_table_names())
     assert EXPECTED_TABLES <= tables
     assert FORBIDDEN_TABLES.isdisjoint(tables)

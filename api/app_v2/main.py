@@ -27,6 +27,7 @@ from api.app_v2.domain import schemas
 from api.app_v2.routes import agents as agents_routes
 from api.app_v2.routes import auth as auth_routes
 from api.app_v2.routes import decisions as decision_routes
+from api.app_v2.routes import hardware as hardware_routes
 from api.app_v2.routes import radar as radar_routes
 from api.app_v2.routes import rescore as rescore_routes
 from api.app_v2.routes import tickets as tickets_routes
@@ -78,6 +79,7 @@ app.include_router(tickets_routes.router, prefix=API_PREFIX)
 app.include_router(agents_routes.router, prefix=API_PREFIX)
 app.include_router(decision_routes.router, prefix=API_PREFIX)
 app.include_router(radar_routes.router, prefix=API_PREFIX)
+app.include_router(hardware_routes.router, prefix=API_PREFIX)
 
 
 @app.get(API_PREFIX + "/health", response_model=schemas.HealthResponse, tags=["health"])

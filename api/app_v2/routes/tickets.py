@@ -15,6 +15,7 @@ from api.app_v2.db import models
 from api.app_v2.db.session import get_db
 from api.app_v2.domain import schemas
 from api.app_v2.services import escalation as escalation_service
+from api.app_v2.services import events, hardware
 from api.app_v2.services import tickets as ticket_service
 
 router = APIRouter(prefix="/tickets", tags=["tickets"])
@@ -40,6 +41,7 @@ def _ticket_out(ticket: models.Ticket) -> schemas.TicketOut:
         opened_at=ticket.opened_at,
         sla_due_at=ticket.sla_due_at,
         current_assignee_id=ticket.current_assignee_id,
+        machine_id=ticket.machine_id,
         risk_probability=ticket.risk_probability,
         risk_model_version=ticket.risk_model_version,
         last_scored_at=ticket.last_scored_at,
@@ -116,6 +118,50 @@ def patch_ticket(
 ):
     ticket = ticket_service.get_ticket(db, ticket_id)
     ticket, _changes = ticket_service.patch_ticket(db, actor, ticket, payload)
+    return schemas.TicketResponse(ticket=_ticket_out(ticket), request_id=request_id)
+
+
+@router.put("/{ticket_id}/machine", response_model=schemas.TicketResponse)
+def link_machine(
+    ticket_id: str,
+    payload: schemas.TicketMachineLink,
+    db: DbSession = Depends(get_db),
+    actor=Depends(deps.current_user),
+    request_id: str = Depends(deps.request_id),
+):
+    """State which machine this ticket is about, or clear that statement.
+
+    This is the only way a ticket and a machine are ever connected. No column in
+    the source event log links an incident to an asset, so the link is a
+    person's assertion and the history records who made it. Nothing in scoring
+    or dispatch reads the field: linking a machine changes what the replacement
+    advisor counts, and nothing else.
+    """
+    ticket = ticket_service.get_ticket(db, ticket_id)
+    previous = ticket.machine_id
+    if payload.machine_id is not None:
+        machine = hardware.get_machine(db, payload.machine_id)
+        ticket.machine_id = machine.id
+        asset_tag = machine.asset_tag
+    else:
+        ticket.machine_id = None
+        asset_tag = None
+    db.flush()
+    events.record(
+        db,
+        ticket.id,
+        "TICKET_UPDATED",
+        actor_user_id=actor.id,
+        payload={
+            "field": "machine_id",
+            "previous_machine_id": previous,
+            "machine_id": ticket.machine_id,
+            "asset_tag": asset_tag,
+            "note": "operator-stated link; nothing infers it and dispatch does not read it",
+        },
+    )
+    db.commit()
+    db.refresh(ticket)
     return schemas.TicketResponse(ticket=_ticket_out(ticket), request_id=request_id)
 
 

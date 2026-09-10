@@ -87,6 +87,9 @@ class TicketOut(BaseModel):
     opened_at: datetime
     sla_due_at: datetime
     current_assignee_id: Optional[str]
+    #: Set only by a person, through the machine-link endpoint. Nothing in
+    #: dispatch or scoring reads it.
+    machine_id: Optional[str]
     risk_probability: Optional[float]
     risk_model_version: Optional[str]
     last_scored_at: Optional[datetime]
@@ -376,3 +379,155 @@ class EscalationAcknowledgeResponse(BaseModel):
     #: Unchanged by this action, and returned so the client can show that.
     ticket_status: str
     request_id: str
+
+
+# --- machines and replacement advice ----------------------------------------
+
+
+class MachineCreate(BaseModel):
+    """A machine an operator is putting on the register.
+
+    ``source_note`` is required for the same reason the SLA policy rows carry
+    one: every figure below is typed in from an organisation's own records, and
+    a screen full of costs with no stated origin is indistinguishable from a
+    screen full of invented ones.
+    """
+
+    asset_tag: str = Field(min_length=1, max_length=64)
+    location: Optional[str] = None
+    machine_type: str = "desktop"
+    age_months: int = Field(default=0, ge=0)
+    purchase_cost: float = Field(gt=0)
+    #: One value means a constant resale value; a list must align year-for-year
+    #: with ``running_cost_by_year``.
+    scrap_value_by_year: List[float] = Field(min_length=1)
+    running_cost_by_year: List[float] = Field(min_length=1)
+    source_note: str = Field(min_length=1)
+    is_active: bool = True
+
+    @field_validator("machine_type")
+    @classmethod
+    def _known_type(cls, value):
+        if value not in ("desktop", "laptop", "server", "kiosk"):
+            raise ValueError("machine_type must be desktop, laptop, server or kiosk")
+        return value
+
+
+class MachinePatch(BaseModel):
+    location: Optional[str] = None
+    machine_type: Optional[str] = None
+    age_months: Optional[int] = Field(default=None, ge=0)
+    purchase_cost: Optional[float] = Field(default=None, gt=0)
+    scrap_value_by_year: Optional[List[float]] = None
+    running_cost_by_year: Optional[List[float]] = None
+    source_note: Optional[str] = Field(default=None, min_length=1)
+    is_active: Optional[bool] = None
+
+
+class MachineOut(BaseModel):
+    id: str
+    asset_tag: str
+    location: Optional[str]
+    machine_type: str
+    age_months: int
+    age_recorded_at: datetime
+    #: The recorded age carried forward to now, which is what the advice uses.
+    current_age_months: float
+    purchase_cost: float
+    scrap_value_by_year: List[float]
+    running_cost_by_year: List[float]
+    is_active: bool
+    source_note: str
+    linked_tickets: int
+
+
+class MachineResponse(BaseModel):
+    machine: MachineOut
+    request_id: str
+
+
+class MachineListResponse(BaseModel):
+    machines: List[MachineOut]
+    request_id: str
+
+
+class ReplacementTableRow(BaseModel):
+    """One year of the average-cost table, kept so it can be checked by hand."""
+
+    year: int
+    cumulative_running_cost: float
+    total_cost: float
+    average_cost: float
+
+
+class MachineEvidenceOut(BaseModel):
+    """Tickets a person linked to this machine. Counted, never inferred."""
+
+    linked_tickets: int
+    open_linked_tickets: int
+    hardware_category_tickets: int
+    mean_risk_probability: Optional[float]
+
+
+class ReplacementAdviceOut(BaseModel):
+    machine_id: str
+    asset_tag: str
+    age_months: float
+    optimal_replacement_year: int
+    optimal_average_cost: float
+    months_until_due: float
+    #: ``replace_now`` | ``replace_soon`` | ``keep``
+    verdict: str
+    table: List[ReplacementTableRow]
+    evidence: MachineEvidenceOut
+    #: Generated from the numbers above and nothing else; the client displays it.
+    reason: str
+    source_note: str
+
+
+class ReplacementAdviceResponse(BaseModel):
+    advice: ReplacementAdviceOut
+    request_id: str
+
+
+class ReplacementAdviceListResponse(BaseModel):
+    advice: List[ReplacementAdviceOut]
+    as_of: datetime
+    request_id: str
+
+
+class GroupReplacementRequest(BaseModel):
+    """Inputs for the group-versus-individual comparison, all operator-supplied."""
+
+    n_items: int = Field(ge=1)
+    #: Probability an item first fails in each period, covering a whole life;
+    #: the service rejects a set that does not sum to 1.
+    failure_prob_by_period: List[float] = Field(min_length=1)
+    unit_replace_cost: float = Field(gt=0)
+    group_replace_cost: float = Field(gt=0)
+
+
+class GroupTableRow(BaseModel):
+    interval: int
+    average_cost: float
+
+
+class GroupReplacementResponse(BaseModel):
+    n_items: int
+    individual_average_cost: float
+    optimal_group_interval: int
+    optimal_group_average_cost: float
+    #: ``group`` or ``individual``
+    cheaper_policy: str
+    group_table: List[GroupTableRow]
+    request_id: str
+
+
+class TicketMachineLink(BaseModel):
+    """Attach a ticket to a machine, or detach it.
+
+    A null ``machine_id`` clears the link. This is a person stating which
+    machine a ticket is about; nothing derives it, and dispatch never reads it.
+    """
+
+    machine_id: Optional[str] = None

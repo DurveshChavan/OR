@@ -50,11 +50,20 @@ python -m uvicorn api.app_v2.main:app --port 8001
 cd client && npm run dev
 ```
 
-Open `http://localhost:5173/v2`.
+Open `http://localhost:5173/`. Since the phase 5 cutover this redirects to
+`/v2`, which is the version-2 application.
 
-The legacy Operations Research demo is still the default route at
-`http://localhost:5173/` and still works; start it with
-`python -m uvicorn api.main:app --port 8000` if it is going to be shown.
+The legacy Operations Research demo moved to `http://localhost:5173/legacy` and
+still works exactly as before; every one of its old paths (`/assignment`,
+`/staffing`, and the rest) redirects there rather than breaking. Start its API
+with `python -m uvicorn api.main:app --port 8000` if it is going to be shown -
+without it the legacy pages show their own error states.
+
+The cutover is reversible until after the presentation:
+
+```bash
+cd client && VITE_DEFAULT_APP=legacy npm run dev   # `/` serves the OR demo again
+```
 
 Confirm the build before signing in:
 

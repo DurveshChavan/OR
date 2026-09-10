@@ -212,6 +212,13 @@ class Ticket(Base):
     current_assignee_id: Mapped[str] = mapped_column(
         IdColumn, ForeignKey("agents.id"), nullable=True
     )
+    #: The machine this ticket is about, if a human said so. Nullable and
+    #: operator-set: no column in UCI-498 links an incident to an asset, so a
+    #: value here is a person's statement and never an inference. Nothing in
+    #: dispatch reads it.
+    machine_id: Mapped[str] = mapped_column(
+        IdColumn, ForeignKey("machines.id"), nullable=True
+    )
     risk_probability: Mapped[float] = mapped_column(Float, nullable=True)
     risk_model_version: Mapped[str] = mapped_column(String(64), nullable=True)
     last_scored_at: Mapped[object] = mapped_column(UtcDateTime, nullable=True)
@@ -234,6 +241,7 @@ class Ticket(Base):
         Index("ix_tickets_status_sla_due_at", "status", "sla_due_at"),
         Index("ix_tickets_status_priority_risk", "status", "priority", "risk_probability"),
         Index("ix_tickets_current_assignee_id", "current_assignee_id"),
+        Index("ix_tickets_machine_id", "machine_id"),
     )
 
 
@@ -314,4 +322,60 @@ class TicketEvent(Base):
         # order is stable when two events share a timestamp.
         Index("ix_ticket_events_ticket_id_occurred_at", "ticket_id", "occurred_at", "id"),
         Index("ix_ticket_events_decision_id", "decision_id"),
+    )
+
+
+#: Machine families the replacement model treats differently. The engine's
+#: ALPHA_BY_TYPE assumes a laptop wears faster than a desktop; that is a
+#: documented assumption, not a measurement, and the advisor screen says so.
+MACHINE_TYPES = ("desktop", "laptop", "server", "kiosk")
+
+
+class Machine(Base):
+    """One workstation the service desk supports, entered by a manager.
+
+    **Where this data comes from, stated in the schema because the answer
+    decides whether the whole feature is honest.** UCI-498 has no ticket-to-asset
+    join and no hardware telemetry, so nothing here is mined, inferred or
+    modelled from the incident log. Every column is typed in by an operator from
+    their own asset register or purchasing records. The replacement advice is
+    therefore a decision-support calculation over the organisation's own numbers,
+    not a prediction about hardware this project has observed.
+
+    ``running_cost_by_year`` is the yearly maintenance-plus-downtime cost the
+    operator attributes to this machine, oldest year first. It is what makes the
+    deteriorating-item average-cost method applicable: the method needs a rising
+    running cost and a falling resale value, and both are organisational facts.
+    """
+
+    __tablename__ = "machines"
+
+    id: Mapped[str] = mapped_column(IdColumn, primary_key=True, default=new_id)
+    asset_tag: Mapped[str] = mapped_column(String(64), nullable=False, unique=True)
+    location: Mapped[str] = mapped_column(String(64), nullable=True)
+    machine_type: Mapped[str] = mapped_column(String(16), nullable=False, default="desktop")
+    #: Age in whole months at the moment the operator recorded it, together with
+    #: when that was, so the advisor can age it forward without anyone editing
+    #: the row every month.
+    age_months: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    age_recorded_at: Mapped[object] = mapped_column(UtcDateTime, nullable=False, default=utcnow)
+    purchase_cost: Mapped[float] = mapped_column(Float, nullable=False)
+    #: Resale value, oldest year first, aligned with running_cost_by_year. A
+    #: single-element list means a constant resale value.
+    scrap_value_by_year_json: Mapped[dict] = mapped_column(CanonicalJson, nullable=False)
+    running_cost_by_year_json: Mapped[dict] = mapped_column(CanonicalJson, nullable=False)
+    is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    #: Free text: where the operator got these numbers. Required, for the same
+    #: reason the SLA policy rows carry a source note.
+    source_note: Mapped[str] = mapped_column(Text, nullable=False)
+    created_at: Mapped[object] = mapped_column(UtcDateTime, nullable=False, default=utcnow)
+    updated_at: Mapped[object] = mapped_column(
+        UtcDateTime, nullable=False, default=utcnow, onupdate=utcnow
+    )
+
+    __table_args__ = (
+        CheckConstraint(_in_set("machine_type", MACHINE_TYPES), name="ck_machines_type"),
+        CheckConstraint("age_months >= 0", name="ck_machines_age_non_negative"),
+        CheckConstraint("purchase_cost > 0", name="ck_machines_purchase_positive"),
+        Index("ix_machines_location", "location"),
     )
