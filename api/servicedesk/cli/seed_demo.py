@@ -2,18 +2,31 @@
 
     python -m api.servicedesk.cli.seed_demo
 
-Everything created here is labelled as demo data, because the alternative is a
-screenshot of invented numbers that later gets quoted as a result:
+The tickets are real incidents from the UCI-498 incident management event log,
+not invented ones. Three properties of that choice matter and are enforced here
+rather than assumed:
 
-* the SLA policy rows carry the required source note saying they are
-  illustrative and must be replaced with an organisation's own policy;
-* agents are named fictional resolvers, not random draws, and their tickets are
-  stored with ``source = "seed_demo"``;
-* no ticket here comes from UCI-498, so nothing in the demo database can be
-  mistaken for a measured result.
+* **held out.** Every seeded incident comes from the ``test`` split, the 3,499
+  records the risk and duration models never saw while being fitted. A demo
+  seeded from training rows would show the model its own memorised examples and
+  present the answer as a prediction.
+* **chosen, not sampled.** 3,333 of those 3,499 are priority 3, so a random draw
+  shows one tier and one outcome. The set below is picked so that one batch of
+  recommendations reaches every outcome the dispatcher can produce.
+  ``scripts/select_demo_incidents.py`` is that selection, kept in the repository
+  so the choice can be checked rather than taken on trust.
+* **placed in the demo window.** The incidents opened in 2016 and the
+  application measures a deadline against the clock, so each ticket is opened at
+  a stated offset before now. That offset is the only figure here that does not
+  come from the dataset, and it is recorded on the ticket's creation event.
 
-The command is idempotent: it refuses to seed a database that already has
-users, so re-running it cannot quietly double a roster.
+Everything that is *not* a ticket is still illustrative and still carries a
+required source note saying so: the SLA policy rows, the four resolvers and the
+machine register, because UCI-498 has no SLA policy, no roster and no asset
+table.
+
+The command is idempotent: it refuses to seed a database that already has users,
+so re-running it cannot quietly double a roster.
 """
 import argparse
 import sys
@@ -40,37 +53,57 @@ DEMO_POLICIES = (
     (4, 1440, 1.0, 0.8, 1.4, 0.1, 0.80),
 )
 
+#: The roster is illustrative - UCI-498 has no resolver table, and the
+#: assignment group it does carry was excluded from the model as leakage. The
+#: skills are named after the dataset's own categories, which are anonymised at
+#: source ("Category 42", not "Network"); renaming them to something that reads
+#: better would be inventing the one field the dispatcher routes on.
+#:
+#: Nine slots across this roster hold Category 42 and ten Category 42 tickets
+#: are seeded, so one of them is always queued rather than assigned.
 DEMO_AGENTS = (
     # display name, wip limit, [(skill, multiplier, is_primary)]
-    ("Resolver 12 (demo)", 3, [("network", 0.9, True), ("hardware", 1.3, False)]),
-    ("Resolver 17 (demo)", 4, [("network", 1.0, True)]),
-    ("Resolver 21 (demo)", 2, [("database", 0.95, True), ("network", 1.4, False)]),
-    ("Resolver 34 (demo)", 3, [("hardware", 1.0, True), ("desktop", 1.1, False)]),
+    ("Resolver 12 (demo)", 3, [("Category 42", 0.9, True), ("Category 46", 1.3, False)]),
+    ("Resolver 17 (demo)", 4, [("Category 42", 1.0, True)]),
+    ("Resolver 21 (demo)", 2, [("Category 26", 0.95, True), ("Category 42", 1.4, False)]),
+    ("Resolver 34 (demo)", 3, [("Category 46", 1.0, True), ("Category 53", 1.1, False)]),
 )
 
-#: The set is chosen so that one batch of recommendations reaches every
-#: outcome the application can produce, rather than only the happy one. With
-#: nine network slots across the roster, ten network tickets guarantee at least
-#: one ``queued`` decision; INC-DEMO-0012 needs a skill nobody holds, which is
-#: the ``no_eligible_agent`` outcome; INC-DEMO-0007 and INC-DEMO-0008 open far
-#: enough in the past to be overdue when they are seeded, so Risk Radar has a
-#: recovery group and the demo does not have to wait for one.
+#: Real held-out incidents, printed by ``scripts/select_demo_incidents.py``.
+#: Priority, category, subcategory, location and contact type are the record's
+#: own values, unchanged. The last column is the demo's own: how many minutes
+#: before now the ticket is opened, because the record's 2016 timestamp would
+#: read as ten years overdue against the clock.
+#:
+#: The mix is deliberate. Ten Category 42 tickets against nine Category 42 slots
+#: guarantee a ``queued`` decision; INC0031021 is Category 23, which no seeded
+#: resolver holds, and is the ``no_eligible_agent`` outcome; INC0030987 and
+#: INC0032909 sit far enough back to be overdue on arrival, so Risk Radar has a
+#: recovery group without anyone waiting for one.
 DEMO_TICKETS = (
-    # reference, priority, skill, category, minutes since opening
-    ("INC-DEMO-0001", 1, "network", "Network", 25),
-    ("INC-DEMO-0002", 2, "database", "Database", 90),
-    ("INC-DEMO-0003", 2, "network", "Network", 200),
-    ("INC-DEMO-0004", 3, "hardware", "Hardware", 30),
-    ("INC-DEMO-0005", 3, "desktop", "Desktop", 400),
-    ("INC-DEMO-0006", 4, "network", "Network", 15),
-    ("INC-DEMO-0007", 1, "network", "Network", 200),
-    ("INC-DEMO-0008", 2, "network", "Network", 320),
-    ("INC-DEMO-0009", 3, "network", "Network", 45),
-    ("INC-DEMO-0010", 3, "network", "Network", 60),
-    ("INC-DEMO-0011", 4, "network", "Network", 120),
-    ("INC-DEMO-0012", 2, "mainframe", "Mainframe", 35),
-    ("INC-DEMO-0013", 3, "network", "Network", 10),
-    ("INC-DEMO-0014", 4, "network", "Network", 5),
+    # incident, priority, category, subcategory, location, contact, minutes ago
+    ("INC0030036", 1, "Category 42", "Subcategory 31", "Location 45", "Phone", 25),
+    ("INC0030553", 2, "Category 42", "Subcategory 183", "Location 188", "Phone", 90),
+    ("INC0031735", 2, "Category 42", "Subcategory 29", "Location 204", "Phone", 200),
+    ("INC0029952", 3, "Category 46", "Subcategory 233", "Location 161", "Phone", 30),
+    ("INC0029939", 3, "Category 26", "Subcategory 164", "Location 82", "Phone", 400),
+    ("INC0030139", 4, "Category 42", "Subcategory 223", "Location 204", "Phone", 15),
+    ("INC0030987", 1, "Category 42", "Subcategory 223", "Location 204", "Phone", 200),
+    ("INC0032909", 2, "Category 42", "Subcategory 223", "Location 161", "Phone", 320),
+    ("INC0029946", 3, "Category 42", "Subcategory 223", "Location 42", "Phone", 45),
+    ("INC0029947", 3, "Category 42", "Subcategory 223", "Location 108", "Phone", 60),
+    ("INC0030347", 4, "Category 42", "Subcategory 223", "Location 204", "Phone", 120),
+    ("INC0031021", 2, "Category 23", "Subcategory 174", "Location 143", "Phone", 35),
+    ("INC0029953", 3, "Category 53", "Subcategory 178", "Location 204", "Phone", 10),
+    ("INC0030422", 4, "Category 42", "Subcategory 223", "Location 143", "Phone", 5),
+)
+
+#: Where the seeded incidents come from, repeated into every seeded ticket's
+#: creation event so the audit trail carries the provenance itself rather than a
+#: document beside it claiming to.
+DEMO_TICKET_PROVENANCE = (
+    "UCI-498 incident management process enriched event log, held-out split; "
+    "record fields unchanged, opened_at placed in the demo window"
 )
 
 #: Four machines, with the same honesty rule as everything else here: these are
@@ -103,9 +136,9 @@ DEMO_MACHINES = (
 #: Which seeded tickets a person has said are about which machine. Operator
 #: statements, seeded so the advisor has evidence to count; nothing derives them.
 DEMO_TICKET_MACHINE_LINKS = {
-    "INC-DEMO-0004": "WS-1004",
-    "INC-DEMO-0005": "WS-1004",
-    "INC-DEMO-0009": "WS-1002",
+    "INC0029952": "WS-1004",
+    "INC0029939": "WS-1004",
+    "INC0029946": "WS-1002",
 }
 
 DEMO_USERS = (
@@ -187,7 +220,8 @@ def seed(force: bool = False) -> dict:
             machines[asset_tag] = machine
 
         policies = {p.priority: p for p in db.scalars(select(models.SlaPolicy)).all()}
-        for reference, priority, skill, category, age_minutes in DEMO_TICKETS:
+        for row in DEMO_TICKETS:
+            reference, priority, category, subcategory, location, contact, age_minutes = row
             opened_at = now - timedelta(minutes=age_minutes)
             ticket = models.Ticket(
                 external_reference=reference,
@@ -195,7 +229,12 @@ def seed(force: bool = False) -> dict:
                 status="open",
                 priority=priority,
                 category=category,
-                required_skill=skill,
+                subcategory=subcategory,
+                location=location,
+                contact_type=contact,
+                # The dataset has no resolver-skill column, so the category the
+                # incident was actually filed under is what routing reads.
+                required_skill=category,
                 opened_at=opened_at,
                 sla_due_at=opened_at + timedelta(minutes=policies[priority].target_minutes),
             )
@@ -206,7 +245,12 @@ def seed(force: bool = False) -> dict:
                 ticket.id,
                 "TICKET_CREATED",
                 actor_user_id=users["manager"].id,
-                payload={"source": "seed_demo", "seed_reference": reference},
+                payload={
+                    "source": "seed_demo",
+                    "seed_reference": reference,
+                    "provenance": DEMO_TICKET_PROVENANCE,
+                    "opened_at_offset_minutes": age_minutes,
+                },
             )
             # The demo ships with committed artifacts, so a seeded ticket is a
             # scored ticket. If they are missing the seed still completes and

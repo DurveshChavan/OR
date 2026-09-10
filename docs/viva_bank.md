@@ -395,11 +395,24 @@ executed. The trigger rejection is therefore proven in SQLite only. And nobody
 other than the author has followed the demo script on a clean machine.
 
 **F4. Is any part of this project synthetic?**
-The demo database, and it is labelled on screen as offline demo data — tickets
-named `INC-DEMO-*`, resolvers named `Resolver NN (demo)`, SLA rows carrying a
-note saying they must be replaced with a real policy. No result in the report
-comes from it. The earlier synthetic ticket/agent/workstation universe was
-removed from the production build entirely.
+Part of the demo database, and the screen says which part. The tickets are not:
+each is a real UCI-498 incident from the held-out split, with the record's own
+incident number, priority, category, subcategory, location and contact type. The
+resolvers, the SLA policy rows and the machine register are illustrative and each
+carries a source note saying so, because UCI-498 has no roster, no SLA policy and
+no asset table. One further thing is the demo's own: a seeded ticket is opened at
+a stated offset inside the demo window rather than in 2016, because a deadline is
+measured against the clock; that offset is recorded on the ticket's creation
+event. No result in the report comes from this database. The earlier synthetic
+ticket/agent/workstation universe was removed from the product entirely.
+
+**F4-bis. Why the held-out split specifically?**
+Because a demo seeded from training rows shows the model its own memorised
+examples and calls the answer a prediction. The numbers would look better and
+mean less.
+`tests/servicedesk/test_demo_seed_provenance.py::test_every_seeded_ticket_comes_from_the_held_out_split`
+checks each seeded incident against the dataset's `split` column, so the claim
+fails a test rather than resting on a comment.
 
 **F5. How does the project justify the "Hardware Replacement" in its title?**
 With the machine register and its replacement advice, which is a screen a

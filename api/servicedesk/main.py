@@ -1,14 +1,18 @@
 """The service-desk FastAPI application.
 
-Runs beside the legacy Operations Research API, never on top of it::
+Two processes serve this project, and they are separate on purpose::
 
-    uvicorn api.main:app        --port 8000    # legacy demo, still the default
-    uvicorn api.servicedesk.main:app --port 8001    # this application
+    uvicorn api.servicedesk.main:app --port 8001    # the product
+    uvicorn api.main:app             --port 8000    # the Operations Research engine
 
-Everything is mounted under ``/api`` so the two can be served together
-during the transition and the legacy route stays the default until the phase 5
-cutover. This package imports nothing from ``api.engine``: the OR modules stay
-exactly as the viva will read them.
+The product is what a dispatcher uses. The engine is what the Methods section
+reads, and it answers on its own port so the two never collide on ``/api``; the
+dev server reaches it through an ``/or-api`` prefix it strips.
+
+The product imports one thing from ``api.engine``: the deteriorating-item
+replacement method, which the Hardware screen shows. That is deliberate, and it
+is the only one - reimplementing an average-cost table inside the application
+would create a second definition of a figure that gets checked by hand.
 
 Handlers are synchronous, and so are the database sessions. For a single
 machine serving one dispatch team that is a smaller thing to explain and a
@@ -37,7 +41,7 @@ API_PREFIX = "/api"
 
 app = FastAPI(
     title="SLA-aware service desk (the application)",
-    version="2.0.0-phase3",
+    version="1.0.0",
     description=(
         "SLA-aware ticket allocation with an auditable decision history. "
         "Authentication, tickets, agents, the audit trail, recommendation, "

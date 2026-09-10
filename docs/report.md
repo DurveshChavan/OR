@@ -122,6 +122,45 @@ A sensitivity excluding the log's first three weeks was **declared in writing
 before the test period was touched**, so that dropping them later could not be a
 reaction to a test number.
 
+### 3A. What the running demo is seeded with
+
+The demo database is separate from everything above, and it holds no result. It
+matters only because it is what a reader sees on screen, so what is in it is
+stated here rather than left to be inferred.
+
+**The tickets are real incidents, from the held-out split.** Each of the
+fourteen is a UCI-498 record carrying its own incident number, priority,
+category, subcategory, location and contact type. All fourteen come from the
+`test` split — the 3,499 incidents neither model saw while being fitted. That
+restriction is the point of the paragraph: a demo seeded from training rows puts
+the model's own memorised examples on screen and calls the output a prediction.
+`tests/servicedesk/test_demo_seed_provenance.py` checks each seeded incident
+against the dataset's `split` column and each field against the record, so this
+is a failing test rather than a claim.
+
+**The incidents are chosen, and the choice is in the repository.** 3,333 of the
+3,499 held-out records are priority 3, so a random draw would show one tier and
+one dispatch outcome. `scripts/select_demo_incidents.py` picks a mix that
+reaches all three: ten Category 42 tickets against nine Category 42 slots force
+a queued decision, one Category 23 ticket forces the refusal because no seeded
+resolver holds it, and two are placed far enough back to be overdue on arrival.
+A live batch returns 11 recommended, 2 queued, 1 no eligible agent.
+
+**One field is the demo's own, and it is recorded as such.** These incidents
+opened in 2016 and the application measures a deadline against the clock, so
+each ticket is opened at a stated offset inside the demo window instead. The
+offset is written into the ticket's `TICKET_CREATED` event alongside the
+provenance string, so the audit trail carries the transformation rather than a
+document beside it describing one.
+
+**What is still illustrative, and says so.** The four resolvers, the SLA policy
+rows and the machine register. UCI-498 has no roster, no SLA policy and no asset
+table, so those are invented figures, each row carrying a required source note.
+The interface states the whole of this in one line in the footer rather than as
+an alert repeated on every screen: an alert bar is for a condition a reader has
+to act on, and the one that still qualifies is "no risk artifact loaded,
+dispatch blocked".
+
 ## 4. Models
 
 Both are trained offline. The API only loads a frozen artifact and scores a
@@ -509,6 +548,9 @@ Reported here rather than left implied by a green-looking checklist.
 | **Audit-trigger rejection in PostgreSQL** | **OPEN**, for the same reason. |
 | **A second person follows the demo script on a clean machine** | **OPEN.** Every step was executed on the development machine only. |
 | Hardware register and replacement advice | **Closed.** 16 tests, including the year-by-year average-cost table and the group-replacement renewal table worked out by hand, and a test that the advice cannot move a dispatch decision. |
+| Demo seeded from real held-out records | **Closed.** All fourteen seeded tickets are UCI-498 incidents from the `test` split, fields unchanged, checked field by field against the dataset by `tests/servicedesk/test_demo_seed_provenance.py`. A live batch returns 11 recommended, 2 queued, 1 no eligible agent. |
+| Dependency advisories | **Closed** on 2026-09-10. `npm audit` reported two moderate advisories in `react-router-dom` 6.30.6 (open redirect via `<Link>`/`useNavigate`, and constructor injection in SSR hydration). Neither was reachable — this build has no SSR and every navigation target is an internal constant or a server-issued identifier — but the router was moved to 7.x and Vite to 7.x regardless. `npm audit` now reports zero. |
+| Secrets and exposed files | **Closed.** No `.env`, key, certificate or database file is tracked, and none appears anywhere in the history. The only credentials in the repository are the demo passwords the seed command prints on purpose. Passwords are Argon2id; the session cookie is `httponly`, `samesite=lax`, and `secure` whenever the scheme is HTTPS. |
 | One application, no separate demo | **Closed.** The Operations Research pages are the `/methods` section; every path they used to live at redirects there. Verified in a browser with both processes running. |
 
 The viva runs on the SQLite path, which is closed. The open items are real and

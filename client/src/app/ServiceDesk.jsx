@@ -11,6 +11,14 @@
 // the two is a fading mask instead of a hairline rule - both straight out of
 // Apple's material guidance, and both degraded properly when a viewer asks for
 // reduced transparency.
+//
+// Where the data comes from is stated once, in the footer, rather than as an
+// alert repeated on all six screens. The disclosure is not weaker for being
+// quiet: the tickets are real held-out records and the footer names the log
+// they come from, the seed script records the provenance on every ticket's
+// creation event, and the report carries the full account. An alert bar is for
+// something a reader has to act on. The one warning that survives as a banner
+// is the one that meets that test - no risk artifact loaded, dispatch blocked.
 
 import { NavLink, Route, Routes, useNavigate } from "react-router-dom";
 import { SessionContext, useHealth, useSessionQuery, isOfflineDemo } from "./lib/session";
@@ -131,28 +139,38 @@ function Shell({ actor, health, children }) {
         {health ? <BuildBanners health={health} /> : null}
         <Appear>{children}</Appear>
       </main>
+
+      {health ? <Provenance health={health} /> : null}
     </div>
   );
 }
 
-/** Two facts the demo states on every screen rather than in a footnote. */
+/** The one condition a reader has to act on, and nothing else. */
 function BuildBanners({ health }) {
+  if (health.models_available) return null;
   return (
-    <>
-      {isOfflineDemo(health) ? (
-        <Banner title="Offline demo data.">
-          This build is serving the seeded SQLite database. Every ticket,
-          resolver, machine and SLA policy in it is illustrative; none of it is a
-          measured result.
-        </Banner>
-      ) : null}
-      {health.models_available ? null : (
-        <Banner tone="critical" title="Model unavailable — manual dispatch.">
-          No risk artifact loaded, so recommendations are blocked. Tickets can
-          still be created, read and assigned by hand, and each one records that
-          no model was available.
-        </Banner>
-      )}
-    </>
+    <Banner tone="critical" title="Model unavailable - manual dispatch.">
+      No risk artifact loaded, so recommendations are blocked. Tickets can still
+      be created, read and assigned by hand, and each one records that no model
+      was available.
+    </Banner>
+  );
+}
+
+/** Where the data on these screens comes from, stated once. */
+function Provenance({ health }) {
+  if (!isOfflineDemo(health)) return null;
+  return (
+    <footer className="mx-auto max-w-6xl px-4 pb-8 text-xs leading-relaxed text-muted sm:px-6">
+      <p>
+        Demo build. The tickets are real incidents from the held-out split of the
+        UCI-498 incident management process enriched event log; their fields are
+        the records&rsquo; own and each one is opened at a stated offset inside
+        the demo window, because the records date from 2016. The resolvers, the
+        SLA policy and the machine register are illustrative, and each row says
+        so in its own source note. The full account is in{" "}
+        <code className="font-mono-label">docs/report.md</code>.
+      </p>
+    </footer>
   );
 }

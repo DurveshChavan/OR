@@ -8,11 +8,22 @@ If any step below asks for the network, the demo is not ready.
 
 ## What is on screen, and what it is not
 
-The seeded database is illustrative. The tickets are named `INC-DEMO-*`, the
-resolvers are named `Resolver NN (demo)`, and the SLA policy rows carry a note
-saying they must be replaced with an organisation's own policy. Nothing in this
-database is a measured result, and the interface says so in a banner on every
-screen.
+The tickets are real. Each one is an incident from the held-out split of
+UCI-498, carrying the record's own incident number, priority, category,
+subcategory, location and contact type. Held-out matters: those are the 3,499
+records the risk and duration models never saw while being fitted, so a risk
+figure on screen is a prediction rather than a memory. The one thing that is not
+the record's own is the opening time - the incidents are from 2016 and a
+deadline is measured against the clock, so each ticket is opened at a stated
+offset inside the demo window, and the offset is written into the ticket's
+creation event.
+
+Everything that is not a ticket is illustrative and says so in its own source
+note: the four resolvers, the SLA policy rows and the machine register, because
+UCI-498 carries no roster, no SLA policy and no asset table. The footer of every
+screen states all of this in one line.
+
+No number in the report comes from this database.
 
 The measured results live elsewhere and are read, not demonstrated live:
 `docs/results/replay-2026-09-10-a1.md` for the policy comparison,
@@ -35,11 +46,18 @@ Expected output: 2 users, 4 policies, 4 agents, 14 tickets, 4 machines, and the
 line
 `sign in as dispatcher.demo or manager.demo with password local-demo-password`.
 
-The fourteen tickets are chosen so one batch reaches every outcome the
-application can produce: ten need the `network` skill against nine network
-slots, so at least one comes back **queued**; `INC-DEMO-0012` needs a
-`mainframe` skill nobody holds, which is **no eligible agent**; `INC-DEMO-0007`
-and `INC-DEMO-0008` are already **overdue** when they are seeded.
+The fourteen incidents are chosen, not sampled - 3,333 of the 3,499 held-out
+records are priority 3, so a random draw would show one tier and one outcome.
+`scripts/select_demo_incidents.py` is the selection, and it is kept in the
+repository so the choice can be checked. It picks them so one batch reaches
+every outcome the application can produce: ten are Category 42 against nine
+Category 42 slots, so at least one comes back **queued**; `INC0031021` is
+Category 23, which no resolver holds, and is **no eligible agent**; `INC0030987`
+and `INC0032909` are already **overdue** when they are seeded.
+
+The categories read as `Category 42`, not `Network`, because that is how they
+are in the source - UCI-498 anonymises them. Renaming them to something more
+readable would mean inventing the one field the dispatcher routes on.
 
 ## 2 · Start the processes
 
@@ -80,8 +98,11 @@ Times are shown in the browser's zone and stored in UTC; the header names the
 zone.
 
 1. **Sign in** as `dispatcher.demo` / `local-demo-password`.
-   Point out the *Offline demo data* banner: it is driven by the API reporting a
-   SQLite dialect, not by a build flag, so a screenshot cannot claim otherwise.
+   Point out the provenance line in the footer. It is driven by the API
+   reporting a SQLite dialect, not by a build flag, so a screenshot cannot claim
+   otherwise. Read it out: the tickets are real held-out UCI-498 incidents, the
+   roster and policy are illustrative, and the opening times are placed in the
+   demo window because the records are from 2016.
 
 2. **Queue.** Fourteen tickets, soonest deadline first. Each row carries the SLA
    clock as text, the risk as a **band with the model version under it**, and
@@ -89,7 +110,7 @@ zone.
    (`impact`, `urgency`, `u_symptom`) do not exist in this application, so a
    bare percentage would be more precise than the input deserves.
 
-3. **Create a ticket** with *New ticket* — P2, skill `network`. The deadline is
+3. **Create a ticket** with *New ticket* — P2, skill `Category 42`. The deadline is
    not typed in: it comes from the SLA policy for that priority. The ticket is
    scored in the same transaction that creates it.
 

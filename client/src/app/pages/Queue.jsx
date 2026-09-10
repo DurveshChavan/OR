@@ -283,7 +283,7 @@ function NewTicket({ onCreated }) {
             onChange={(event) =>
               setForm({ ...form, external_reference: event.target.value })
             }
-            placeholder="INC-DEMO-0100"
+            placeholder="INC0031234"
           />
         </Field>
         <Field label="Priority">
