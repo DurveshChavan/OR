@@ -254,12 +254,17 @@ function Recommendation({ detail, ticket, agents, stale, actor, onActed }) {
         ) : null}
       </div>
 
-      <Alternatives alternatives={alternatives} note={note} />
+      <Alternatives
+        alternatives={alternatives}
+        note={note}
+        state={decision.state}
+      />
 
       <OverrideForm
         decisionId={decision.decision_id}
         ticket={ticket}
         agents={agents}
+        alternatives={alternatives}
         recommendedId={decision.recommended_agent?.id}
         onActed={onActed}
       />
@@ -267,19 +272,38 @@ function Recommendation({ detail, ticket, agents, stale, actor, onActed }) {
   );
 }
 
-function Alternatives({ alternatives, note }) {
+//: What the list means depends on what the solve decided. For a recommended
+//: decision these are the runners-up; for a queued one the solve chose the
+//: queue over all of them, and calling them "alternatives" without saying that
+//: would suggest a resolver was available and passed over.
+const ALTERNATIVES_HEADING = {
+  recommended: "other resolvers the solve priced",
+  queued: "resolvers the solve priced before choosing the queue",
+  no_eligible_agent: "resolvers the solve priced",
+};
+
+function Alternatives({ alternatives, note, state }) {
   if (!alternatives.length) {
     return (
       <Empty>
-        No other eligible resolver was priced for this ticket at that moment.
+        {state === "no_eligible_agent"
+          ? "No resolver holds the required skill, so nothing was priced."
+          : "No other eligible resolver was priced for this ticket at that moment."}
       </Empty>
     );
   }
   return (
     <div>
       <p className="font-mono-label text-[10px] text-muted">
-        alternatives the solve priced
+        {ALTERNATIVES_HEADING[state] || "resolvers the solve priced"}
       </p>
+      {state === "queued" ? (
+        <p className="mt-1 text-xs text-muted">
+          Every one of these was priced above the queue for this ticket, or its
+          slot went to another ticket in the same tier. Overriding to one of
+          them is a human decision the solve did not make.
+        </p>
+      ) : null}
       <div className="mt-2 overflow-x-auto">
         <table className="w-full min-w-[560px] border-collapse text-sm">
           <thead>
@@ -317,10 +341,29 @@ function Alternatives({ alternatives, note }) {
   );
 }
 
-function OverrideForm({ decisionId, ticket, agents, recommendedId, onActed }) {
+function OverrideForm({
+  decisionId,
+  ticket,
+  agents,
+  alternatives,
+  recommendedId,
+  onActed,
+}) {
+  // Two sets, and the difference is visible on purpose. The alternatives table
+  // above holds resolvers the solve actually priced; this dropdown also lists
+  // resolvers who were at their WIP limit when the batch solved and therefore
+  // had no column in the cost matrix at all. They are still worth offering -
+  // capacity may have freed since - but they carry no cost, and the server
+  // re-checks eligibility at submit and can still refuse with
+  // AGENT_NOT_ELIGIBLE. Showing one flat list would have implied the solve
+  // considered all of them.
+  const priced = new Map(
+    (alternatives || []).map((one) => [one.agent_id, one.total_cost])
+  );
   const choices = eligibleAgents(agents, ticket.required_skill).filter(
     (agent) => agent.id !== recommendedId
   );
+  const unpriced = choices.filter((agent) => !priced.has(agent.id));
   const [agentId, setAgentId] = useState("");
   const [reason, setReason] = useState("");
   const override = useMutation({
@@ -367,7 +410,10 @@ function OverrideForm({ decisionId, ticket, agents, recommendedId, onActed }) {
               <option value="">choose a resolver</option>
               {choices.map((agent) => (
                 <option key={agent.id} value={agent.id}>
-                  {agent.display_name} (WIP {agent.wip_limit})
+                  {agent.display_name}
+                  {priced.has(agent.id)
+                    ? ` — cost ${formatCost(priced.get(agent.id))}`
+                    : " — not priced in this solve"}
                 </option>
               ))}
             </select>
@@ -386,6 +432,15 @@ function OverrideForm({ decisionId, ticket, agents, recommendedId, onActed }) {
           </label>
         </div>
       )}
+
+      {unpriced.length ? (
+        <p className="mt-2 text-xs text-muted">
+          {unpriced.length} resolver(s) in this list were at their WIP limit when
+          the batch solved, so the solve never priced them. They are offered
+          because capacity may have freed since; eligibility is re-checked when
+          the override is submitted.
+        </p>
+      ) : null}
 
       {override.error ? (
         <div className="mt-3">
