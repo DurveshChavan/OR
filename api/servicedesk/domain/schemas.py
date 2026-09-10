@@ -465,7 +465,6 @@ class MachineEvidenceOut(BaseModel):
 
     linked_tickets: int
     open_linked_tickets: int
-    hardware_category_tickets: int
     mean_risk_probability: Optional[float]
 
 

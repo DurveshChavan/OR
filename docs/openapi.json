@@ -856,10 +856,6 @@
       "MachineEvidenceOut": {
         "description": "Tickets a person linked to this machine. Counted, never inferred.",
         "properties": {
-          "hardware_category_tickets": {
-            "title": "Hardware Category Tickets",
-            "type": "integer"
-          },
           "linked_tickets": {
             "title": "Linked Tickets",
             "type": "integer"
@@ -883,7 +879,6 @@
         "required": [
           "linked_tickets",
           "open_linked_tickets",
-          "hardware_category_tickets",
           "mean_risk_probability"
         ],
         "title": "MachineEvidenceOut",

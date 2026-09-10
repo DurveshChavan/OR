@@ -7,21 +7,21 @@ archived: they are the `/methods` section of the application.
 
 `tests/test_m0.py` through `tests/test_m7.py`, `tests/test_pipeline.py` and
 `tests/test_api.py` import `api.engine` and `api.main` by their real paths. 95
-of the repository's tests are legacy tests. Moving the modules would break all
-of them; copying them would create two definitions of the same eight OR modules,
-and the copy would quietly drift from the one the tests actually exercise.
+of the repository's tests are these. Moving the modules would break all of them;
+copying them would create two definitions of the same eight OR modules, and the
+copy would quietly drift from the one the tests actually exercise.
 
-So the legacy application stays exactly where it always was, still runnable,
-still tested on every commit:
+So the modules stay exactly where they always were, still runnable, still tested
+on every commit:
 
 | What | Where |
 |---|---|
 | OR engine, one module per technique | `api/engine/` |
-| Legacy FastAPI routes (no OR logic) | `api/main.py` |
-| Legacy React pages | `client/src/pages/`, `client/src/components/`, `client/src/hooks/` |
-| Legacy tests | `tests/test_m*.py`, `tests/test_pipeline.py`, `tests/test_api.py` |
+| The engine's FastAPI routes (no OR logic) | `api/main.py` |
+| The screens, now the `/methods` section | `client/src/pages/`, `client/src/components/`, `client/src/hooks/` |
+| Their tests | `tests/test_m*.py`, `tests/test_pipeline.py`, `tests/test_api.py` |
 | Worked examples for the oral exam | test docstrings in `tests/test_m*.py` and `tests/servicedesk/test_hardware.py` |
-| Pre-cutover state | git tag `legacy-or-final` (local, at `b82a7cc`) |
+| State before the sections were merged | git tag `legacy-or-final` (local, at `b82a7cc`) |
 
 ## Running them
 

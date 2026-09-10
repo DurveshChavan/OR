@@ -169,7 +169,7 @@ function Provenance({ health }) {
         the demo window, because the records date from 2016. The resolvers, the
         SLA policy and the machine register are illustrative, and each row says
         so in its own source note. The full account is in{" "}
-        <code className="font-mono-label">docs/report.md</code>.
+        <code>docs/report.md</code>.
       </p>
     </footer>
   );

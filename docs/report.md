@@ -138,6 +138,14 @@ the model's own memorised examples on screen and calls the output a prediction.
 against the dataset's `split` column and each field against the record, so this
 is a failing test rather than a claim.
 
+**The category is what routing reads, and it is a proxy.** UCI-498 has no
+resolver-skill column, so a seeded ticket's `required_skill` is the category the
+incident was actually filed under, and the seeded roster holds skills with those
+same names. That is a proxy and should be read as one: a real deployment maps
+categories to the skills its resolvers actually hold. Naming the categories
+something more readable — `Network` for `Category 42` — would have hidden the
+proxy behind an invented field, which is the one field dispatch routes on.
+
 **The incidents are chosen, and the choice is in the repository.** 3,333 of the
 3,499 held-out records are priority 3, so a random draw would show one tier and
 one dispatch outcome. `scripts/select_demo_incidents.py` picks a mix that
@@ -440,9 +448,18 @@ no failure is predicted, and the incident log contributes nothing to it.
 
 **Tickets connect to machines only when a person says so.**
 `tickets.machine_id` is set through one endpoint, by a signed-in user, and the
-history records who did it. The advisor counts those links — how many tickets,
-how many still open, how many in a hardware category — and shows the count as
-context beside the verdict. The count is not an input to the arithmetic.
+history records who did it. The advisor counts those links — how many tickets
+and how many still open — and shows the count as context beside the verdict.
+The count is not an input to the arithmetic.
+
+A third count used to sit beside those two: how many of the linked tickets were
+filed under a hardware category. It was removed when the demo moved to real
+records, because it matched the literal string `hardware` and UCI-498 anonymises
+its categories. No category in the real data means hardware, so the figure could
+only ever read zero, and a zero that is a property of the schema rather than of
+the machine reads on screen as evidence of absence. That is the general
+limitation stated once: this dataset cannot tell a hardware incident from any
+other kind, which is the same reason the register is operator-maintained.
 
 **What this feature explicitly does not do.** It does not change a
 recommendation, a deadline, an assignment or a risk score. A machine 21 months

@@ -224,10 +224,9 @@ function MachineAdvice({ machineId, onClose }) {
         </table>
       </div>
 
-      <dl className="mt-4 grid gap-3 sm:grid-cols-4">
+      <dl className="mt-4 grid gap-3 sm:grid-cols-3">
         <Fact label="linked tickets">{row.evidence.linked_tickets}</Fact>
         <Fact label="still open">{row.evidence.open_linked_tickets}</Fact>
-        <Fact label="hardware category">{row.evidence.hardware_category_tickets}</Fact>
         <Fact label="mean ticket risk">
           {row.evidence.mean_risk_probability === null
             ? "—"

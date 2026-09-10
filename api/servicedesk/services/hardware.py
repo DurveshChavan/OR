@@ -55,7 +55,6 @@ class MachineEvidence:
 
     linked_tickets: int
     open_linked_tickets: int
-    hardware_category_tickets: int
     mean_risk_probability: Optional[float]
 
 
@@ -189,13 +188,8 @@ def explain(advice: dict, evidence: MachineEvidence) -> str:
     sentence += _degradation_clause(advice["table"])
     if evidence.linked_tickets:
         sentence += (
-            " %d ticket(s) have been linked to it by hand, %d still open, %d "
-            "recorded against a hardware category."
-            % (
-                evidence.linked_tickets,
-                evidence.open_linked_tickets,
-                evidence.hardware_category_tickets,
-            )
+            " %d ticket(s) have been linked to it by hand, %d still open."
+            % (evidence.linked_tickets, evidence.open_linked_tickets)
         )
     else:
         sentence += " No ticket has been linked to it, so the register figures stand alone."
@@ -235,14 +229,17 @@ def evidence_for(db: DbSession, machine: models.Machine) -> MachineEvidence:
     open_rows = [
         row for row in rows if row.status not in models.TERMINAL_TICKET_STATUSES
     ]
-    hardware = [
-        row for row in rows if (row.category or "").strip().lower() == "hardware"
-    ]
+    # There used to be a third count here: how many of the linked tickets were
+    # filed under a hardware category. It matched the literal string "hardware",
+    # which worked only while the categories were invented. UCI-498 anonymises
+    # them - "Category 42", not "Network" - so no category in real data means
+    # hardware, and the count could only ever read zero. A figure that is always
+    # zero by construction is worse than no figure, so it was removed rather
+    # than left on screen looking like evidence of absence.
     scored = [row.risk_probability for row in rows if row.risk_probability is not None]
     return MachineEvidence(
         linked_tickets=len(rows),
         open_linked_tickets=len(open_rows),
-        hardware_category_tickets=len(hardware),
         mean_risk_probability=(sum(scored) / len(scored)) if scored else None,
     )
 

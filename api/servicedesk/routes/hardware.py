@@ -58,7 +58,6 @@ def _advice_out(db: DbSession, machine: models.Machine) -> schemas.ReplacementAd
         evidence=schemas.MachineEvidenceOut(
             linked_tickets=evidence.linked_tickets,
             open_linked_tickets=evidence.open_linked_tickets,
-            hardware_category_tickets=evidence.hardware_category_tickets,
             mean_risk_probability=(
                 round(evidence.mean_risk_probability, 4)
                 if evidence.mean_risk_probability is not None
