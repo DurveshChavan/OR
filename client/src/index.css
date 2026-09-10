@@ -86,3 +86,124 @@ h3,
     animation: none !important;
   }
 }
+
+/* --- material and type, the service desk shell ---------------------------
+ *
+ * Three ideas from Apple's interface work, applied to a data application:
+ * chrome is a translucent layer with content passing under it rather than an
+ * opaque strip; the boundary where they meet is a fading mask, not a hairline;
+ * and tracking is size-specific - large text tightens, small text does not.
+ * Each has an explicit fallback for a viewer who asks for less transparency,
+ * less motion or more contrast, because those settings are requests and not
+ * suggestions.
+ */
+
+.chrome-layer {
+  background: color-mix(in oklch, var(--color-paper) 72%, transparent);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+}
+
+/* The fade under floating chrome. Six pixels of gradient reads as depth where a
+   1px border reads as a seam. */
+.scroll-edge {
+  height: 6px;
+  background: linear-gradient(
+    to bottom,
+    color-mix(in oklch, var(--color-ink) 8%, transparent),
+    transparent
+  );
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .chrome-layer {
+    background: var(--color-surface);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    border-bottom: 1px solid var(--color-rule);
+  }
+  .scroll-edge {
+    display: none;
+  }
+}
+
+@media (prefers-contrast: more) {
+  .chrome-layer {
+    background: var(--color-surface);
+    border-bottom: 1px solid var(--color-ink-2);
+  }
+}
+
+/* Large text is set tighter as it grows; body copy stays where the font was
+   designed to sit. One fixed letter-spacing for every size would be wrong at
+   one end or the other. */
+h1,
+.font-display {
+  letter-spacing: -0.021em;
+}
+
+h2 {
+  letter-spacing: -0.016em;
+}
+
+/* One form-field definition, so a control cannot look like two different
+   controls on two screens. */
+.field {
+  width: 100%;
+  border-radius: var(--radius-control);
+  border: 1px solid var(--color-rule-2);
+  background: var(--color-paper);
+  padding: 0.5rem 0.75rem;
+  font: inherit;
+  color: var(--color-ink);
+  transition: border-color 140ms var(--ease-out), box-shadow 140ms var(--ease-out);
+}
+
+.field:focus {
+  outline: none;
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px color-mix(in oklch, var(--color-accent) 18%, transparent);
+}
+
+.field:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* Tables carry the weight of every screen here, so the row boundary is the
+   quietest thing that still separates two rows. */
+table {
+  border-collapse: collapse;
+}
+
+tbody tr {
+  transition: background-color 140ms var(--ease-out);
+}
+
+tbody tr:hover {
+  background: color-mix(in oklch, var(--color-paper-2) 60%, transparent);
+}
+
+/* Press feedback on every control, not only the ones built from the shared
+ * Button. The rule that matters is that the acknowledgement happens on press
+ * rather than on release, and `:active` is the platform's own name for that
+ * moment. Disabled controls stay still, because a control that answers a press
+ * it will not act on is lying about being available.
+ */
+button:not(:disabled),
+[role="button"]:not([aria-disabled="true"]) {
+  transition: transform 220ms var(--ease-out);
+}
+
+button:not(:disabled):active,
+[role="button"]:not([aria-disabled="true"]):active {
+  transform: scale(0.975);
+  transition: transform 90ms var(--ease-out);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  button:not(:disabled):active,
+  [role="button"]:not([aria-disabled="true"]):active {
+    transform: none;
+  }
+}

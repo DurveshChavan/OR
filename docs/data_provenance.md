@@ -90,14 +90,14 @@ cannot be changed and every core gate is already green. See
 
 **The legacy synthetic universe.** The previous build sampled real distributions
 into a randomly generated ticket/agent/workstation population. It is retained as
-Operations Research viva material only and supplies no number in the v2 result.
+Operations Research viva material only and supplies no number in the service desk result.
 
 ## Regeneration
 
 ```
-python -m api.app_v2.ingest.uci498 fetch     # -> data/manifests/uci498.json
-python -m api.app_v2.ingest.uci498 audit     # -> data/reports/uci498_audit.md
-python -m api.app_v2.ingest.uci498 prepare   # -> data/processed/uci498/incidents_v1.parquet
+python -m api.servicedesk.ingest.uci498 fetch     # -> data/manifests/uci498.json
+python -m api.servicedesk.ingest.uci498 audit     # -> data/reports/uci498_audit.md
+python -m api.servicedesk.ingest.uci498 prepare   # -> data/processed/uci498/incidents_v1.parquet
 ```
 
 `fetch` adopts an existing local file and never re-downloads without `--force`:

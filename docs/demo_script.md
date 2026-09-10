@@ -28,10 +28,11 @@ why the first line deletes the file instead of seeding on top of it.
 cd Project
 rm -f data/demo/sla_desk.sqlite3            # Windows: del data\demo\sla_desk.sqlite3
 python -m alembic upgrade head
-python -m api.app_v2.cli.seed_demo
+python -m api.servicedesk.cli.seed_demo
 ```
 
-Expected output: 2 users, 4 policies, 4 agents, 14 tickets, and the line
+Expected output: 2 users, 4 policies, 4 agents, 14 tickets, 4 machines, and the
+line
 `sign in as dispatcher.demo or manager.demo with password local-demo-password`.
 
 The fourteen tickets are chosen so one batch reaches every outcome the
@@ -40,35 +41,32 @@ slots, so at least one comes back **queued**; `INC-DEMO-0012` needs a
 `mainframe` skill nobody holds, which is **no eligible agent**; `INC-DEMO-0007`
 and `INC-DEMO-0008` are already **overdue** when they are seeded.
 
-## 2 · Start the two processes
+## 2 · Start the processes
 
 ```bash
-# terminal 1 — the version-2 API
-python -m uvicorn api.app_v2.main:app --port 8001
+# terminal 1 — the service desk API
+python -m uvicorn api.servicedesk.main:app --port 8001
 
-# terminal 2 — the client
+# terminal 2 — the Operations Research engine, which the Methods screens read
+python -m uvicorn api.main:app --port 8000
+
+# terminal 3 — the client
 cd client && npm run dev
 ```
 
-Open `http://localhost:5173/`. Since the phase 5 cutover this redirects to
-`/v2`, which is the version-2 application.
+Open `http://localhost:5173/`. That is the whole application: Queue, Risk Radar,
+Hardware, Methods and Administration. Paths from before the sections were merged
+(`/assignment`, `/staffing`, `/legacy`, and the rest) redirect to their Methods
+page rather than breaking.
 
-The legacy Operations Research demo moved to `http://localhost:5173/legacy` and
-still works exactly as before; every one of its old paths (`/assignment`,
-`/staffing`, and the rest) redirects there rather than breaking. Start its API
-with `python -m uvicorn api.main:app --port 8000` if it is going to be shown -
-without it the legacy pages show their own error states.
-
-The cutover is reversible until after the presentation:
-
-```bash
-cd client && VITE_DEFAULT_APP=legacy npm run dev   # `/` serves the OR demo again
-```
+The engine on port 8000 is only needed for the Methods screens; every other
+screen works without it, and each Methods page shows its own error state when it
+is not running.
 
 Confirm the build before signing in:
 
 ```bash
-curl http://localhost:8001/api/v2/health
+curl http://localhost:8001/api/health
 ```
 
 `models_available: true` and a `risk_model_version` mean the committed
@@ -123,7 +121,25 @@ zone.
    ticket with a note; it appends one event and changes no status, no assignee
    and no deadline, and it routes nothing to a vendor.
 
-9. **Administration**, signed in as `manager.demo`. Show that a dispatcher sees
+9. **Hardware.** The title's third term, and the screen that answers "where did
+   this number come from" fastest. WS-1004 is 57 months old and its own cost
+   figures put the lowest average annual cost at year 3, so the advice is
+   *replace now*, 21 months late. Open the verdict: the full year-by-year table
+   appears with the minimum marked — 36,000 / 25,500 / 23,333.33 / 24,000 /
+   26,400 — and a professor can check it with a calculator. Say plainly that
+   every figure was typed in by an operator, that two tickets were linked to that
+   machine by a person, and that linking them changed no recommendation: the
+   register is decision support and dispatch never reads it. Then run the
+   group-versus-individual comparison below it with the default figures; the
+   renewal table 700 / 560 / 600.67 / 703.55 against 666.67 says a group swap
+   every 2 periods is cheaper.
+
+10. **Methods.** Eight pages, one per Operations Research technique, with the
+    syllabus unit named on each. The assignment page is worth opening: within a
+    row every permitted cell holds the same number, which is exactly the defect
+    the dispatch cost model in the Queue screen fixes.
+
+11. **Administration**, signed in as `manager.demo`. Show that a dispatcher sees
    the same numbers with every control disabled. Edit an SLA rate and point at
    the warning: stored deadlines do not move and decisions already written keep
    the rates they were priced under. Then press **Rescore open tickets** and
@@ -132,7 +148,7 @@ zone.
    moves when a ticket is edited, when it was never scored, or when a different
    artifact is installed.
 
-10. **The audit trail is the database's rule, not the application's.** With the
+12. **The audit trail is the database's rule, not the application's.** With the
     API still running:
 
     ```bash
@@ -143,15 +159,15 @@ zone.
     the PostgreSQL path, where the application role additionally holds only
     SELECT and INSERT on that table.
 
-11. **Restart the API** and reload the page. Tickets, decisions, assignments and
-    events are all still there: version 2 keeps state in a database, not in
+13. **Restart the API** and reload the page. Tickets, decisions, assignments and
+    events are all still there: the service desk keeps state in a database, not in
     process memory.
 
 ## 4 · The command line, if the browser is not wanted
 
 ```bash
-python -m api.app_v2.cli.rescore_open_tickets     # the same rescore, no UI
-python -m api.app_v2.cli.export_openapi           # regenerate docs/openapi_v2.json
+python -m api.servicedesk.cli.rescore_open_tickets     # the same rescore, no UI
+python -m api.servicedesk.cli.export_openapi           # regenerate docs/openapi.json
 ```
 
 There is no scheduler and no worker process in this build, so nothing in the
@@ -162,7 +178,7 @@ demo depends on a timer firing.
 ```bash
 rm -f data/demo/sla_desk.sqlite3
 python -m alembic upgrade head
-python -m api.app_v2.cli.seed_demo
+python -m api.servicedesk.cli.seed_demo
 ```
 
 ## Credentials

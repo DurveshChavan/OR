@@ -7,15 +7,17 @@ export default defineConfig({
   server: {
     port: 5173,
     proxy: {
-      // The specific prefix must come first: Vite matches proxy keys in
-      // insertion order, so "/api" alone would swallow every "/api/v2" call and
-      // send it to the legacy server, which answers 404.
-      "/api/v2": {
-        target: "http://localhost:8001",
+      // Two servers, two prefixes, and the order matters: Vite matches proxy
+      // keys in insertion order, so the more specific "/or-api" is registered
+      // first. It carries the Operations Research engine's own routes, with the
+      // prefix stripped before forwarding; "/api" is the service desk.
+      "/or-api": {
+        target: "http://localhost:8000",
         changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/or-api/, ""),
       },
       "/api": {
-        target: "http://localhost:8000",
+        target: "http://localhost:8001",
         changeOrigin: true,
       },
     },

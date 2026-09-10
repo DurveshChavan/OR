@@ -54,4 +54,4 @@ alone.
 ## Hardware
 
 Absent. No claim about hardware replacement, asset ageing or a hardware feedback
-loop appears in any v2 result.
+loop appears in any dispatch result.

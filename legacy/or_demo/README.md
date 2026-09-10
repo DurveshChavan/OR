@@ -1,6 +1,7 @@
-# The Operations Research demo — archive notes
+# The Operations Research methods — where they live and how to run them
 
-This directory is an archive **pointer**, not a copy.
+This directory is a **pointer**, not a copy, and the methods it points at are not
+archived: they are the `/methods` section of the application.
 
 ## Why the code was not duplicated here
 
@@ -22,26 +23,22 @@ still tested on every commit:
 | Worked examples for the oral exam | `legacy/viva_methods.ipynb` |
 | Pre-cutover state | git tag `legacy-or-final` (local, at `b82a7cc`) |
 
-## Running it after the cutover
+## Running them
 
-Version 2 now serves `/`. The legacy demo moved to `/legacy` and every one of
-its old paths redirects there, so nothing that was rehearsed against
-`/assignment` or `/staffing` breaks.
-
-```bash
-python -m uvicorn api.main:app --port 8000     # the legacy API
-cd client && npm run dev                       # then open /legacy
-```
-
-To put the legacy demo back on `/` — the switch is kept until after the
-presentation:
+The engine has its own process. The client reaches it through an `/or-api`
+prefix that the dev server strips, so the two APIs never collide on `/api`.
 
 ```bash
-cd client && VITE_DEFAULT_APP=legacy npm run dev
+python -m uvicorn api.main:app --port 8000     # the engine
+cd client && npm run dev                       # then open /methods
 ```
 
 Check it is alive with `curl http://localhost:8000/api/health`. Without that
-process the legacy pages render their own error states rather than blank.
+process the Methods pages render their own error states rather than blank; every
+other screen works without it.
+
+Paths from before the sections were merged — `/assignment`, `/staffing`,
+`/legacy` and the rest — redirect to their Methods page.
 
 ## The eight modules and their syllabus units
 
@@ -57,12 +54,13 @@ process the legacy pages render their own error states rather than blank.
 | `api/engine/replacement.py` | Deteriorating-item average cost, group vs individual replacement | IV |
 | `api/engine/pipeline.py` | Wires M0–M7 and closes the M7→M3 loop | — |
 
-## What version 2 takes from this, and what it does not
+## What the application takes from this
 
-Nothing. `api/app_v2/` imports no module from `api/engine/`, and no number in a
-version-2 screen, decision or result comes from the legacy pipeline. The two
-applications share a repository, a client build and a test run, and nothing
-else.
+The replacement arithmetic, and only that. `services/hardware.py` calls
+`api/engine/replacement.py` so the Hardware screen and the oral examination read
+the same code. Nothing else is imported: dispatch, scoring and the replay share
+no code with the engine, and no number in a dispatch result comes from the
+legacy pipeline.
 
 ## The M7 → M3 loop, described accurately
 
@@ -81,8 +79,8 @@ had before, so the loop moves the total cost without changing which agent serves
 the ticket. The `/legacy/assignment` screen shows this plainly: within a row,
 every permitted cell holds the same number.
 
-Version 2's dispatch is the fix, and explaining that transition is a stronger
-answer than defending the original loop. `api/app_v2/services/dispatch.py`
+The service desk's dispatch is the fix, and explaining that transition is a stronger
+answer than defending the original loop. `api/servicedesk/services/dispatch.py`
 prices a *pair*: when that agent can start, how long that agent takes on that
 skill, and how late that combination finishes. The row is no longer constant, so
 the assignment step has something to choose between —

@@ -6,7 +6,7 @@ Create Date: 2026-09-09
 
 The schema is built from the ORM metadata rather than from a second, hand-copied
 list of ``op.create_table`` calls. There is one reason: the check constraints and
-indexes in ``api/app_v2/db/models.py`` are part of the specification, and a
+indexes in ``api/servicedesk/db/models.py`` are part of the specification, and a
 duplicate definition here would eventually disagree with them without anything
 failing. This project has no deployed v2 database to migrate, so the first
 revision only has to be correct once, on an empty database, in both dialects.
@@ -17,7 +17,7 @@ expressed.
 """
 from alembic import op
 
-from api.app_v2.db.models import Base
+from api.servicedesk.db.models import Base
 
 revision = "0001"
 down_revision = None

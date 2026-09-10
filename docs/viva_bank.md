@@ -10,7 +10,7 @@ marks than an admitted limit.
 
 **A1. Which OR technique does the production system actually use?**
 Assignment — the Hungarian method, `scipy.optimize.linear_sum_assignment`, run
-once per priority tier in `api/app_v2/services/dispatch.py`. Rows are tickets,
+once per priority tier in `api/servicedesk/services/dispatch.py`. Rows are tickets,
 columns are individual free WIP slots. It is the same technique as
 `api/engine/assignment.py`; what changed is what is in the cells.
 
@@ -79,10 +79,62 @@ aged / post-replacement and a test asserts cost rises then falls.
 **A11. Does that loop change who gets the ticket?**
 No, and this is the important part of the answer. The factor multiplies a whole
 *row*, and a row scaled by a positive constant has the same ordering it had.
-The loop moves total cost, not the assignment. Version 2's candidate-specific
+The loop moves total cost, not the assignment. The service desk's candidate-specific
 cost is the fix: it prices a pair — when that resolver can start, how fast they
 are on that skill, how late that combination finishes — so the row is no longer
 constant. Explaining that transition is the honest answer.
+
+---
+
+## A-bis · Hardware replacement — expect this, it is in the title
+
+**H1. Where does the machine data come from?**
+A manager types it in, from their own asset register: age, purchase cost, resale
+value by year, running cost by year, and a required note saying where the figures
+came from. UCI-498 has no hardware telemetry and no ticket-to-asset key, so
+nothing here could honestly be mined. The screen says that above the table.
+
+**H2. Then what is the contribution, if the data is typed in?**
+The decision. Given an organisation's own economics, the system says when each
+machine should be replaced and whether a fleet is cheaper swapped on a schedule
+than repaired on failure — and it shows the whole table so the answer can be
+checked with a calculator. That is decision support, and it is the same thing an
+LP or a transportation model does with numbers a planner supplies.
+
+**H3. Show me the arithmetic.**
+For replacement at the end of year *n*: total = purchase − resale(n) + running
+cost accumulated to n; average = total / n; the optimal year minimises the
+average. On the seeded register: purchase 62,000, resale 30,000 / 22,000 /
+15,000 / 9,000 / 5,000, running 4,000 / 7,000 / 12,000 / 20,000 / 32,000 gives
+averages 36,000 / 25,500 / 23,333.33 / 24,000 / 26,400, so year 3. WS-1004 is 57
+months old, which is 21 months past that, so the verdict is replace now.
+
+**H4. And the fleet method?**
+The renewal recursion: B₁ = N·p₁, and B_i = N·p_i + Σ_j B_j·p_(i−j), because an
+item replaced on failure is new again and can fail again. Group cost for
+interval T is (N·group_cost + unit_cost·ΣB_i)/T; replace-on-failure costs
+N·unit_cost / mean life. The test instance — N = 100, p = 0.1/0.2/0.3/0.4, unit
+20, group 5 — gives 700 / 560 / 600.67 / 703.55 against 666.67, so a group swap
+every 2 periods wins. That table is in the test docstring.
+
+**H5. Does a failing machine change who gets the ticket?**
+No, and a test enforces it. The same ticket recommended before and after being
+linked to a machine 21 months overdue gets the identical resolver, risk and
+stored reason. Saying otherwise would require a causal claim the data cannot
+support.
+
+**H6. Then why link tickets to machines at all?**
+So a manager can see the operational context beside the economics: how many
+tickets a person has attached to that machine, how many are still open, how many
+are hardware-category. It is counted, never inferred — the link is set by a
+signed-in user through one endpoint and the history records who set it — and it
+is not an input to the replacement arithmetic.
+
+**H7. Why not predict hardware failure from a real dataset?**
+Because the only candidates — disk-failure datasets, for instance — cannot be
+joined to this ticket log, so a model trained on one could not be shown to
+affect anything in the other. A separately evaluated failure-risk appendix was
+considered and rejected as answering a question this project did not register.
 
 ---
 
@@ -301,7 +353,7 @@ time-varying score would need a feature the model was never fitted on.
 
 **E7. Why no scheduler or background worker?**
 Because a demo must not depend on a timer firing. Rescore is a protected
-endpoint and a CLI command, `python -m api.app_v2.cli.rescore_open_tickets`. A
+endpoint and a CLI command, `python -m api.servicedesk.cli.rescore_open_tickets`. A
 real deployment can schedule that command externally.
 
 **E8. Why synchronous FastAPI and synchronous sessions?**
@@ -341,10 +393,11 @@ note saying they must be replaced with a real policy. No result in the report
 comes from it. The earlier synthetic ticket/agent/workstation universe was
 removed from the production build entirely.
 
-**F5. Why is hardware not in the application?**
-Because no dataset joins a ticket to an asset, so a hardware feature could not
-have influenced routing honestly. The title's hardware term is answered by the
-retained OR appendix — deteriorating-item and group-replacement arithmetic, and
-the M7→M3 loop — and the report states plainly that the loop scales a whole
-cost-matrix row and therefore cannot change which resolver serves a ticket. No
-version-2 result mentions hardware.
+**F5. How does the project justify the "Hardware Replacement" in its title?**
+With the machine register and its replacement advice, which is a screen a
+professor can use, not an appendix. What it does not do is claim a hardware
+effect on routing: no dataset joins a ticket to an asset, so the honest feature
+is decision support over an operator's own economics. The earlier design
+multiplied a cost-matrix row by an ageing factor and called that a feedback
+loop; a row scaled by a constant keeps its ordering, so it moved total cost and
+not the assignment. This build says so and replaces it rather than defending it.

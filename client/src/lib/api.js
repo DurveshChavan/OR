@@ -1,7 +1,10 @@
 // Thin wrapper over the FastAPI engine endpoints. No business logic here --
 // every number on screen traces back to one of these calls.
 
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || "";
+// The Operations Research engine runs as its own process on port 8000, while
+// the service desk API owns `/api`. This prefix keeps them apart: the dev
+// server strips it and forwards the rest to the engine.
+const BASE_URL = import.meta.env.VITE_OR_API_BASE_URL || "/or-api";
 
 async function request(path, options = {}) {
   const res = await fetch(`${BASE_URL}${path}`, {

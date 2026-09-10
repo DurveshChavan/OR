@@ -47,4 +47,4 @@ required in the report.
 
 Hardware ageing alpha, workstation ages, degradation threshold, purchase/scrap
 economics, capacity cost per agent, routing overhead matrix, support-centre
-capacities. All were invented. None supply any v2 number.
+capacities. All were invented. None supply any number in the application.

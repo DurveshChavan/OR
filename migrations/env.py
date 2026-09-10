@@ -7,8 +7,8 @@ touching process environment).
 """
 from alembic import context
 
-from api.app_v2.db.models import Base
-from api.app_v2.db.session import database_url, make_engine
+from api.servicedesk.db.models import Base
+from api.servicedesk.db.session import database_url, make_engine
 
 config = context.config
 target_metadata = Base.metadata

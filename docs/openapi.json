@@ -1,0 +1,3548 @@
+{
+  "components": {
+    "schemas": {
+      "ActorOut": {
+        "description": "The signed-in user, with nothing about credentials in it.",
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "role": {
+            "title": "Role",
+            "type": "string"
+          },
+          "username": {
+            "title": "Username",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "username",
+          "role"
+        ],
+        "title": "ActorOut",
+        "type": "object"
+      },
+      "AgentCreate": {
+        "properties": {
+          "display_name": {
+            "title": "Display Name",
+            "type": "string"
+          },
+          "is_active": {
+            "default": true,
+            "title": "Is Active",
+            "type": "boolean"
+          },
+          "skills": {
+            "items": {
+              "$ref": "#/components/schemas/SkillIn"
+            },
+            "title": "Skills",
+            "type": "array"
+          },
+          "wip_limit": {
+            "default": 1,
+            "minimum": 1.0,
+            "title": "Wip Limit",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "display_name"
+        ],
+        "title": "AgentCreate",
+        "type": "object"
+      },
+      "AgentListResponse": {
+        "properties": {
+          "agents": {
+            "items": {
+              "$ref": "#/components/schemas/AgentOut"
+            },
+            "title": "Agents",
+            "type": "array"
+          },
+          "request_id": {
+            "title": "Request Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "agents",
+          "request_id"
+        ],
+        "title": "AgentListResponse",
+        "type": "object"
+      },
+      "AgentOut": {
+        "properties": {
+          "display_name": {
+            "title": "Display Name",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "is_active": {
+            "title": "Is Active",
+            "type": "boolean"
+          },
+          "next_available_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Available At"
+          },
+          "skills": {
+            "items": {
+              "$ref": "#/components/schemas/SkillOut"
+            },
+            "title": "Skills",
+            "type": "array"
+          },
+          "wip_limit": {
+            "title": "Wip Limit",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "display_name",
+          "is_active",
+          "wip_limit",
+          "next_available_at",
+          "skills"
+        ],
+        "title": "AgentOut",
+        "type": "object"
+      },
+      "AgentPatch": {
+        "properties": {
+          "display_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Display Name"
+          },
+          "is_active": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Active"
+          },
+          "wip_limit": {
+            "anyOf": [
+              {
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Wip Limit"
+          }
+        },
+        "title": "AgentPatch",
+        "type": "object"
+      },
+      "AgentResponse": {
+        "properties": {
+          "agent": {
+            "$ref": "#/components/schemas/AgentOut"
+          },
+          "request_id": {
+            "title": "Request Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "agent",
+          "request_id"
+        ],
+        "title": "AgentResponse",
+        "type": "object"
+      },
+      "AgentSummary": {
+        "description": "Just enough of an agent to name them in a recommendation.",
+        "properties": {
+          "display_name": {
+            "title": "Display Name",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "display_name"
+        ],
+        "title": "AgentSummary",
+        "type": "object"
+      },
+      "AssignmentResponse": {
+        "description": "What was recommended and what was actually assigned, side by side.",
+        "properties": {
+          "assigned_agent": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AgentSummary"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "decision": {
+            "$ref": "#/components/schemas/DecisionOut"
+          },
+          "overridden": {
+            "title": "Overridden",
+            "type": "boolean"
+          },
+          "request_id": {
+            "title": "Request Id",
+            "type": "string"
+          },
+          "ticket_status": {
+            "title": "Ticket Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "decision",
+          "assigned_agent",
+          "ticket_status",
+          "overridden",
+          "request_id"
+        ],
+        "title": "AssignmentResponse",
+        "type": "object"
+      },
+      "DecisionDetailResponse": {
+        "properties": {
+          "candidate_payload": {
+            "additionalProperties": true,
+            "title": "Candidate Payload",
+            "type": "object"
+          },
+          "decision": {
+            "$ref": "#/components/schemas/DecisionOut"
+          },
+          "request_id": {
+            "title": "Request Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "decision",
+          "candidate_payload",
+          "request_id"
+        ],
+        "title": "DecisionDetailResponse",
+        "type": "object"
+      },
+      "DecisionListResponse": {
+        "properties": {
+          "decisions": {
+            "items": {
+              "$ref": "#/components/schemas/DecisionOut"
+            },
+            "title": "Decisions",
+            "type": "array"
+          },
+          "request_id": {
+            "title": "Request Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "decisions",
+          "request_id"
+        ],
+        "title": "DecisionListResponse",
+        "type": "object"
+      },
+      "DecisionOut": {
+        "description": "A stored recommendation, exactly as it was written.\n\n``reason`` is the text the decision carries. The client shows it verbatim;\nnothing recomputes it, here or in the browser.",
+        "properties": {
+          "batch_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Batch Id"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "decision_id": {
+            "title": "Decision Id",
+            "type": "string"
+          },
+          "eligible_agent_count": {
+            "title": "Eligible Agent Count",
+            "type": "integer"
+          },
+          "model_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model Version"
+          },
+          "policy_version": {
+            "title": "Policy Version",
+            "type": "integer"
+          },
+          "predicted_duration_minutes": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Predicted Duration Minutes"
+          },
+          "projected_finish_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Projected Finish At"
+          },
+          "projected_lateness_minutes": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Projected Lateness Minutes"
+          },
+          "projected_wait_minutes": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Projected Wait Minutes"
+          },
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          },
+          "recommended_agent": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AgentSummary"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "risk_probability": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Risk Probability"
+          },
+          "sla_due_at": {
+            "format": "date-time",
+            "title": "Sla Due At",
+            "type": "string"
+          },
+          "state": {
+            "title": "State",
+            "type": "string"
+          },
+          "ticket_id": {
+            "title": "Ticket Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "decision_id",
+          "ticket_id",
+          "batch_id",
+          "state",
+          "recommended_agent",
+          "risk_probability",
+          "predicted_duration_minutes",
+          "projected_wait_minutes",
+          "projected_finish_at",
+          "projected_lateness_minutes",
+          "sla_due_at",
+          "reason",
+          "model_version",
+          "policy_version",
+          "eligible_agent_count",
+          "created_at"
+        ],
+        "title": "DecisionOut",
+        "type": "object"
+      },
+      "EscalationAcknowledgeRequest": {
+        "description": "A human answering an escalation recommendation, or raising one.",
+        "properties": {
+          "note": {
+            "minLength": 1,
+            "title": "Note",
+            "type": "string"
+          }
+        },
+        "required": [
+          "note"
+        ],
+        "title": "EscalationAcknowledgeRequest",
+        "type": "object"
+      },
+      "EscalationAcknowledgeResponse": {
+        "properties": {
+          "event": {
+            "$ref": "#/components/schemas/EventOut"
+          },
+          "following_recommendation": {
+            "title": "Following Recommendation",
+            "type": "boolean"
+          },
+          "request_id": {
+            "title": "Request Id",
+            "type": "string"
+          },
+          "ticket_id": {
+            "title": "Ticket Id",
+            "type": "string"
+          },
+          "ticket_status": {
+            "title": "Ticket Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "ticket_id",
+          "event",
+          "following_recommendation",
+          "ticket_status",
+          "request_id"
+        ],
+        "title": "EscalationAcknowledgeResponse",
+        "type": "object"
+      },
+      "EventListResponse": {
+        "properties": {
+          "events": {
+            "items": {
+              "$ref": "#/components/schemas/EventOut"
+            },
+            "title": "Events",
+            "type": "array"
+          },
+          "request_id": {
+            "title": "Request Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "events",
+          "request_id"
+        ],
+        "title": "EventListResponse",
+        "type": "object"
+      },
+      "EventOut": {
+        "properties": {
+          "actor_user_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actor User Id"
+          },
+          "decision_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Decision Id"
+          },
+          "event_type": {
+            "title": "Event Type",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "occurred_at": {
+            "format": "date-time",
+            "title": "Occurred At",
+            "type": "string"
+          },
+          "payload": {
+            "additionalProperties": true,
+            "title": "Payload",
+            "type": "object"
+          },
+          "ticket_id": {
+            "title": "Ticket Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "ticket_id",
+          "decision_id",
+          "actor_user_id",
+          "event_type",
+          "payload",
+          "occurred_at"
+        ],
+        "title": "EventOut",
+        "type": "object"
+      },
+      "GroupReplacementRequest": {
+        "description": "Inputs for the group-versus-individual comparison, all operator-supplied.",
+        "properties": {
+          "failure_prob_by_period": {
+            "items": {
+              "type": "number"
+            },
+            "minItems": 1,
+            "title": "Failure Prob By Period",
+            "type": "array"
+          },
+          "group_replace_cost": {
+            "exclusiveMinimum": 0.0,
+            "title": "Group Replace Cost",
+            "type": "number"
+          },
+          "n_items": {
+            "minimum": 1.0,
+            "title": "N Items",
+            "type": "integer"
+          },
+          "unit_replace_cost": {
+            "exclusiveMinimum": 0.0,
+            "title": "Unit Replace Cost",
+            "type": "number"
+          }
+        },
+        "required": [
+          "n_items",
+          "failure_prob_by_period",
+          "unit_replace_cost",
+          "group_replace_cost"
+        ],
+        "title": "GroupReplacementRequest",
+        "type": "object"
+      },
+      "GroupReplacementResponse": {
+        "properties": {
+          "cheaper_policy": {
+            "title": "Cheaper Policy",
+            "type": "string"
+          },
+          "group_table": {
+            "items": {
+              "$ref": "#/components/schemas/GroupTableRow"
+            },
+            "title": "Group Table",
+            "type": "array"
+          },
+          "individual_average_cost": {
+            "title": "Individual Average Cost",
+            "type": "number"
+          },
+          "n_items": {
+            "title": "N Items",
+            "type": "integer"
+          },
+          "optimal_group_average_cost": {
+            "title": "Optimal Group Average Cost",
+            "type": "number"
+          },
+          "optimal_group_interval": {
+            "title": "Optimal Group Interval",
+            "type": "integer"
+          },
+          "request_id": {
+            "title": "Request Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "n_items",
+          "individual_average_cost",
+          "optimal_group_interval",
+          "optimal_group_average_cost",
+          "cheaper_policy",
+          "group_table",
+          "request_id"
+        ],
+        "title": "GroupReplacementResponse",
+        "type": "object"
+      },
+      "GroupTableRow": {
+        "properties": {
+          "average_cost": {
+            "title": "Average Cost",
+            "type": "number"
+          },
+          "interval": {
+            "title": "Interval",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "interval",
+          "average_cost"
+        ],
+        "title": "GroupTableRow",
+        "type": "object"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "title": "Detail",
+            "type": "array"
+          }
+        },
+        "title": "HTTPValidationError",
+        "type": "object"
+      },
+      "HealthResponse": {
+        "properties": {
+          "dialect": {
+            "title": "Dialect",
+            "type": "string"
+          },
+          "duration_model_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Duration Model Version"
+          },
+          "migration_head_present": {
+            "title": "Migration Head Present",
+            "type": "boolean"
+          },
+          "models_available": {
+            "default": false,
+            "title": "Models Available",
+            "type": "boolean"
+          },
+          "request_id": {
+            "title": "Request Id",
+            "type": "string"
+          },
+          "risk_model_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Risk Model Version"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status",
+          "dialect",
+          "migration_head_present",
+          "request_id"
+        ],
+        "title": "HealthResponse",
+        "type": "object"
+      },
+      "LoginRequest": {
+        "properties": {
+          "password": {
+            "title": "Password",
+            "type": "string"
+          },
+          "username": {
+            "title": "Username",
+            "type": "string"
+          }
+        },
+        "required": [
+          "username",
+          "password"
+        ],
+        "title": "LoginRequest",
+        "type": "object"
+      },
+      "LoginResponse": {
+        "properties": {
+          "actor": {
+            "$ref": "#/components/schemas/ActorOut"
+          },
+          "request_id": {
+            "title": "Request Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "actor",
+          "request_id"
+        ],
+        "title": "LoginResponse",
+        "type": "object"
+      },
+      "LogoutResponse": {
+        "properties": {
+          "request_id": {
+            "title": "Request Id",
+            "type": "string"
+          },
+          "signed_out": {
+            "title": "Signed Out",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "signed_out",
+          "request_id"
+        ],
+        "title": "LogoutResponse",
+        "type": "object"
+      },
+      "MachineCreate": {
+        "description": "A machine an operator is putting on the register.\n\n``source_note`` is required for the same reason the SLA policy rows carry\none: every figure below is typed in from an organisation's own records, and\na screen full of costs with no stated origin is indistinguishable from a\nscreen full of invented ones.",
+        "properties": {
+          "age_months": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Age Months",
+            "type": "integer"
+          },
+          "asset_tag": {
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Asset Tag",
+            "type": "string"
+          },
+          "is_active": {
+            "default": true,
+            "title": "Is Active",
+            "type": "boolean"
+          },
+          "location": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Location"
+          },
+          "machine_type": {
+            "default": "desktop",
+            "title": "Machine Type",
+            "type": "string"
+          },
+          "purchase_cost": {
+            "exclusiveMinimum": 0.0,
+            "title": "Purchase Cost",
+            "type": "number"
+          },
+          "running_cost_by_year": {
+            "items": {
+              "type": "number"
+            },
+            "minItems": 1,
+            "title": "Running Cost By Year",
+            "type": "array"
+          },
+          "scrap_value_by_year": {
+            "items": {
+              "type": "number"
+            },
+            "minItems": 1,
+            "title": "Scrap Value By Year",
+            "type": "array"
+          },
+          "source_note": {
+            "minLength": 1,
+            "title": "Source Note",
+            "type": "string"
+          }
+        },
+        "required": [
+          "asset_tag",
+          "purchase_cost",
+          "scrap_value_by_year",
+          "running_cost_by_year",
+          "source_note"
+        ],
+        "title": "MachineCreate",
+        "type": "object"
+      },
+      "MachineEvidenceOut": {
+        "description": "Tickets a person linked to this machine. Counted, never inferred.",
+        "properties": {
+          "hardware_category_tickets": {
+            "title": "Hardware Category Tickets",
+            "type": "integer"
+          },
+          "linked_tickets": {
+            "title": "Linked Tickets",
+            "type": "integer"
+          },
+          "mean_risk_probability": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mean Risk Probability"
+          },
+          "open_linked_tickets": {
+            "title": "Open Linked Tickets",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "linked_tickets",
+          "open_linked_tickets",
+          "hardware_category_tickets",
+          "mean_risk_probability"
+        ],
+        "title": "MachineEvidenceOut",
+        "type": "object"
+      },
+      "MachineListResponse": {
+        "properties": {
+          "machines": {
+            "items": {
+              "$ref": "#/components/schemas/MachineOut"
+            },
+            "title": "Machines",
+            "type": "array"
+          },
+          "request_id": {
+            "title": "Request Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "machines",
+          "request_id"
+        ],
+        "title": "MachineListResponse",
+        "type": "object"
+      },
+      "MachineOut": {
+        "properties": {
+          "age_months": {
+            "title": "Age Months",
+            "type": "integer"
+          },
+          "age_recorded_at": {
+            "format": "date-time",
+            "title": "Age Recorded At",
+            "type": "string"
+          },
+          "asset_tag": {
+            "title": "Asset Tag",
+            "type": "string"
+          },
+          "current_age_months": {
+            "title": "Current Age Months",
+            "type": "number"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "is_active": {
+            "title": "Is Active",
+            "type": "boolean"
+          },
+          "linked_tickets": {
+            "title": "Linked Tickets",
+            "type": "integer"
+          },
+          "location": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Location"
+          },
+          "machine_type": {
+            "title": "Machine Type",
+            "type": "string"
+          },
+          "purchase_cost": {
+            "title": "Purchase Cost",
+            "type": "number"
+          },
+          "running_cost_by_year": {
+            "items": {
+              "type": "number"
+            },
+            "title": "Running Cost By Year",
+            "type": "array"
+          },
+          "scrap_value_by_year": {
+            "items": {
+              "type": "number"
+            },
+            "title": "Scrap Value By Year",
+            "type": "array"
+          },
+          "source_note": {
+            "title": "Source Note",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "asset_tag",
+          "location",
+          "machine_type",
+          "age_months",
+          "age_recorded_at",
+          "current_age_months",
+          "purchase_cost",
+          "scrap_value_by_year",
+          "running_cost_by_year",
+          "is_active",
+          "source_note",
+          "linked_tickets"
+        ],
+        "title": "MachineOut",
+        "type": "object"
+      },
+      "MachinePatch": {
+        "properties": {
+          "age_months": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Age Months"
+          },
+          "is_active": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Active"
+          },
+          "location": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Location"
+          },
+          "machine_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Machine Type"
+          },
+          "purchase_cost": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Purchase Cost"
+          },
+          "running_cost_by_year": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "number"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Running Cost By Year"
+          },
+          "scrap_value_by_year": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "number"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Scrap Value By Year"
+          },
+          "source_note": {
+            "anyOf": [
+              {
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Note"
+          }
+        },
+        "title": "MachinePatch",
+        "type": "object"
+      },
+      "MachineResponse": {
+        "properties": {
+          "machine": {
+            "$ref": "#/components/schemas/MachineOut"
+          },
+          "request_id": {
+            "title": "Request Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "machine",
+          "request_id"
+        ],
+        "title": "MachineResponse",
+        "type": "object"
+      },
+      "OverrideRequest": {
+        "properties": {
+          "agent_id": {
+            "title": "Agent Id",
+            "type": "string"
+          },
+          "reason": {
+            "minLength": 1,
+            "title": "Reason",
+            "type": "string"
+          }
+        },
+        "required": [
+          "agent_id",
+          "reason"
+        ],
+        "title": "OverrideRequest",
+        "type": "object"
+      },
+      "RecommendationRequest": {
+        "description": "Ask for recommendations. This request never assigns anyone.",
+        "properties": {
+          "as_of": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "As Of"
+          },
+          "mode": {
+            "default": "batch",
+            "title": "Mode",
+            "type": "string"
+          },
+          "ticket_ids": {
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1,
+            "title": "Ticket Ids",
+            "type": "array"
+          }
+        },
+        "required": [
+          "ticket_ids"
+        ],
+        "title": "RecommendationRequest",
+        "type": "object"
+      },
+      "ReplacementAdviceListResponse": {
+        "properties": {
+          "advice": {
+            "items": {
+              "$ref": "#/components/schemas/ReplacementAdviceOut"
+            },
+            "title": "Advice",
+            "type": "array"
+          },
+          "as_of": {
+            "format": "date-time",
+            "title": "As Of",
+            "type": "string"
+          },
+          "request_id": {
+            "title": "Request Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "advice",
+          "as_of",
+          "request_id"
+        ],
+        "title": "ReplacementAdviceListResponse",
+        "type": "object"
+      },
+      "ReplacementAdviceOut": {
+        "properties": {
+          "age_months": {
+            "title": "Age Months",
+            "type": "number"
+          },
+          "asset_tag": {
+            "title": "Asset Tag",
+            "type": "string"
+          },
+          "evidence": {
+            "$ref": "#/components/schemas/MachineEvidenceOut"
+          },
+          "machine_id": {
+            "title": "Machine Id",
+            "type": "string"
+          },
+          "months_until_due": {
+            "title": "Months Until Due",
+            "type": "number"
+          },
+          "optimal_average_cost": {
+            "title": "Optimal Average Cost",
+            "type": "number"
+          },
+          "optimal_replacement_year": {
+            "title": "Optimal Replacement Year",
+            "type": "integer"
+          },
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          },
+          "source_note": {
+            "title": "Source Note",
+            "type": "string"
+          },
+          "table": {
+            "items": {
+              "$ref": "#/components/schemas/ReplacementTableRow"
+            },
+            "title": "Table",
+            "type": "array"
+          },
+          "verdict": {
+            "title": "Verdict",
+            "type": "string"
+          }
+        },
+        "required": [
+          "machine_id",
+          "asset_tag",
+          "age_months",
+          "optimal_replacement_year",
+          "optimal_average_cost",
+          "months_until_due",
+          "verdict",
+          "table",
+          "evidence",
+          "reason",
+          "source_note"
+        ],
+        "title": "ReplacementAdviceOut",
+        "type": "object"
+      },
+      "ReplacementAdviceResponse": {
+        "properties": {
+          "advice": {
+            "$ref": "#/components/schemas/ReplacementAdviceOut"
+          },
+          "request_id": {
+            "title": "Request Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "advice",
+          "request_id"
+        ],
+        "title": "ReplacementAdviceResponse",
+        "type": "object"
+      },
+      "ReplacementTableRow": {
+        "description": "One year of the average-cost table, kept so it can be checked by hand.",
+        "properties": {
+          "average_cost": {
+            "title": "Average Cost",
+            "type": "number"
+          },
+          "cumulative_running_cost": {
+            "title": "Cumulative Running Cost",
+            "type": "number"
+          },
+          "total_cost": {
+            "title": "Total Cost",
+            "type": "number"
+          },
+          "year": {
+            "title": "Year",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "year",
+          "cumulative_running_cost",
+          "total_cost",
+          "average_cost"
+        ],
+        "title": "ReplacementTableRow",
+        "type": "object"
+      },
+      "RescoreRequest": {
+        "properties": {
+          "as_of": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "As Of"
+          },
+          "only_stale": {
+            "default": true,
+            "title": "Only Stale",
+            "type": "boolean"
+          },
+          "stale_after_minutes": {
+            "default": 5,
+            "minimum": 0.0,
+            "title": "Stale After Minutes",
+            "type": "integer"
+          }
+        },
+        "title": "RescoreRequest",
+        "type": "object"
+      },
+      "RescoreResponse": {
+        "properties": {
+          "considered": {
+            "title": "Considered",
+            "type": "integer"
+          },
+          "request_id": {
+            "title": "Request Id",
+            "type": "string"
+          },
+          "rescored": {
+            "title": "Rescored",
+            "type": "integer"
+          },
+          "unchanged": {
+            "title": "Unchanged",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "considered",
+          "rescored",
+          "unchanged",
+          "request_id"
+        ],
+        "title": "RescoreResponse",
+        "type": "object"
+      },
+      "RiskRadarResponse": {
+        "properties": {
+          "as_of": {
+            "format": "date-time",
+            "title": "As Of",
+            "type": "string"
+          },
+          "request_id": {
+            "title": "Request Id",
+            "type": "string"
+          },
+          "tickets": {
+            "items": {
+              "$ref": "#/components/schemas/RiskRadarRow"
+            },
+            "title": "Tickets",
+            "type": "array"
+          }
+        },
+        "required": [
+          "as_of",
+          "tickets",
+          "request_id"
+        ],
+        "title": "RiskRadarResponse",
+        "type": "object"
+      },
+      "RiskRadarRow": {
+        "description": "One open ticket with the numbers that decided where it sits in the list.",
+        "properties": {
+          "current_assignee_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Current Assignee Id"
+          },
+          "external_reference": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "External Reference"
+          },
+          "minutes_to_due": {
+            "title": "Minutes To Due",
+            "type": "number"
+          },
+          "overdue": {
+            "title": "Overdue",
+            "type": "boolean"
+          },
+          "overdue_minutes": {
+            "title": "Overdue Minutes",
+            "type": "number"
+          },
+          "priority": {
+            "title": "Priority",
+            "type": "integer"
+          },
+          "required_skill": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Required Skill"
+          },
+          "risk_model_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Risk Model Version"
+          },
+          "risk_probability": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Risk Probability"
+          },
+          "sla_due_at": {
+            "format": "date-time",
+            "title": "Sla Due At",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "ticket_id": {
+            "title": "Ticket Id",
+            "type": "string"
+          },
+          "urgency_cost_per_minute": {
+            "title": "Urgency Cost Per Minute",
+            "type": "number"
+          }
+        },
+        "required": [
+          "ticket_id",
+          "external_reference",
+          "priority",
+          "status",
+          "required_skill",
+          "sla_due_at",
+          "minutes_to_due",
+          "overdue",
+          "overdue_minutes",
+          "risk_probability",
+          "risk_model_version",
+          "urgency_cost_per_minute",
+          "current_assignee_id"
+        ],
+        "title": "RiskRadarRow",
+        "type": "object"
+      },
+      "SkillIn": {
+        "properties": {
+          "efficiency_multiplier": {
+            "default": 1.0,
+            "exclusiveMinimum": 0.0,
+            "title": "Efficiency Multiplier",
+            "type": "number"
+          },
+          "is_primary": {
+            "default": false,
+            "title": "Is Primary",
+            "type": "boolean"
+          },
+          "skill": {
+            "title": "Skill",
+            "type": "string"
+          }
+        },
+        "required": [
+          "skill"
+        ],
+        "title": "SkillIn",
+        "type": "object"
+      },
+      "SkillOut": {
+        "properties": {
+          "efficiency_multiplier": {
+            "title": "Efficiency Multiplier",
+            "type": "number"
+          },
+          "is_primary": {
+            "title": "Is Primary",
+            "type": "boolean"
+          },
+          "skill": {
+            "title": "Skill",
+            "type": "string"
+          }
+        },
+        "required": [
+          "skill",
+          "efficiency_multiplier",
+          "is_primary"
+        ],
+        "title": "SkillOut",
+        "type": "object"
+      },
+      "SlaPolicyListResponse": {
+        "properties": {
+          "policies": {
+            "items": {
+              "$ref": "#/components/schemas/SlaPolicyOut"
+            },
+            "title": "Policies",
+            "type": "array"
+          },
+          "request_id": {
+            "title": "Request Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "policies",
+          "request_id"
+        ],
+        "title": "SlaPolicyListResponse",
+        "type": "object"
+      },
+      "SlaPolicyOut": {
+        "properties": {
+          "breach_penalty_per_minute": {
+            "title": "Breach Penalty Per Minute",
+            "type": "number"
+          },
+          "escalation_threshold": {
+            "title": "Escalation Threshold",
+            "type": "number"
+          },
+          "holding_cost_per_minute": {
+            "title": "Holding Cost Per Minute",
+            "type": "number"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "late_penalty_per_minute": {
+            "title": "Late Penalty Per Minute",
+            "type": "number"
+          },
+          "overdue_recovery_penalty_per_minute": {
+            "title": "Overdue Recovery Penalty Per Minute",
+            "type": "number"
+          },
+          "priority": {
+            "title": "Priority",
+            "type": "integer"
+          },
+          "source_note": {
+            "title": "Source Note",
+            "type": "string"
+          },
+          "target_minutes": {
+            "title": "Target Minutes",
+            "type": "integer"
+          },
+          "version": {
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "priority",
+          "target_minutes",
+          "breach_penalty_per_minute",
+          "late_penalty_per_minute",
+          "overdue_recovery_penalty_per_minute",
+          "holding_cost_per_minute",
+          "escalation_threshold",
+          "version",
+          "source_note"
+        ],
+        "title": "SlaPolicyOut",
+        "type": "object"
+      },
+      "SlaPolicyPatch": {
+        "description": "The business inputs a manager may edit (spec I.4).\n\nPriority is absent because it identifies the row, and version is absent\nbecause it is the system's counter: a manager who could type a version could\nmake an old recommendation look current.",
+        "properties": {
+          "breach_penalty_per_minute": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Breach Penalty Per Minute"
+          },
+          "escalation_threshold": {
+            "anyOf": [
+              {
+                "maximum": 1.0,
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Escalation Threshold"
+          },
+          "holding_cost_per_minute": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Holding Cost Per Minute"
+          },
+          "late_penalty_per_minute": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Late Penalty Per Minute"
+          },
+          "overdue_recovery_penalty_per_minute": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Overdue Recovery Penalty Per Minute"
+          },
+          "source_note": {
+            "anyOf": [
+              {
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Note"
+          },
+          "target_minutes": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target Minutes"
+          }
+        },
+        "title": "SlaPolicyPatch",
+        "type": "object"
+      },
+      "SlaPolicyResponse": {
+        "description": "One policy after an edit, with what the edit reaches.\n\n``affected_ticket_ids`` are the open tickets of that priority which received\na ``POLICY_CHANGED_REFERENCE`` event. Their stored deadlines did not move;\nthe field exists so the interface can say truthfully which live work the\nnext recommendation will price differently.",
+        "properties": {
+          "affected_ticket_ids": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Affected Ticket Ids",
+            "type": "array"
+          },
+          "changes": {
+            "additionalProperties": true,
+            "title": "Changes",
+            "type": "object"
+          },
+          "policy": {
+            "$ref": "#/components/schemas/SlaPolicyOut"
+          },
+          "request_id": {
+            "title": "Request Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "policy",
+          "changes",
+          "affected_ticket_ids",
+          "request_id"
+        ],
+        "title": "SlaPolicyResponse",
+        "type": "object"
+      },
+      "TicketCreate": {
+        "properties": {
+          "category": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category"
+          },
+          "contact_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Contact Type"
+          },
+          "external_reference": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "External Reference"
+          },
+          "location": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Location"
+          },
+          "opened_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Opened At"
+          },
+          "priority": {
+            "maximum": 4.0,
+            "minimum": 1.0,
+            "title": "Priority",
+            "type": "integer"
+          },
+          "required_skill": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Required Skill"
+          },
+          "subcategory": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subcategory"
+          }
+        },
+        "required": [
+          "priority"
+        ],
+        "title": "TicketCreate",
+        "type": "object"
+      },
+      "TicketListResponse": {
+        "properties": {
+          "request_id": {
+            "title": "Request Id",
+            "type": "string"
+          },
+          "tickets": {
+            "items": {
+              "$ref": "#/components/schemas/TicketOut"
+            },
+            "title": "Tickets",
+            "type": "array"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "tickets",
+          "total",
+          "request_id"
+        ],
+        "title": "TicketListResponse",
+        "type": "object"
+      },
+      "TicketMachineLink": {
+        "description": "Attach a ticket to a machine, or detach it.\n\nA null ``machine_id`` clears the link. This is a person stating which\nmachine a ticket is about; nothing derives it, and dispatch never reads it.",
+        "properties": {
+          "machine_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Machine Id"
+          }
+        },
+        "title": "TicketMachineLink",
+        "type": "object"
+      },
+      "TicketOut": {
+        "properties": {
+          "category": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category"
+          },
+          "contact_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Contact Type"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "current_assignee_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Current Assignee Id"
+          },
+          "external_reference": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "External Reference"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "last_scored_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Scored At"
+          },
+          "location": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Location"
+          },
+          "machine_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Machine Id"
+          },
+          "opened_at": {
+            "format": "date-time",
+            "title": "Opened At",
+            "type": "string"
+          },
+          "priority": {
+            "title": "Priority",
+            "type": "integer"
+          },
+          "required_skill": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Required Skill"
+          },
+          "risk_model_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Risk Model Version"
+          },
+          "risk_probability": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Risk Probability"
+          },
+          "sla_due_at": {
+            "format": "date-time",
+            "title": "Sla Due At",
+            "type": "string"
+          },
+          "source": {
+            "title": "Source",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "subcategory": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subcategory"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "external_reference",
+          "source",
+          "status",
+          "priority",
+          "category",
+          "subcategory",
+          "location",
+          "contact_type",
+          "required_skill",
+          "opened_at",
+          "sla_due_at",
+          "current_assignee_id",
+          "machine_id",
+          "risk_probability",
+          "risk_model_version",
+          "last_scored_at",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "TicketOut",
+        "type": "object"
+      },
+      "TicketPatch": {
+        "description": "The fields a dispatcher may correct after creation.\n\nPriority is here and the deadline is not: changing a priority is a triage\ndecision that gets recorded as an event, while ``sla_due_at`` stays fixed at\nthe value the policy produced when the ticket was opened.",
+        "properties": {
+          "category": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category"
+          },
+          "contact_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Contact Type"
+          },
+          "location": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Location"
+          },
+          "priority": {
+            "anyOf": [
+              {
+                "maximum": 4.0,
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Priority"
+          },
+          "required_skill": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Required Skill"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status"
+          },
+          "subcategory": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subcategory"
+          }
+        },
+        "title": "TicketPatch",
+        "type": "object"
+      },
+      "TicketResponse": {
+        "properties": {
+          "request_id": {
+            "title": "Request Id",
+            "type": "string"
+          },
+          "ticket": {
+            "$ref": "#/components/schemas/TicketOut"
+          }
+        },
+        "required": [
+          "ticket",
+          "request_id"
+        ],
+        "title": "TicketResponse",
+        "type": "object"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "title": "Location",
+            "type": "array"
+          },
+          "msg": {
+            "title": "Message",
+            "type": "string"
+          },
+          "type": {
+            "title": "Error Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError",
+        "type": "object"
+      }
+    }
+  },
+  "info": {
+    "description": "SLA-aware ticket allocation with an auditable decision history. Authentication, tickets, agents, the audit trail, recommendation, acceptance, override, manual rescore and Risk Radar.",
+    "title": "SLA-aware service desk (the application)",
+    "version": "2.0.0-phase3"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/api/agents": {
+      "get": {
+        "operationId": "list_agents_api_agents_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentListResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List Agents",
+        "tags": [
+          "administration"
+        ]
+      },
+      "post": {
+        "operationId": "create_agent_api_agents_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AgentCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Agent",
+        "tags": [
+          "administration"
+        ]
+      }
+    },
+    "/api/agents/{agent_id}": {
+      "patch": {
+        "operationId": "patch_agent_api_agents__agent_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "agent_id",
+            "required": true,
+            "schema": {
+              "title": "Agent Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AgentPatch"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Patch Agent",
+        "tags": [
+          "administration"
+        ]
+      }
+    },
+    "/api/agents/{agent_id}/skills": {
+      "put": {
+        "description": "Set an agent's skills to exactly this list.\n\nReplacement rather than merge: eligibility is decided by these rows, and a\nskill that was removed has to actually disappear or the dispatcher would\nkeep seeing an agent proposed for work they no longer do.",
+        "operationId": "replace_skills_api_agents__agent_id__skills_put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "agent_id",
+            "required": true,
+            "schema": {
+              "title": "Agent Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "items": {
+                  "$ref": "#/components/schemas/SkillIn"
+                },
+                "title": "Payload",
+                "type": "array"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Replace Skills",
+        "tags": [
+          "administration"
+        ]
+      }
+    },
+    "/api/assignment-decisions": {
+      "post": {
+        "description": "Recommend, and only recommend. This endpoint assigns nobody (spec D.3).",
+        "operationId": "create_recommendations_api_assignment_decisions_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecommendationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DecisionListResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Recommendations",
+        "tags": [
+          "decisions"
+        ]
+      }
+    },
+    "/api/assignment-decisions/{decision_id}": {
+      "get": {
+        "description": "The decision with its full candidate payload, for the audit view.",
+        "operationId": "read_decision_api_assignment_decisions__decision_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "decision_id",
+            "required": true,
+            "schema": {
+              "title": "Decision Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DecisionDetailResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Read Decision",
+        "tags": [
+          "decisions"
+        ]
+      }
+    },
+    "/api/assignment-decisions/{decision_id}/accept": {
+      "post": {
+        "operationId": "accept_recommendation_api_assignment_decisions__decision_id__accept_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "decision_id",
+            "required": true,
+            "schema": {
+              "title": "Decision Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssignmentResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Accept Recommendation",
+        "tags": [
+          "decisions"
+        ]
+      }
+    },
+    "/api/assignment-decisions/{decision_id}/override": {
+      "post": {
+        "description": "Both the recommendation and the human's choice come back, so the client\ncan show the difference honestly rather than only the outcome.",
+        "operationId": "override_recommendation_api_assignment_decisions__decision_id__override_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "decision_id",
+            "required": true,
+            "schema": {
+              "title": "Decision Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OverrideRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssignmentResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Override Recommendation",
+        "tags": [
+          "decisions"
+        ]
+      }
+    },
+    "/api/health": {
+      "get": {
+        "description": "Liveness, the dialect, migration state, and which artifacts are loaded.\n\nThe model versions are here because the demo has to be able to answer \"which\nmodel produced that number?\" without opening a database, and because a build\nwith no usable artifact should say so on its health endpoint rather than at\nthe first ticket creation.",
+        "operationId": "health_api_health_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Health",
+        "tags": [
+          "health"
+        ]
+      }
+    },
+    "/api/login": {
+      "post": {
+        "operationId": "login_api_login_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Login",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/logout": {
+      "post": {
+        "operationId": "logout_api_logout_post",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LogoutResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Logout",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/machines": {
+      "get": {
+        "operationId": "list_machines_api_machines_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "active_only",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Active Only",
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MachineListResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Machines",
+        "tags": [
+          "hardware"
+        ]
+      },
+      "post": {
+        "operationId": "create_machine_api_machines_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MachineCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MachineResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Machine",
+        "tags": [
+          "hardware"
+        ]
+      }
+    },
+    "/api/machines/{machine_id}": {
+      "patch": {
+        "description": "Edit register figures.\n\nRe-recording the age also re-stamps ``age_recorded_at``, so the advisor ages\nthe new figure forward from today rather than from whenever the row was\nfirst written.",
+        "operationId": "patch_machine_api_machines__machine_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "machine_id",
+            "required": true,
+            "schema": {
+              "title": "Machine Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MachinePatch"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MachineResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Patch Machine",
+        "tags": [
+          "hardware"
+        ]
+      }
+    },
+    "/api/machines/{machine_id}/replacement-advice": {
+      "get": {
+        "operationId": "machine_advice_api_machines__machine_id__replacement_advice_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "machine_id",
+            "required": true,
+            "schema": {
+              "title": "Machine Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReplacementAdviceResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Machine Advice",
+        "tags": [
+          "hardware"
+        ]
+      }
+    },
+    "/api/me": {
+      "get": {
+        "description": "Who the cookie belongs to. The client uses this to restore its session.",
+        "operationId": "whoami_api_me_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Whoami",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/replacement-advice": {
+      "get": {
+        "description": "Advice for the whole register, most overdue first.\n\nThe ordering is by how far past its optimal replacement year a machine is,\nwhich is a number in the response rather than a judgement made here.",
+        "operationId": "fleet_advice_api_replacement_advice_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "active_only",
+            "required": false,
+            "schema": {
+              "default": true,
+              "title": "Active Only",
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReplacementAdviceListResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Fleet Advice",
+        "tags": [
+          "hardware"
+        ]
+      }
+    },
+    "/api/replacement-advice/group": {
+      "post": {
+        "description": "Group replacement against replace-on-failure for a fleet of like items.",
+        "operationId": "group_advice_api_replacement_advice_group_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GroupReplacementRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GroupReplacementResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Group Advice",
+        "tags": [
+          "hardware"
+        ]
+      }
+    },
+    "/api/risk-radar": {
+      "get": {
+        "operationId": "risk_radar_api_risk_radar_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "priority",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maximum": 4,
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Priority"
+            }
+          },
+          {
+            "in": "query",
+            "name": "overdue_only",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Overdue Only",
+              "type": "boolean"
+            }
+          },
+          {
+            "in": "query",
+            "name": "assignee_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Assignee Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "risk_band",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Risk Band"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 100,
+              "maximum": 500,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RiskRadarResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Risk Radar",
+        "tags": [
+          "radar"
+        ]
+      }
+    },
+    "/api/sla-policies": {
+      "get": {
+        "operationId": "list_policies_api_sla_policies_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SlaPolicyListResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List Policies",
+        "tags": [
+          "administration"
+        ]
+      }
+    },
+    "/api/sla-policies/{policy_id}": {
+      "patch": {
+        "description": "Edit the business inputs for one priority (spec I.4).\n\nThe edit bumps ``version``, so every recommendation priced under the old\nnumbers becomes stale and must be rescored before it can be accepted. No\nticket's stored ``sla_due_at`` is touched, which is what the interface's\n\"affects future recommendations only\" warning actually means.",
+        "operationId": "patch_policy_api_sla_policies__policy_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "policy_id",
+            "required": true,
+            "schema": {
+              "title": "Policy Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SlaPolicyPatch"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SlaPolicyResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Patch Policy",
+        "tags": [
+          "administration"
+        ]
+      }
+    },
+    "/api/tickets": {
+      "get": {
+        "operationId": "list_tickets_api_tickets_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          },
+          {
+            "in": "query",
+            "name": "priority",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maximum": 4,
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Priority"
+            }
+          },
+          {
+            "in": "query",
+            "name": "assignee_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Assignee Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 200,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TicketListResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Tickets",
+        "tags": [
+          "tickets"
+        ]
+      },
+      "post": {
+        "operationId": "create_ticket_api_tickets_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TicketCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TicketResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Ticket",
+        "tags": [
+          "tickets"
+        ]
+      }
+    },
+    "/api/tickets/rescore": {
+      "post": {
+        "operationId": "rescore_tickets_api_tickets_rescore_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RescoreRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RescoreResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Rescore Tickets",
+        "tags": [
+          "tickets"
+        ]
+      }
+    },
+    "/api/tickets/{ticket_id}": {
+      "get": {
+        "operationId": "get_ticket_api_tickets__ticket_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "ticket_id",
+            "required": true,
+            "schema": {
+              "title": "Ticket Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TicketResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Ticket",
+        "tags": [
+          "tickets"
+        ]
+      },
+      "patch": {
+        "operationId": "patch_ticket_api_tickets__ticket_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "ticket_id",
+            "required": true,
+            "schema": {
+              "title": "Ticket Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TicketPatch"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TicketResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Patch Ticket",
+        "tags": [
+          "tickets"
+        ]
+      }
+    },
+    "/api/tickets/{ticket_id}/escalation-acknowledgement": {
+      "post": {
+        "description": "Record a human response to escalation. Nothing is routed anywhere.\n\nThis is the action Risk Radar offers on a flagged or overdue ticket. It\nappends one immutable event and leaves the ticket's status, assignee and\ndeadline exactly as they were: the system recommends and records, and a\nperson decides what actually happens next (spec B.2).",
+        "operationId": "acknowledge_escalation_api_tickets__ticket_id__escalation_acknowledgement_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "ticket_id",
+            "required": true,
+            "schema": {
+              "title": "Ticket Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EscalationAcknowledgeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EscalationAcknowledgeResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Acknowledge Escalation",
+        "tags": [
+          "tickets"
+        ]
+      }
+    },
+    "/api/tickets/{ticket_id}/events": {
+      "get": {
+        "description": "History ascending by occurrence time, then event id (spec D.6).",
+        "operationId": "list_events_api_tickets__ticket_id__events_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "ticket_id",
+            "required": true,
+            "schema": {
+              "title": "Ticket Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EventListResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Events",
+        "tags": [
+          "tickets"
+        ]
+      }
+    },
+    "/api/tickets/{ticket_id}/machine": {
+      "put": {
+        "description": "State which machine this ticket is about, or clear that statement.\n\nThis is the only way a ticket and a machine are ever connected. No column in\nthe source event log links an incident to an asset, so the link is a\nperson's assertion and the history records who made it. Nothing in scoring\nor dispatch reads the field: linking a machine changes what the replacement\nadvisor counts, and nothing else.",
+        "operationId": "link_machine_api_tickets__ticket_id__machine_put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "ticket_id",
+            "required": true,
+            "schema": {
+              "title": "Ticket Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TicketMachineLink"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TicketResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Link Machine",
+        "tags": [
+          "tickets"
+        ]
+      }
+    }
+  }
+}
