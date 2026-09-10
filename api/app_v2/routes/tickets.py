@@ -1,8 +1,8 @@
-"""Ticket CRUD and event history (spec D.2, D.6).
+"""Ticket CRUD, event history, and escalation acknowledgement.
 
-There is no recommendation endpoint here yet. Dispatch arrives in phase 3, and
-until then the queue shows tickets and their deadlines and nothing that pretends
-to be a model output.
+Spec D.2 and D.6 for the ticket and history routes; spec B.1 dispatcher story 2
+for the escalation action. Recommendation itself lives in ``routes/decisions``;
+nothing here assigns anybody.
 """
 from typing import Optional
 
@@ -14,6 +14,7 @@ from api.app_v2 import deps
 from api.app_v2.db import models
 from api.app_v2.db.session import get_db
 from api.app_v2.domain import schemas
+from api.app_v2.services import escalation as escalation_service
 from api.app_v2.services import tickets as ticket_service
 
 router = APIRouter(prefix="/tickets", tags=["tickets"])
@@ -145,5 +146,43 @@ def list_events(
             )
             for row in rows
         ],
+        request_id=request_id,
+    )
+
+
+@router.post(
+    "/{ticket_id}/escalation-acknowledgement",
+    response_model=schemas.EscalationAcknowledgeResponse,
+    status_code=201,
+)
+def acknowledge_escalation(
+    ticket_id: str,
+    payload: schemas.EscalationAcknowledgeRequest,
+    db: DbSession = Depends(get_db),
+    actor=Depends(deps.current_user),
+    request_id: str = Depends(deps.request_id),
+):
+    """Record a human response to escalation. Nothing is routed anywhere.
+
+    This is the action Risk Radar offers on a flagged or overdue ticket. It
+    appends one immutable event and leaves the ticket's status, assignee and
+    deadline exactly as they were: the system recommends and records, and a
+    person decides what actually happens next (spec B.2).
+    """
+    ticket = ticket_service.get_ticket(db, ticket_id)
+    event, recommendation = escalation_service.acknowledge(db, actor, ticket, payload.note)
+    return schemas.EscalationAcknowledgeResponse(
+        ticket_id=ticket.id,
+        event=schemas.EventOut(
+            id=event.id,
+            ticket_id=event.ticket_id,
+            decision_id=event.decision_id,
+            actor_user_id=event.actor_user_id,
+            event_type=event.event_type,
+            payload=event.payload_json,
+            occurred_at=event.occurred_at,
+        ),
+        following_recommendation=recommendation is not None,
+        ticket_status=ticket.status,
         request_id=request_id,
     )

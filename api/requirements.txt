@@ -21,3 +21,10 @@ alembic
 argon2-cffi
 psycopg[binary]        # PostgreSQL driver; SQLite needs nothing extra
 httpx                  # FastAPI TestClient transport
+
+# Version-2 offline models only (api/app_v2/ml/, api/app_v2/ingest/). The
+# engine's ban on ML libraries still holds for api/engine/, which imports
+# none of these. Training runs offline; the API only loads a saved artifact.
+scikit-learn>=1.3
+joblib
+pyarrow                # parquet for prepared incident data

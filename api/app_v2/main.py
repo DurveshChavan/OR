@@ -26,17 +26,21 @@ from api.app_v2.db.session import get_engine
 from api.app_v2.domain import schemas
 from api.app_v2.routes import agents as agents_routes
 from api.app_v2.routes import auth as auth_routes
+from api.app_v2.routes import decisions as decision_routes
+from api.app_v2.routes import radar as radar_routes
+from api.app_v2.routes import rescore as rescore_routes
 from api.app_v2.routes import tickets as tickets_routes
+from api.app_v2.services import scoring
 
 API_PREFIX = "/api/v2"
 
 app = FastAPI(
     title="SLA-aware service desk (v2)",
-    version="2.0.0-phase1",
+    version="2.0.0-phase3",
     description=(
         "SLA-aware ticket allocation with an auditable decision history. "
-        "Phase 1 covers authentication, tickets, agents and the audit trail; "
-        "recommendation and rescore endpoints arrive in later phases."
+        "Authentication, tickets, agents, the audit trail, recommendation, "
+        "acceptance, override, manual rescore and Risk Radar."
     ),
 )
 
@@ -66,19 +70,40 @@ app.add_exception_handler(RequestValidationError, errors.validation_error_handle
 app.add_exception_handler(StarletteHTTPException, errors.http_error_handler)
 
 app.include_router(auth_routes.router, prefix=API_PREFIX)
+# The rescore router owns POST /tickets/rescore and must be mounted before the
+# ticket router, whose GET /tickets/{ticket_id} would otherwise not conflict but
+# whose ordering is easier to reason about with the fixed path registered first.
+app.include_router(rescore_routes.router, prefix=API_PREFIX)
 app.include_router(tickets_routes.router, prefix=API_PREFIX)
 app.include_router(agents_routes.router, prefix=API_PREFIX)
+app.include_router(decision_routes.router, prefix=API_PREFIX)
+app.include_router(radar_routes.router, prefix=API_PREFIX)
 
 
 @app.get(API_PREFIX + "/health", response_model=schemas.HealthResponse, tags=["health"])
 def health(request_id: str = Depends(deps.request_id)) -> schemas.HealthResponse:
-    """Liveness, the dialect in use, and whether migrations have been run."""
+    """Liveness, the dialect, migration state, and which artifacts are loaded.
+
+    The model versions are here because the demo has to be able to answer "which
+    model produced that number?" without opening a database, and because a build
+    with no usable artifact should say so on its health endpoint rather than at
+    the first ticket creation.
+    """
     engine = get_engine()
     with engine.connect() as connection:
         head_present = engine.dialect.has_table(connection, "alembic_version")
+    try:
+        risk_version, duration_version = scoring.available_versions()
+        models_available = True
+    except errors.ApiError:
+        risk_version = duration_version = None
+        models_available = False
     return schemas.HealthResponse(
         status="ok",
         dialect=engine.dialect.name,
         migration_head_present=bool(head_present),
+        models_available=models_available,
+        risk_model_version=risk_version,
+        duration_model_version=duration_version,
         request_id=request_id,
     )

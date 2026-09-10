@@ -1,64 +1,78 @@
-"""UCI-498 incident and label audit (FINAL_IMPLEMENTATION.md, week-one gate 1).
+"""UCI-498 ingestion: ``fetch`` the log, ``audit`` it, ``prepare`` incident rows.
 
-Answers the questions the plan says must be answered before any v2 model,
-schema, or research claim is committed to:
+    python -m api.app_v2.ingest.uci498 fetch
+    python -m api.app_v2.ingest.uci498 audit
+    python -m api.app_v2.ingest.uci498 prepare
 
-  * how many raw events, unique incidents, valid incidents, dropped-and-why
-  * the per-incident ``made_sla`` prevalence
-  * whether ``made_sla`` LATCHES across an incident's lifecycle. It is a live
-    compliance flag, so a breaching ticket is supposed to change value; what
-    decides the label's validity is whether an incident can ever go back from
-    False to True. If it can, "did it breach?" has no single answer and the plan
-    says to stop calling the model a breach predictor.
-  * the exact ordering rule used to pick the first and final record
-  * missingness and cardinality of every candidate feature
-  * when ``assignment_group`` / ``assigned_to`` first become populated, which
-    decides whether either leaks a pre-existing human routing action
-  * which end-timestamp actually measures work. ``closed_at`` is rejected: the
-    resolve-to-close gap is a fixed ~5-day auto-close timer, so duration is
-    ``resolved_at - opened_at``.
+This is the promotion of ``scripts/audit_uci498.py`` that PHASE_2 calls for. The
+audit logic and its ordering rule are carried over unchanged, because the
+numbers it produced are already quoted in ``notes/phases/STATE.md`` and will be
+cited in every model card; a rewrite that moved one of them would silently
+invalidate prose that is already written. The new work here is ``fetch`` (hash
+and manifest the raw file) and ``prepare`` (one row per incident, split
+recorded, ready for training).
 
-Deliberately standalone: this runs before the v2 contract is frozen, so it
-must not import from ``api.engine`` (legacy) or presume an ``app_v2`` package
-layout that does not exist yet. Phase 2 promotes this logic into
-``app_v2/ingest/uci498.py`` behind the ``fetch``/``audit``/``prepare`` CLI the
-plan specifies; until then the answers matter more than the packaging.
+What the audit settled, and what this module therefore hard-codes:
 
-Reads only. Writes only under data/reports/.
+  * label — ``made_sla == False`` on the final ordered record. The flag latches:
+    of 24,918 incidents, 0 ever return from False to True.
+  * duration — ``resolved_at - opened_at``. Never ``closed_at``: the
+    resolve-to-close gap is a fixed ~5-day auto-close timer.
+  * features — first ordered record only; ``assignment_group`` excluded.
 
-    python scripts/audit_uci498.py
+Reads raw data. Writes only under ``data/processed/``, ``data/manifests/`` and
+``data/reports/``. Raw data is never modified.
 """
+import argparse
 import hashlib
+import io
+import json
 import os
 import sys
+import urllib.request
+import zipfile
 from datetime import datetime, timezone
 
 import numpy as np
 import pandas as pd
 
+from api.app_v2.ml.feature_spec import (
+    AUDIT_GATED_FIELDS,
+    CREATION_FIELDS,
+    FORBIDDEN_FIELDS,
+    INCIDENT_FEATURES_V1,
+    ORDER_RULE,
+)
+
+RAW_DIR = os.path.join("data", "raw", "uci498")
+#: The audited file. Its SHA-256 is quoted in data/reports/uci498_audit.md and
+#: in every downstream manifest, so this path is not interchangeable with the
+#: second copy under data/incident+management+process+enriched+event+log/.
 RAW_PATH = os.path.join("data", "incident_event_log.csv")
 REPORT_DIR = os.path.join("data", "reports")
 REPORT_MD = os.path.join(REPORT_DIR, "uci498_audit.md")
+PROCESSED_DIR = os.path.join("data", "processed", "uci498")
+PROCESSED_PARQUET = os.path.join(PROCESSED_DIR, "incidents_v1.parquet")
+PROCESSED_SCHEMA = os.path.join(PROCESSED_DIR, "incidents_v1.schema.json")
+MANIFEST_PATH = os.path.join("data", "manifests", "uci498.json")
 
-#: Ordering rule, stated once and used everywhere below. UCI-498 is an event
-#: log: one incident `number` has many rows. Everything in this audit depends
-#: on which row is treated as "the decision-time snapshot", so the rule is
-#: named rather than left implicit in a sort call.
-ORDER_RULE = ("sys_updated_at", "sys_mod_count", "_row_index")
+SOURCE_URL = "https://archive.ics.uci.edu/dataset/498/incident+management+process+enriched+event+log"
+ZIP_URL = (
+    "https://archive.ics.uci.edu/static/public/498/"
+    "incident+management+process+enriched+event+log.zip"
+)
+CITATION = (
+    "UCI ML Repository, dataset 498, *Incident management process enriched "
+    "event log* (ServiceNow-derived, anonymised)."
+)
+LICENSE = "CC BY 4.0 (UCI Machine Learning Repository terms)"
+#: Bumped whenever preparation semantics change, so a manifest identifies the
+#: code that produced the parquet, not just the data that went in.
+PREPARE_CODE_VERSION = "uci498-prepare-1"
 
-#: Fields available at (or before) ticket creation -- the plan's allow-list.
-CREATION_FIELDS = [
-    "priority", "impact", "urgency", "category", "subcategory",
-    "location", "contact_type", "opened_at", "u_symptom",
-]
-#: Audit-gated: allowed only if this audit proves it is set before the routing
-#: decision being evaluated.
-AUDIT_GATED_FIELDS = ["assignment_group"]
-#: Never a feature: resolution or prior-routing outcome leakage.
-FORBIDDEN_FIELDS = [
-    "assigned_to", "resolved_by", "closed_code", "resolved_at", "closed_at",
-    "reassignment_count", "reopen_count", "sys_mod_count", "made_sla",
-]
+#: Chronological split, fixed by the plan (§E.4) and by PHASE_2.
+TRAIN_FRACTION = 0.70
+VALIDATION_FRACTION = 0.15
 
 TIMESTAMP_COLUMNS = [
     "opened_at", "sys_created_at", "sys_updated_at", "resolved_at", "closed_at",
@@ -281,9 +295,267 @@ def quantiles(series, qs=(0.01, 0.1, 0.25, 0.5, 0.75, 0.9, 0.99)):
     return {f"p{int(q * 100)}": float(np.quantile(s, q)) for q in qs} if len(s) else {}
 
 
-def main():
+# --------------------------------------------------------------------------
+# fetch
+# --------------------------------------------------------------------------
+
+def write_manifest(digest, raw_events, unique_incidents, prepared=None,
+                   split_boundaries=None):
+    """Record where the data came from and what was built from it.
+
+    Every field the plan asks for (§ "Data manifests and model cards") lives
+    here, including the SHA-256 that model cards cite back to.
+    """
+    os.makedirs(os.path.dirname(MANIFEST_PATH), exist_ok=True)
+    manifest = {
+        "source_url": SOURCE_URL,
+        "archive_url": ZIP_URL,
+        "citation": CITATION,
+        "license": LICENSE,
+        "local_path": RAW_PATH.replace(os.sep, "/"),
+        "sha256": digest,
+        "recorded_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "raw_events": int(raw_events),
+        "unique_incidents": int(unique_incidents),
+        "prepare_code_version": PREPARE_CODE_VERSION,
+        "feature_schema_version": INCIDENT_FEATURES_V1.version,
+        "label_definition": "made_sla == False on the final ordered record",
+        "duration_definition": "resolved_at - opened_at (closed_at rejected: ~5-day auto-close timer)",
+        "ordering_rule": list(ORDER_RULE),
+    }
+    if prepared is not None:
+        manifest["prepared_incidents"] = int(prepared)
+    if split_boundaries is not None:
+        manifest.update(split_boundaries)
+    with open(MANIFEST_PATH, "w", encoding="utf-8") as fh:
+        json.dump(manifest, fh, indent=2, sort_keys=True)
+    return manifest
+
+
+def fetch(force=False):
+    """Make sure the raw log is present locally, then hash and manifest it.
+
+    An existing valid file is adopted, never re-downloaded. A fresh pull from
+    UCI could be a different snapshot, and its SHA-256 would then disagree with
+    the hash already quoted in the audit report, the manifests and the model
+    cards. ``--force`` is the only path that downloads, and it is a deliberate
+    act of re-basing every one of those documents.
+    """
+    if os.path.exists(RAW_PATH) and not force:
+        digest = sha256(RAW_PATH)
+        df = pd.read_csv(RAW_PATH, na_values="?", low_memory=False, usecols=["number"])
+        manifest = write_manifest(digest, len(df), df["number"].nunique())
+        print(f"adopted existing {RAW_PATH}")
+        print(f"sha256={digest}")
+        print(f"raw events={len(df):,} incidents={df['number'].nunique():,}")
+        print(f"wrote {MANIFEST_PATH}")
+        return manifest
+
+    os.makedirs(RAW_DIR, exist_ok=True)
+    print(f"downloading {ZIP_URL}")
+    raw = urllib.request.urlopen(ZIP_URL).read()
+    with zipfile.ZipFile(io.BytesIO(raw)) as archive:
+        names = [n for n in archive.namelist() if n.endswith(".csv")]
+        if not names:
+            sys.exit("archive contains no CSV; UCI may have changed the packaging")
+        with archive.open(names[0]) as member:
+            payload = member.read()
+    target = os.path.join(RAW_DIR, "incident_event_log.csv")
+    with open(target, "wb") as fh:
+        fh.write(payload)
+
+    df = pd.read_csv(target, na_values="?", low_memory=False)
+    required = {"number", "opened_at", "made_sla", "sys_updated_at", "sys_mod_count"}
+    missing = required - set(df.columns)
+    if missing:
+        sys.exit(f"downloaded CSV is missing required column(s): {sorted(missing)}")
+
+    digest = sha256(target)
+    print(f"wrote {target}")
+    print(f"sha256={digest}")
+    print(
+        "NOTE: this file is at data/raw/uci498/. The audited path is "
+        f"{RAW_PATH}; every document citing a SHA-256 must be re-based before "
+        "the new file is used."
+    )
+    return write_manifest(digest, len(df), df["number"].nunique())
+
+
+# --------------------------------------------------------------------------
+# prepare
+# --------------------------------------------------------------------------
+
+def assign_chronological_split(valid, train_fraction=TRAIN_FRACTION,
+                               validation_fraction=VALIDATION_FRACTION):
+    """Label each incident train / validation / test by ``opened_at`` order.
+
+    The cut is taken at a row index and then pushed forward to the end of the
+    tied timestamp, so one ``opened_at`` value never straddles two splits. That
+    makes the split reproducible from the two recorded boundary timestamps
+    alone — which is what model cards and replay fixtures cite, rather than a
+    percentage that a later run might round differently.
+    """
+    ordered = valid.sort_values(["opened_at", "incident_id"], kind="mergesort")
+    opened = ordered["opened_at"].to_numpy()
+    n = len(ordered)
+
+    def cut(index):
+        if index >= n:
+            return n
+        boundary = opened[index - 1] if index > 0 else opened[0]
+        # advance past every row sharing the boundary timestamp
+        return int(np.searchsorted(opened, boundary, side="right"))
+
+    train_end = cut(int(n * train_fraction))
+    validation_end = cut(int(n * (train_fraction + validation_fraction)))
+
+    split = np.empty(n, dtype=object)
+    split[:train_end] = "train"
+    split[train_end:validation_end] = "validation"
+    split[validation_end:] = "test"
+    ordered = ordered.assign(split=split)
+
+    def at(i):
+        # A split can be empty on a small fixture; report that as null rather
+        # than raising, so the boundaries stay inspectable either way.
+        return str(opened[i]) if 0 <= i < n else None
+
+    boundaries = {
+        "train_end_opened_at": at(train_end - 1),
+        "validation_start_opened_at": at(train_end),
+        "validation_end_opened_at": at(validation_end - 1),
+        "test_start_opened_at": at(validation_end),
+        "split_counts": {
+            "train": int(train_end),
+            "validation": int(validation_end - train_end),
+            "test": int(n - validation_end),
+        },
+    }
+    return ordered, boundaries
+
+
+def prepare(raw_path=RAW_PATH, write=True):
+    """Build exactly one feature row per valid incident.
+
+    Features come from the first ordered record; label and duration come from
+    the final one. Nothing on the forbidden list survives into the output, and
+    ``FeatureSpec.validate_frame`` is called on the result so that the file
+    itself, not just the training script, is proven clean.
+    """
+    df = load_raw(raw_path)
+    ordered = df.sort_values(list(ORDER_RULE), kind="mergesort")
+    grouped = ordered.groupby("number", sort=False)
+    first = grouped.head(1).set_index("number")
+    final = grouped.tail(1).set_index("number")
+
+    sla_final = normalise_sla(final["made_sla"])
+    opened = first["opened_at"]
+    resolved = final["resolved_at"]
+    duration = (resolved - opened).dt.total_seconds() / 60.0
+
+    # Every column is assigned onto one index (the incident number), so first-
+    # record and final-record values cannot drift out of alignment. Building the
+    # frame from a dict of differently-indexed Series silently reorders rows and
+    # pairs a ticket's features with another ticket's label.
+    incidents = pd.DataFrame(index=first.index)
+    incidents["incident_id"] = first.index.astype(str)
+    incidents["opened_at"] = opened
+    for col in INCIDENT_FEATURES_V1.categorical:
+        incidents[col] = first[col] if col in first.columns else pd.NA
+    made_sla = sla_final.astype("boolean")
+    incidents["label_breach"] = ~made_sla
+    incidents["duration_minutes"] = duration
+    incidents["_resolved_at"] = resolved
+
+    valid = incidents[
+        incidents["opened_at"].notna()
+        & incidents["_resolved_at"].notna()
+        & incidents["label_breach"].notna()
+        & (incidents["duration_minutes"] > 0)
+    ].copy()
+    valid = valid.drop(columns=["_resolved_at"]).reset_index(drop=True)
+    valid["label_breach"] = valid["label_breach"].astype(bool)
+
+    prepared, boundaries = assign_chronological_split(valid)
+    prepared = prepared.reset_index(drop=True)
+
+    # The invariants the plan states as asserts, kept as asserts.
+    assert prepared["incident_id"].is_unique, "preparation produced duplicate incidents"
+    INCIDENT_FEATURES_V1.validate_frame(prepared)
+
+    if not write:
+        return prepared, boundaries
+
+    os.makedirs(PROCESSED_DIR, exist_ok=True)
+    prepared.to_parquet(PROCESSED_PARQUET, index=False)
+
+    digest = sha256(raw_path)
+    schema = {
+        "prepared_file": PROCESSED_PARQUET.replace(os.sep, "/"),
+        "prepare_code_version": PREPARE_CODE_VERSION,
+        "source_sha256": digest,
+        "source_path": raw_path.replace(os.sep, "/"),
+        "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "incident_count": int(len(prepared)),
+        "label_column": "label_breach",
+        "label_definition": "made_sla == False on the final ordered record",
+        "label_prevalence": float(prepared["label_breach"].mean()),
+        # Recorded because it is large and it constrains how the risk model may
+        # be reported: the breach rate falls from 44% in the training period to
+        # 24% in the locked test period. A chronological split does not hide
+        # that drift, it exposes it.
+        "label_prevalence_by_split": {
+            str(k): float(v)
+            for k, v in prepared.groupby("split")["label_breach"].mean().items()
+        },
+        # Weekly prevalence is recorded because the split-level number hides
+        # where the shift happens: the first three weeks of the log run at
+        # 56% / 96% / 66% breach and the rate settles near 21-25% from
+        # mid-April on. Any claim about model calibration on the locked test
+        # period has to be read against this table.
+        "label_prevalence_by_open_week": {
+            str(k): {"n": int(v["n"]), "breach_rate": float(v["breach_rate"])}
+            for k, v in prepared.assign(
+                _week=prepared["opened_at"].dt.to_period("W").astype(str)
+            ).groupby("_week")["label_breach"].agg(
+                n="size", breach_rate="mean"
+            ).iterrows()
+        },
+        "duration_column": "duration_minutes",
+        "duration_definition": "resolved_at - opened_at, minutes",
+        "ordering_rule": list(ORDER_RULE),
+        "split": boundaries,
+        "feature_spec": INCIDENT_FEATURES_V1.as_dict(),
+        "dtypes": {c: str(t) for c, t in prepared.dtypes.items()},
+    }
+    with open(PROCESSED_SCHEMA, "w", encoding="utf-8") as fh:
+        json.dump(schema, fh, indent=2, sort_keys=True)
+
+    write_manifest(
+        digest, len(df), df["number"].nunique(),
+        prepared=len(prepared), split_boundaries={"split": boundaries},
+    )
+
+    print(f"wrote {PROCESSED_PARQUET} ({len(prepared):,} incidents)")
+    print(f"wrote {PROCESSED_SCHEMA}")
+    print(f"wrote {MANIFEST_PATH}")
+    counts = boundaries["split_counts"]
+    print(
+        "split: train={train:,} validation={validation:,} test={test:,}".format(**counts)
+    )
+    print(f"train ends {boundaries['train_end_opened_at']} | "
+          f"test starts {boundaries['test_start_opened_at']}")
+    print(f"breach prevalence={prepared['label_breach'].mean() * 100:.2f}%")
+    return prepared, boundaries
+
+
+# --------------------------------------------------------------------------
+# audit
+# --------------------------------------------------------------------------
+
+def audit():
     if not os.path.exists(RAW_PATH):
-        sys.exit(f"raw log not found at {RAW_PATH}; run the legacy loader once to cache it")
+        sys.exit(f"raw log not found at {RAW_PATH}; run `fetch` first")
     os.makedirs(REPORT_DIR, exist_ok=True)
 
     df = load_raw(RAW_PATH)
@@ -309,7 +581,7 @@ def main():
     A = L.append
     A("# UCI-498 incident and label audit\n")
     A(f"Generated {datetime.now(timezone.utc).isoformat(timespec='seconds')} "
-      f"by `scripts/audit_uci498.py`.\n")
+      f"by `api/app_v2/ingest/uci498.py audit`.\n")
     A("## Source\n")
     A(f"- file: `{RAW_PATH}`")
     A(f"- SHA-256: `{digest}`")
@@ -501,6 +773,27 @@ def main():
     print(f"breach prevalence={prevalence * 100:.2f}%")
     for field, s in timing.items():
         print(f"{field}: first-record fill={s['populated_on_first_record_pct']:.1f}%")
+
+
+def main(argv=None):
+    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    sub = parser.add_subparsers(dest="command", required=True)
+    fetch_parser = sub.add_parser("fetch", help="hash and manifest the raw log")
+    fetch_parser.add_argument(
+        "--force", action="store_true",
+        help="download a fresh copy even if a local file exists (re-bases every "
+             "document that cites the current SHA-256)",
+    )
+    sub.add_parser("audit", help="regenerate data/reports/uci498_audit.md")
+    sub.add_parser("prepare", help="write one feature row per valid incident")
+
+    args = parser.parse_args(argv)
+    if args.command == "fetch":
+        fetch(force=args.force)
+    elif args.command == "audit":
+        audit()
+    else:
+        prepare()
 
 
 if __name__ == "__main__":

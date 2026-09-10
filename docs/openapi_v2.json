@@ -183,6 +183,302 @@
         "title": "AgentResponse",
         "type": "object"
       },
+      "AgentSummary": {
+        "description": "Just enough of an agent to name them in a recommendation.",
+        "properties": {
+          "display_name": {
+            "title": "Display Name",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "display_name"
+        ],
+        "title": "AgentSummary",
+        "type": "object"
+      },
+      "AssignmentResponse": {
+        "description": "What was recommended and what was actually assigned, side by side.",
+        "properties": {
+          "assigned_agent": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AgentSummary"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "decision": {
+            "$ref": "#/components/schemas/DecisionOut"
+          },
+          "overridden": {
+            "title": "Overridden",
+            "type": "boolean"
+          },
+          "request_id": {
+            "title": "Request Id",
+            "type": "string"
+          },
+          "ticket_status": {
+            "title": "Ticket Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "decision",
+          "assigned_agent",
+          "ticket_status",
+          "overridden",
+          "request_id"
+        ],
+        "title": "AssignmentResponse",
+        "type": "object"
+      },
+      "DecisionDetailResponse": {
+        "properties": {
+          "candidate_payload": {
+            "additionalProperties": true,
+            "title": "Candidate Payload",
+            "type": "object"
+          },
+          "decision": {
+            "$ref": "#/components/schemas/DecisionOut"
+          },
+          "request_id": {
+            "title": "Request Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "decision",
+          "candidate_payload",
+          "request_id"
+        ],
+        "title": "DecisionDetailResponse",
+        "type": "object"
+      },
+      "DecisionListResponse": {
+        "properties": {
+          "decisions": {
+            "items": {
+              "$ref": "#/components/schemas/DecisionOut"
+            },
+            "title": "Decisions",
+            "type": "array"
+          },
+          "request_id": {
+            "title": "Request Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "decisions",
+          "request_id"
+        ],
+        "title": "DecisionListResponse",
+        "type": "object"
+      },
+      "DecisionOut": {
+        "description": "A stored recommendation, exactly as it was written.\n\n``reason`` is the text the decision carries. The client shows it verbatim;\nnothing recomputes it, here or in the browser.",
+        "properties": {
+          "batch_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Batch Id"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "decision_id": {
+            "title": "Decision Id",
+            "type": "string"
+          },
+          "eligible_agent_count": {
+            "title": "Eligible Agent Count",
+            "type": "integer"
+          },
+          "model_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model Version"
+          },
+          "policy_version": {
+            "title": "Policy Version",
+            "type": "integer"
+          },
+          "predicted_duration_minutes": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Predicted Duration Minutes"
+          },
+          "projected_finish_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Projected Finish At"
+          },
+          "projected_lateness_minutes": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Projected Lateness Minutes"
+          },
+          "projected_wait_minutes": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Projected Wait Minutes"
+          },
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          },
+          "recommended_agent": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AgentSummary"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "risk_probability": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Risk Probability"
+          },
+          "sla_due_at": {
+            "format": "date-time",
+            "title": "Sla Due At",
+            "type": "string"
+          },
+          "state": {
+            "title": "State",
+            "type": "string"
+          },
+          "ticket_id": {
+            "title": "Ticket Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "decision_id",
+          "ticket_id",
+          "batch_id",
+          "state",
+          "recommended_agent",
+          "risk_probability",
+          "predicted_duration_minutes",
+          "projected_wait_minutes",
+          "projected_finish_at",
+          "projected_lateness_minutes",
+          "sla_due_at",
+          "reason",
+          "model_version",
+          "policy_version",
+          "eligible_agent_count",
+          "created_at"
+        ],
+        "title": "DecisionOut",
+        "type": "object"
+      },
+      "EscalationAcknowledgeRequest": {
+        "description": "A human answering an escalation recommendation, or raising one.",
+        "properties": {
+          "note": {
+            "minLength": 1,
+            "title": "Note",
+            "type": "string"
+          }
+        },
+        "required": [
+          "note"
+        ],
+        "title": "EscalationAcknowledgeRequest",
+        "type": "object"
+      },
+      "EscalationAcknowledgeResponse": {
+        "properties": {
+          "event": {
+            "$ref": "#/components/schemas/EventOut"
+          },
+          "following_recommendation": {
+            "title": "Following Recommendation",
+            "type": "boolean"
+          },
+          "request_id": {
+            "title": "Request Id",
+            "type": "string"
+          },
+          "ticket_id": {
+            "title": "Ticket Id",
+            "type": "string"
+          },
+          "ticket_status": {
+            "title": "Ticket Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "ticket_id",
+          "event",
+          "following_recommendation",
+          "ticket_status",
+          "request_id"
+        ],
+        "title": "EscalationAcknowledgeResponse",
+        "type": "object"
+      },
       "EventListResponse": {
         "properties": {
           "events": {
@@ -282,13 +578,40 @@
             "title": "Dialect",
             "type": "string"
           },
+          "duration_model_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Duration Model Version"
+          },
           "migration_head_present": {
             "title": "Migration Head Present",
+            "type": "boolean"
+          },
+          "models_available": {
+            "default": false,
+            "title": "Models Available",
             "type": "boolean"
           },
           "request_id": {
             "title": "Request Id",
             "type": "string"
+          },
+          "risk_model_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Risk Model Version"
           },
           "status": {
             "title": "Status",
@@ -355,6 +678,254 @@
           "request_id"
         ],
         "title": "LogoutResponse",
+        "type": "object"
+      },
+      "OverrideRequest": {
+        "properties": {
+          "agent_id": {
+            "title": "Agent Id",
+            "type": "string"
+          },
+          "reason": {
+            "minLength": 1,
+            "title": "Reason",
+            "type": "string"
+          }
+        },
+        "required": [
+          "agent_id",
+          "reason"
+        ],
+        "title": "OverrideRequest",
+        "type": "object"
+      },
+      "RecommendationRequest": {
+        "description": "Ask for recommendations. This request never assigns anyone.",
+        "properties": {
+          "as_of": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "As Of"
+          },
+          "mode": {
+            "default": "batch",
+            "title": "Mode",
+            "type": "string"
+          },
+          "ticket_ids": {
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1,
+            "title": "Ticket Ids",
+            "type": "array"
+          }
+        },
+        "required": [
+          "ticket_ids"
+        ],
+        "title": "RecommendationRequest",
+        "type": "object"
+      },
+      "RescoreRequest": {
+        "properties": {
+          "as_of": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "As Of"
+          },
+          "only_stale": {
+            "default": true,
+            "title": "Only Stale",
+            "type": "boolean"
+          },
+          "stale_after_minutes": {
+            "default": 5,
+            "minimum": 0.0,
+            "title": "Stale After Minutes",
+            "type": "integer"
+          }
+        },
+        "title": "RescoreRequest",
+        "type": "object"
+      },
+      "RescoreResponse": {
+        "properties": {
+          "considered": {
+            "title": "Considered",
+            "type": "integer"
+          },
+          "request_id": {
+            "title": "Request Id",
+            "type": "string"
+          },
+          "rescored": {
+            "title": "Rescored",
+            "type": "integer"
+          },
+          "unchanged": {
+            "title": "Unchanged",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "considered",
+          "rescored",
+          "unchanged",
+          "request_id"
+        ],
+        "title": "RescoreResponse",
+        "type": "object"
+      },
+      "RiskRadarResponse": {
+        "properties": {
+          "as_of": {
+            "format": "date-time",
+            "title": "As Of",
+            "type": "string"
+          },
+          "request_id": {
+            "title": "Request Id",
+            "type": "string"
+          },
+          "tickets": {
+            "items": {
+              "$ref": "#/components/schemas/RiskRadarRow"
+            },
+            "title": "Tickets",
+            "type": "array"
+          }
+        },
+        "required": [
+          "as_of",
+          "tickets",
+          "request_id"
+        ],
+        "title": "RiskRadarResponse",
+        "type": "object"
+      },
+      "RiskRadarRow": {
+        "description": "One open ticket with the numbers that decided where it sits in the list.",
+        "properties": {
+          "current_assignee_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Current Assignee Id"
+          },
+          "external_reference": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "External Reference"
+          },
+          "minutes_to_due": {
+            "title": "Minutes To Due",
+            "type": "number"
+          },
+          "overdue": {
+            "title": "Overdue",
+            "type": "boolean"
+          },
+          "overdue_minutes": {
+            "title": "Overdue Minutes",
+            "type": "number"
+          },
+          "priority": {
+            "title": "Priority",
+            "type": "integer"
+          },
+          "required_skill": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Required Skill"
+          },
+          "risk_model_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Risk Model Version"
+          },
+          "risk_probability": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Risk Probability"
+          },
+          "sla_due_at": {
+            "format": "date-time",
+            "title": "Sla Due At",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "ticket_id": {
+            "title": "Ticket Id",
+            "type": "string"
+          },
+          "urgency_cost_per_minute": {
+            "title": "Urgency Cost Per Minute",
+            "type": "number"
+          }
+        },
+        "required": [
+          "ticket_id",
+          "external_reference",
+          "priority",
+          "status",
+          "required_skill",
+          "sla_due_at",
+          "minutes_to_due",
+          "overdue",
+          "overdue_minutes",
+          "risk_probability",
+          "risk_model_version",
+          "urgency_cost_per_minute",
+          "current_assignee_id"
+        ],
+        "title": "RiskRadarRow",
         "type": "object"
       },
       "SkillIn": {
@@ -481,6 +1052,130 @@
           "source_note"
         ],
         "title": "SlaPolicyOut",
+        "type": "object"
+      },
+      "SlaPolicyPatch": {
+        "description": "The business inputs a manager may edit (spec I.4).\n\nPriority is absent because it identifies the row, and version is absent\nbecause it is the system's counter: a manager who could type a version could\nmake an old recommendation look current.",
+        "properties": {
+          "breach_penalty_per_minute": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Breach Penalty Per Minute"
+          },
+          "escalation_threshold": {
+            "anyOf": [
+              {
+                "maximum": 1.0,
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Escalation Threshold"
+          },
+          "holding_cost_per_minute": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Holding Cost Per Minute"
+          },
+          "late_penalty_per_minute": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Late Penalty Per Minute"
+          },
+          "overdue_recovery_penalty_per_minute": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Overdue Recovery Penalty Per Minute"
+          },
+          "source_note": {
+            "anyOf": [
+              {
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Note"
+          },
+          "target_minutes": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target Minutes"
+          }
+        },
+        "title": "SlaPolicyPatch",
+        "type": "object"
+      },
+      "SlaPolicyResponse": {
+        "description": "One policy after an edit, with what the edit reaches.\n\n``affected_ticket_ids`` are the open tickets of that priority which received\na ``POLICY_CHANGED_REFERENCE`` event. Their stored deadlines did not move;\nthe field exists so the interface can say truthfully which live work the\nnext recommendation will price differently.",
+        "properties": {
+          "affected_ticket_ids": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Affected Ticket Ids",
+            "type": "array"
+          },
+          "changes": {
+            "additionalProperties": true,
+            "title": "Changes",
+            "type": "object"
+          },
+          "policy": {
+            "$ref": "#/components/schemas/SlaPolicyOut"
+          },
+          "request_id": {
+            "title": "Request Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "policy",
+          "changes",
+          "affected_ticket_ids",
+          "request_id"
+        ],
+        "title": "SlaPolicyResponse",
         "type": "object"
       },
       "TicketCreate": {
@@ -914,9 +1609,9 @@
     }
   },
   "info": {
-    "description": "SLA-aware ticket allocation with an auditable decision history. Phase 1 covers authentication, tickets, agents and the audit trail; recommendation and rescore endpoints arrive in later phases.",
+    "description": "SLA-aware ticket allocation with an auditable decision history. Authentication, tickets, agents, the audit trail, recommendation, acceptance, override, manual rescore and Risk Radar.",
     "title": "SLA-aware service desk (v2)",
-    "version": "2.0.0-phase1"
+    "version": "2.0.0-phase3"
   },
   "openapi": "3.1.0",
   "paths": {
@@ -1089,9 +1784,189 @@
         ]
       }
     },
+    "/api/v2/assignment-decisions": {
+      "post": {
+        "description": "Recommend, and only recommend. This endpoint assigns nobody (spec D.3).",
+        "operationId": "create_recommendations_api_v2_assignment_decisions_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecommendationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DecisionListResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Recommendations",
+        "tags": [
+          "decisions"
+        ]
+      }
+    },
+    "/api/v2/assignment-decisions/{decision_id}": {
+      "get": {
+        "description": "The decision with its full candidate payload, for the audit view.",
+        "operationId": "read_decision_api_v2_assignment_decisions__decision_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "decision_id",
+            "required": true,
+            "schema": {
+              "title": "Decision Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DecisionDetailResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Read Decision",
+        "tags": [
+          "decisions"
+        ]
+      }
+    },
+    "/api/v2/assignment-decisions/{decision_id}/accept": {
+      "post": {
+        "operationId": "accept_recommendation_api_v2_assignment_decisions__decision_id__accept_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "decision_id",
+            "required": true,
+            "schema": {
+              "title": "Decision Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssignmentResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Accept Recommendation",
+        "tags": [
+          "decisions"
+        ]
+      }
+    },
+    "/api/v2/assignment-decisions/{decision_id}/override": {
+      "post": {
+        "description": "Both the recommendation and the human's choice come back, so the client\ncan show the difference honestly rather than only the outcome.",
+        "operationId": "override_recommendation_api_v2_assignment_decisions__decision_id__override_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "decision_id",
+            "required": true,
+            "schema": {
+              "title": "Decision Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OverrideRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssignmentResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Override Recommendation",
+        "tags": [
+          "decisions"
+        ]
+      }
+    },
     "/api/v2/health": {
       "get": {
-        "description": "Liveness, the dialect in use, and whether migrations have been run.",
+        "description": "Liveness, the dialect, migration state, and which artifacts are loaded.\n\nThe model versions are here because the demo has to be able to answer \"which\nmodel produced that number?\" without opening a database, and because a build\nwith no usable artifact should say so on its health endpoint rather than at\nthe first ticket creation.",
         "operationId": "health_api_v2_health_get",
         "responses": {
           "200": {
@@ -1195,6 +2070,111 @@
         ]
       }
     },
+    "/api/v2/risk-radar": {
+      "get": {
+        "operationId": "risk_radar_api_v2_risk_radar_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "priority",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maximum": 4,
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Priority"
+            }
+          },
+          {
+            "in": "query",
+            "name": "overdue_only",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Overdue Only",
+              "type": "boolean"
+            }
+          },
+          {
+            "in": "query",
+            "name": "assignee_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Assignee Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "risk_band",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Risk Band"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 100,
+              "maximum": 500,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RiskRadarResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Risk Radar",
+        "tags": [
+          "radar"
+        ]
+      }
+    },
     "/api/v2/sla-policies": {
       "get": {
         "operationId": "list_policies_api_v2_sla_policies_get",
@@ -1211,6 +2191,59 @@
           }
         },
         "summary": "List Policies",
+        "tags": [
+          "administration"
+        ]
+      }
+    },
+    "/api/v2/sla-policies/{policy_id}": {
+      "patch": {
+        "description": "Edit the business inputs for one priority (spec I.4).\n\nThe edit bumps ``version``, so every recommendation priced under the old\nnumbers becomes stale and must be rescored before it can be accepted. No\nticket's stored ``sla_due_at`` is touched, which is what the interface's\n\"affects future recommendations only\" warning actually means.",
+        "operationId": "patch_policy_api_v2_sla_policies__policy_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "policy_id",
+            "required": true,
+            "schema": {
+              "title": "Policy Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SlaPolicyPatch"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SlaPolicyResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Patch Policy",
         "tags": [
           "administration"
         ]
@@ -1361,6 +2394,47 @@
         ]
       }
     },
+    "/api/v2/tickets/rescore": {
+      "post": {
+        "operationId": "rescore_tickets_api_v2_tickets_rescore_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RescoreRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RescoreResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Rescore Tickets",
+        "tags": [
+          "tickets"
+        ]
+      }
+    },
     "/api/v2/tickets/{ticket_id}": {
       "get": {
         "operationId": "get_ticket_api_v2_tickets__ticket_id__get",
@@ -1448,6 +2522,59 @@
           }
         },
         "summary": "Patch Ticket",
+        "tags": [
+          "tickets"
+        ]
+      }
+    },
+    "/api/v2/tickets/{ticket_id}/escalation-acknowledgement": {
+      "post": {
+        "description": "Record a human response to escalation. Nothing is routed anywhere.\n\nThis is the action Risk Radar offers on a flagged or overdue ticket. It\nappends one immutable event and leaves the ticket's status, assignee and\ndeadline exactly as they were: the system recommends and records, and a\nperson decides what actually happens next (spec B.2).",
+        "operationId": "acknowledge_escalation_api_v2_tickets__ticket_id__escalation_acknowledgement_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "ticket_id",
+            "required": true,
+            "schema": {
+              "title": "Ticket Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EscalationAcknowledgeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EscalationAcknowledgeResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Acknowledge Escalation",
         "tags": [
           "tickets"
         ]

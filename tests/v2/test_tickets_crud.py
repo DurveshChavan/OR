@@ -53,14 +53,19 @@ def test_creation_writes_its_events_in_the_same_transaction(
     types = [event["event_type"] for event in events]
 
     assert types[0] == "TICKET_CREATED"
-    # Phase 1 has no risk artifact, so the ticket is honestly marked unscored
-    # rather than given an invented probability.
-    assert "MODEL_UNAVAILABLE" in types
+    # Creation scores the ticket inside the same transaction, so the score and
+    # the row it belongs to can never separate (spec C.3).
+    assert "RISK_SCORED" in types
     assert all(event["actor_user_id"] == actor.id for event in events)
 
     stored = db.get(models.Ticket, ticket_id)
-    assert stored.risk_probability is None
-    assert stored.risk_model_version is None
+    assert 0.0 < stored.risk_probability < 1.0
+    assert stored.risk_model_version
+    assert stored.last_scored_at is not None
+
+    scored = [event for event in events if event["event_type"] == "RISK_SCORED"][0]
+    assert scored["payload"]["risk_probability"] == stored.risk_probability
+    assert scored["payload"]["predicted_duration_minutes"] >= 0.0
 
 
 def test_a_duplicate_external_reference_is_refused(client, db, signed_in, make_policy):

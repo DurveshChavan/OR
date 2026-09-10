@@ -1,10 +1,15 @@
 """Ticket creation and correction.
 
-Phase 1 has no risk model: the artifact and its feature schema arrive in
-phase 2. Rather than invent a score, a ticket created now is stored unscored and
-carries a ``MODEL_UNAVAILABLE`` event saying so, which is exactly the documented
-manual-fallback path in spec C.3. When the artifact exists, scoring joins this
-same transaction and an unscored ticket becomes the exception it is meant to be.
+Creation is one transaction: the deadline comes from the policy in force now,
+the risk and duration artifacts score the ticket, and ``TICKET_CREATED`` plus
+``RISK_SCORED`` are written beside the row (spec C.3). If scoring fails the
+whole creation rolls back, so an unscored ticket is never quietly stored.
+
+There is one documented exception. ``allow_manual_fallback`` lets a caller
+create a ticket while the artifacts are unavailable; it writes the ticket
+unscored and records a ``MODEL_UNAVAILABLE`` event carrying the reason, which is
+the "model unavailable - manual dispatch" path spec E.6 requires. It is never
+the default, so the failure has to be chosen rather than absorbed.
 """
 from datetime import timedelta
 
@@ -14,7 +19,7 @@ from sqlalchemy.orm import Session as DbSession
 from api.app_v2.db import models
 from api.app_v2.db.types import utcnow
 from api.app_v2.errors import ApiError
-from api.app_v2.services import events
+from api.app_v2.services import events, scoring
 
 #: The fields a patch may change, each recorded in the TICKET_UPDATED payload.
 PATCHABLE_FIELDS = (
@@ -42,8 +47,9 @@ def active_policy(db: DbSession, priority: int) -> models.SlaPolicy:
     return policy
 
 
-def create_ticket(db: DbSession, actor: models.User, payload, source: str = "manual"):
-    """Create one ticket with a fixed deadline and its opening events.
+def create_ticket(db: DbSession, actor: models.User, payload, source: str = "manual",
+                  allow_manual_fallback: bool = False):
+    """Create one ticket with a fixed deadline, a score, and its opening events.
 
     The deadline is stored, not derived on read: a later policy edit must not
     move a deadline a team has already been working against.
@@ -87,17 +93,51 @@ def create_ticket(db: DbSession, actor: models.User, payload, source: str = "man
             "sla_target_minutes": policy.target_minutes,
         },
     )
+    score_ticket_in_transaction(db, actor, ticket, allow_manual_fallback)
+    return ticket
+
+
+def score_ticket_in_transaction(db: DbSession, actor: models.User,
+                                ticket: models.Ticket,
+                                allow_manual_fallback: bool = False):
+    """Score `ticket`, write the score onto it, and record what happened.
+
+    Returns the :class:`~api.app_v2.services.scoring.TicketScore`, or ``None``
+    when the manual-fallback path was taken. The caller's transaction is not
+    committed here: the score and its event land with the row they describe.
+    """
+    try:
+        score = scoring.score_ticket(ticket)
+    except ApiError as error:
+        if not allow_manual_fallback:
+            raise
+        events.record(
+            db,
+            ticket.id,
+            "MODEL_UNAVAILABLE",
+            actor_user_id=actor.id,
+            payload={"stage": "ticket_creation", "reason": error.message},
+        )
+        return None
+
+    ticket.risk_probability = score.risk_probability
+    ticket.risk_model_version = score.risk_model_version
+    ticket.last_scored_at = utcnow()
+    db.flush()
     events.record(
         db,
         ticket.id,
-        "MODEL_UNAVAILABLE",
+        "RISK_SCORED",
         actor_user_id=actor.id,
         payload={
-            "stage": "ticket_creation",
-            "reason": "no risk model artifact is installed in this build",
+            "risk_probability": score.risk_probability,
+            "predicted_duration_minutes": score.predicted_duration_minutes,
+            "risk_model_version": score.risk_model_version,
+            "duration_model_version": score.duration_model_version,
+            "unavailable_features": list(scoring.UNAVAILABLE_AT_DISPATCH),
         },
     )
-    return ticket
+    return score
 
 
 def _reference_taken(db: DbSession, reference: str) -> bool:

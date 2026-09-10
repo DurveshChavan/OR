@@ -95,8 +95,16 @@ Operations Research viva material only and supplies no number in the v2 result.
 ## Regeneration
 
 ```
-python scripts/audit_uci498.py     # -> data/reports/uci498_audit.md
+python -m api.app_v2.ingest.uci498 fetch     # -> data/manifests/uci498.json
+python -m api.app_v2.ingest.uci498 audit     # -> data/reports/uci498_audit.md
+python -m api.app_v2.ingest.uci498 prepare   # -> data/processed/uci498/incidents_v1.parquet
 ```
+
+`fetch` adopts an existing local file and never re-downloads without `--force`:
+a fresh pull could be a different snapshot, and its SHA-256 would then disagree
+with the hash quoted in the audit report and in every model card. Phase 2
+promoted this code out of `scripts/audit_uci498.py`; the audit output was
+checked to be byte-identical afterwards apart from its generated-at line.
 
 Raw and prepared data stay gitignored. The audit report and its CSV companions
 are the committed evidence.

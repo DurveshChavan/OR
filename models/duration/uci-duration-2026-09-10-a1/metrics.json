@@ -1,0 +1,130 @@
+{
+  "models": {
+    "baseline (priority x category median)": {
+      "test": {
+        "mean_absolute_error_minutes": 8198.001000285796,
+        "median_absolute_error_minutes": 1581.5,
+        "median_actual_minutes": 201.0,
+        "median_predicted_minutes": 1593.5,
+        "n": 3499,
+        "p90_absolute_error_minutes": 17840.400000000005,
+        "split": "test"
+      },
+      "validation": {
+        "mean_absolute_error_minutes": 8769.24542595769,
+        "median_absolute_error_minutes": 1584.5,
+        "median_actual_minutes": 216.5,
+        "median_predicted_minutes": 1593.5,
+        "n": 3498,
+        "p90_absolute_error_minutes": 18646.10000000001,
+        "split": "validation"
+      }
+    },
+    "ridge on log1p(minutes)": {
+      "test": {
+        "mean_absolute_error_minutes": 7984.038349141492,
+        "median_absolute_error_minutes": 979.029575674807,
+        "median_actual_minutes": 201.0,
+        "median_predicted_minutes": 756.2080017100582,
+        "n": 3499,
+        "p90_absolute_error_minutes": 17747.398015695668,
+        "split": "test"
+      },
+      "validation": {
+        "mean_absolute_error_minutes": 8403.446621386236,
+        "median_absolute_error_minutes": 879.8404478319997,
+        "median_actual_minutes": 216.5,
+        "median_predicted_minutes": 655.781305202706,
+        "n": 3498,
+        "p90_absolute_error_minutes": 18061.60396111886,
+        "split": "validation"
+      }
+    }
+  },
+  "selection_table": [
+    {
+      "median_absolute_error_minutes": 879.8404478319997,
+      "params": {
+        "alpha": 3.0,
+        "min_frequency": 10
+      }
+    },
+    {
+      "median_absolute_error_minutes": 880.2744206474752,
+      "params": {
+        "alpha": 0.3,
+        "min_frequency": 10
+      }
+    },
+    {
+      "median_absolute_error_minutes": 881.3159080783316,
+      "params": {
+        "alpha": 1.0,
+        "min_frequency": 10
+      }
+    },
+    {
+      "median_absolute_error_minutes": 900.437692752972,
+      "params": {
+        "alpha": 10.0,
+        "min_frequency": 10
+      }
+    },
+    {
+      "median_absolute_error_minutes": 903.2916622128766,
+      "params": {
+        "alpha": 1.0,
+        "min_frequency": 20
+      }
+    },
+    {
+      "median_absolute_error_minutes": 903.7253814210245,
+      "params": {
+        "alpha": 3.0,
+        "min_frequency": 20
+      }
+    },
+    {
+      "median_absolute_error_minutes": 904.7544446871696,
+      "params": {
+        "alpha": 0.3,
+        "min_frequency": 20
+      }
+    },
+    {
+      "median_absolute_error_minutes": 908.4361878892516,
+      "params": {
+        "alpha": 10.0,
+        "min_frequency": 20
+      }
+    },
+    {
+      "median_absolute_error_minutes": 944.2624876889012,
+      "params": {
+        "alpha": 10.0,
+        "min_frequency": 50
+      }
+    },
+    {
+      "median_absolute_error_minutes": 946.9560862476876,
+      "params": {
+        "alpha": 3.0,
+        "min_frequency": 50
+      }
+    },
+    {
+      "median_absolute_error_minutes": 948.2853207993369,
+      "params": {
+        "alpha": 1.0,
+        "min_frequency": 50
+      }
+    },
+    {
+      "median_absolute_error_minutes": 948.6499222008183,
+      "params": {
+        "alpha": 0.3,
+        "min_frequency": 50
+      }
+    }
+  ]
+}

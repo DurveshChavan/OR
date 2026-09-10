@@ -25,6 +25,7 @@ from api.app_v2.db import models
 from api.app_v2.db.session import session_scope, database_url
 from api.app_v2.db.types import utcnow
 from api.app_v2.services import events, security
+from api.app_v2.services import tickets as ticket_service
 
 DEMO_SOURCE_NOTE = "illustrative demo policy; replace with organisational SLA policy"
 
@@ -139,6 +140,13 @@ def seed(force: bool = False) -> dict:
                 "TICKET_CREATED",
                 actor_user_id=users["manager"].id,
                 payload={"source": "seed_demo", "seed_reference": reference},
+            )
+            # The demo ships with committed artifacts, so a seeded ticket is a
+            # scored ticket. If they are missing the seed still completes and
+            # each ticket says so in its own history rather than silently
+            # showing an empty risk column.
+            ticket_service.score_ticket_in_transaction(
+                db, users["manager"], ticket, allow_manual_fallback=True
             )
 
         db.commit()

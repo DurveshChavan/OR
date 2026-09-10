@@ -12,6 +12,7 @@ from api.app_v2.db import models
 from api.app_v2.db.session import get_db
 from api.app_v2.domain import schemas
 from api.app_v2.errors import ApiError
+from api.app_v2.services import policies as policy_service
 
 router = APIRouter(tags=["administration"])
 
@@ -163,22 +164,46 @@ def list_policies(
         select(models.SlaPolicy).order_by(models.SlaPolicy.priority.asc())
     ).all()
     return schemas.SlaPolicyListResponse(
-        policies=[
-            schemas.SlaPolicyOut(
-                id=policy.id,
-                priority=policy.priority,
-                target_minutes=policy.target_minutes,
-                breach_penalty_per_minute=policy.breach_penalty_per_minute,
-                late_penalty_per_minute=policy.late_penalty_per_minute,
-                overdue_recovery_penalty_per_minute=(
-                    policy.overdue_recovery_penalty_per_minute
-                ),
-                holding_cost_per_minute=policy.holding_cost_per_minute,
-                escalation_threshold=policy.escalation_threshold,
-                version=policy.version,
-                source_note=policy.source_note,
-            )
-            for policy in policies
-        ],
+        policies=[_policy_out(policy) for policy in policies],
+        request_id=request_id,
+    )
+
+
+def _policy_out(policy: models.SlaPolicy) -> schemas.SlaPolicyOut:
+    return schemas.SlaPolicyOut(
+        id=policy.id,
+        priority=policy.priority,
+        target_minutes=policy.target_minutes,
+        breach_penalty_per_minute=policy.breach_penalty_per_minute,
+        late_penalty_per_minute=policy.late_penalty_per_minute,
+        overdue_recovery_penalty_per_minute=policy.overdue_recovery_penalty_per_minute,
+        holding_cost_per_minute=policy.holding_cost_per_minute,
+        escalation_threshold=policy.escalation_threshold,
+        version=policy.version,
+        source_note=policy.source_note,
+    )
+
+
+@router.patch("/sla-policies/{policy_id}", response_model=schemas.SlaPolicyResponse)
+def patch_policy(
+    policy_id: str,
+    payload: schemas.SlaPolicyPatch,
+    db: DbSession = Depends(get_db),
+    manager=Depends(deps.current_manager),
+    request_id: str = Depends(deps.request_id),
+):
+    """Edit the business inputs for one priority (spec I.4).
+
+    The edit bumps ``version``, so every recommendation priced under the old
+    numbers becomes stale and must be rescored before it can be accepted. No
+    ticket's stored ``sla_due_at`` is touched, which is what the interface's
+    "affects future recommendations only" warning actually means.
+    """
+    policy = policy_service.get_policy(db, policy_id)
+    policy, changes, affected = policy_service.patch_policy(db, manager, policy, payload)
+    return schemas.SlaPolicyResponse(
+        policy=_policy_out(policy),
+        changes=changes,
+        affected_ticket_ids=affected,
         request_id=request_id,
     )
