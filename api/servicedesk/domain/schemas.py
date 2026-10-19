@@ -7,10 +7,11 @@ API, and a client field never depends on lazy loading.
 Every response carries ``request_id`` (spec D) so a screenshot of a failure in
 the demo can be traced to a specific request.
 """
+import re
 from datetime import datetime
 from typing import List, Optional
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
 class ActorOut(BaseModel):
@@ -36,9 +37,28 @@ class LogoutResponse(BaseModel):
     request_id: str
 
 
+#: What a service-desk reference looks like: an uppercase prefix, at least one
+#: digit, and nothing but letters, digits and hyphens. The rule exists because
+#: a demo database picked up a ticket called "sedrftgghuj" - somebody testing
+#: the form - and a reference that identifies nothing is worse than no reference
+#: at all, because the queue then shows it where a record number belongs. It is
+#: deliberately loose enough for every convention already in use here
+#: (INC0030987, INC-TEST-0001, PERF-0004) and strict enough to refuse a keyboard
+#: mash.
+REFERENCE_PATTERN = re.compile(r"^[A-Z][A-Z0-9-]*[0-9][A-Z0-9-]*$")
+
+
 class TicketCreate(BaseModel):
     external_reference: Optional[str] = None
-    priority: int = Field(ge=1, le=4)
+    #: What the caller reported. Stored and shown; no model reads it.
+    title: str = Field(min_length=1, max_length=200)
+    description: Optional[str] = Field(default=None, max_length=5000)
+    #: ITIL impact and urgency, 1 (high) to 3 (low), as UCI-498 records them.
+    impact: Optional[int] = Field(default=None, ge=1, le=3)
+    urgency: Optional[int] = Field(default=None, ge=1, le=3)
+    #: Derived from impact and urgency when both are given, and then optional;
+    #: required otherwise (services/triage.py).
+    priority: Optional[int] = Field(default=None, ge=1, le=4)
     category: Optional[str] = None
     subcategory: Optional[str] = None
     location: Optional[str] = None
@@ -55,6 +75,28 @@ class TicketCreate(BaseModel):
             raise ValueError("opened_at must include a timezone offset")
         return value
 
+    @field_validator("title")
+    @classmethod
+    def _title_must_say_something(cls, value):
+        if not value.strip():
+            raise ValueError("a title must say what the problem is")
+        return value.strip()
+
+    @field_validator("external_reference")
+    @classmethod
+    def _must_look_like_a_reference(cls, value):
+        if value is None:
+            return None
+        cleaned = value.strip().upper()
+        if not cleaned:
+            return None
+        if not REFERENCE_PATTERN.match(cleaned):
+            raise ValueError(
+                "a reference is an uppercase code containing at least one "
+                "digit, such as INC0031234"
+            )
+        return cleaned
+
 
 class TicketPatch(BaseModel):
     """The fields a dispatcher may correct after creation.
@@ -62,10 +104,18 @@ class TicketPatch(BaseModel):
     Priority is here and the deadline is not: changing a priority is a triage
     decision that gets recorded as an event, while ``sla_due_at`` stays fixed at
     the value the policy produced when the ticket was opened.
+
+    Status is not here. It moves only through the actions that give it meaning
+    - assignment, escalation review, resolve, close, reopen - and an unknown
+    field is refused rather than ignored, so a client still sending ``status``
+    learns that instead of reading a 200 that changed nothing.
     """
 
+    model_config = ConfigDict(extra="forbid")
+
+    title: Optional[str] = Field(default=None, min_length=1, max_length=200)
+    description: Optional[str] = Field(default=None, max_length=5000)
     priority: Optional[int] = Field(default=None, ge=1, le=4)
-    status: Optional[str] = None
     category: Optional[str] = None
     subcategory: Optional[str] = None
     location: Optional[str] = None
@@ -77,8 +127,13 @@ class TicketOut(BaseModel):
     id: str
     external_reference: Optional[str]
     source: str
+    #: Null only on tickets created before titles existed.
+    title: Optional[str] = None
+    description: Optional[str] = None
     status: str
     priority: int
+    impact: Optional[int] = None
+    urgency: Optional[int] = None
     category: Optional[str]
     subcategory: Optional[str]
     location: Optional[str]
@@ -90,6 +145,14 @@ class TicketOut(BaseModel):
     #: Set only by a person, through the machine-link endpoint. Nothing in
     #: dispatch or scoring reads it.
     machine_id: Optional[str]
+    #: Who a live escalation review is with, and when it opened. Both are null
+    #: unless the status is ``escalation_review``.
+    escalation_target: Optional[str] = None
+    escalation_opened_at: Optional[datetime] = None
+    #: When the ticket was resolved, and whether that was by its deadline. Both
+    #: null until a resolve; cleared again by a reopen.
+    resolved_at: Optional[datetime] = None
+    sla_met: Optional[bool] = None
     risk_probability: Optional[float]
     risk_model_version: Optional[str]
     last_scored_at: Optional[datetime]
@@ -354,6 +417,8 @@ class RiskRadarRow(BaseModel):
     risk_model_version: Optional[str]
     urgency_cost_per_minute: float
     current_assignee_id: Optional[str]
+    #: Null unless this ticket is in a live escalation review.
+    escalation_target: Optional[str] = None
 
 
 class RiskRadarResponse(BaseModel):
@@ -362,22 +427,49 @@ class RiskRadarResponse(BaseModel):
     request_id: str
 
 
-class EscalationAcknowledgeRequest(BaseModel):
-    """A human answering an escalation recommendation, or raising one."""
+class TicketTransitionRequest(BaseModel):
+    """Resolve, close or reopen: each one says why.
 
-    #: Required for the same reason an override reason is required: an
-    #: unexplained entry in the audit trail is not an audit trail.
+    Required for the same reason an override reason is required: an
+    unexplained entry in the audit trail is not an audit trail.
+    """
+
+    note: str = Field(min_length=1, max_length=2000)
+
+
+class EscalationReviewRequest(BaseModel):
+    """Open a review: say why, and say who it is with."""
+
     note: str = Field(min_length=1)
+    #: One of ``models.ESCALATION_TARGETS``. Validated in the service rather
+    #: than as a Literal here, so the vocabulary has one definition and the
+    #: rejection message can name the routes this desk actually has.
+    target: str = Field(min_length=1)
 
 
-class EscalationAcknowledgeResponse(BaseModel):
+class EscalationReviewCloseRequest(BaseModel):
+    """Close a review: say what happened."""
+
+    note: str = Field(min_length=1)
+    #: One of ``models.ESCALATION_OUTCOMES``, validated in the service.
+    outcome: str = Field(min_length=1)
+
+
+class EscalationReviewResponse(BaseModel):
+    """The state change created by an internal escalation review.
+
+    This is intentionally not an L2 or vendor integration response. The desk
+    can put a ticket into its own review state and name which of its own routes
+    the review is with; it cannot truthfully claim to have contacted another
+    system it does not operate.
+    """
+
     ticket_id: str
     event: EventOut
-    #: True when the model had already flagged this ticket. False means the
-    #: dispatcher went first, and the history says so.
-    following_recommendation: bool
-    #: Unchanged by this action, and returned so the client can show that.
     ticket_status: str
+    #: The live target after this call: the chosen route when a review opened,
+    #: and null when one closed.
+    escalation_target: Optional[str] = None
     request_id: str
 
 

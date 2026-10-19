@@ -1,7 +1,11 @@
 /* Hallmark · genre: modern-minimal · macrostructure: Workbench (app family)
  * theme: Cobalt · design-system: design.md · designed-as-app
- * nav: N3 side-rail (adapted: functional 8-route app rail, not a marketing
- *      scroll-dot rail — see design.md § Nav adaptation) · footer: none (app shell)
+ * nav: N3 side-rail (adapted: a functional app rail, not a marketing scroll-dot
+ *      rail — see design.md § Nav adaptation). It carries two entries for a
+ *      dispatcher and four for a manager; the eight-route version this comment
+ *      used to describe was the shell before the research worksheets were moved
+ *      out of it.
+ * footer: one line, provenance only.
  */
 @import "tailwindcss";
 @import "./tokens.css";
@@ -70,6 +74,34 @@ h3,
   outline: 2px solid var(--color-focus);
   outline-offset: 2px;
   transition: none;
+}
+
+.skip-link {
+  position: fixed;
+  z-index: 100;
+  top: 0.5rem;
+  left: 0.5rem;
+  transform: translateY(-150%);
+  border-radius: var(--radius-control);
+  background: var(--color-ink);
+  color: var(--color-surface);
+  padding: 0.5rem 0.75rem;
+}
+
+.skip-link:focus {
+  transform: translateY(0);
+}
+
+input[type="checkbox"] {
+  accent-color: var(--color-accent);
+}
+
+summary {
+  list-style-position: outside;
+}
+
+summary:hover {
+  color: var(--color-accent);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -184,26 +216,82 @@ tbody tr:hover {
   background: color-mix(in oklch, var(--color-paper-2) 60%, transparent);
 }
 
-/* Press feedback on every control, not only the ones built from the shared
- * Button. The rule that matters is that the acknowledgement happens on press
- * rather than on release, and `:active` is the platform's own name for that
- * moment. Disabled controls stay still, because a control that answers a press
- * it will not act on is lying about being available.
+/* --- the landing page ----------------------------------------------------
+ *
+ * The signed-out page is the only screen with no work on it, so it is the only
+ * one allowed to use the whole viewport. It centres itself vertically rather
+ * than stacking from the top, because a hero pinned to the top-left of an empty
+ * 900px page reads as a page that failed to finish loading.
+ *
+ * The decoration is two soft washes and a hairline grid, drawn from tokens that
+ * already exist. Nothing to download, and every piece of text still sits on a
+ * solid surface, which is why switching this on did not move the contrast
+ * measurements.
  */
-button:not(:disabled),
-[role="button"]:not([aria-disabled="true"]) {
-  transition: transform 220ms var(--ease-out);
+.landing {
+  display: grid;
+  align-content: center;
+  min-height: calc(100svh - 9rem);
+  padding-block: clamp(1.5rem, 5vw, 4rem);
 }
 
-button:not(:disabled):active,
-[role="button"]:not([aria-disabled="true"]):active {
-  transform: scale(0.975);
-  transition: transform 90ms var(--ease-out);
+.landing-wash {
+  position: absolute;
+  inset: -20% -20% -10% -20%;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(
+      46rem 30rem at 12% 12%,
+      color-mix(in oklch, var(--color-accent) 18%, transparent),
+      transparent 68%
+    ),
+    radial-gradient(
+      38rem 26rem at 88% 4%,
+      color-mix(in oklch, var(--color-good) 13%, transparent),
+      transparent 66%
+    ),
+    radial-gradient(
+      34rem 24rem at 70% 96%,
+      color-mix(in oklch, var(--color-accent) 10%, transparent),
+      transparent 70%
+    );
 }
 
-@media (prefers-reduced-motion: reduce) {
-  button:not(:disabled):active,
-  [role="button"]:not([aria-disabled="true"]):active {
-    transform: none;
+/* The grid is a texture, not information. It fades out well before it can
+   compete with a line of type. */
+.landing::before {
+  content: "";
+  position: absolute;
+  inset: -4rem -50vw auto -50vw;
+  z-index: -1;
+  height: 34rem;
+  pointer-events: none;
+  background-image:
+    linear-gradient(to right, color-mix(in oklch, var(--color-ink) 5%, transparent) 1px, transparent 1px),
+    linear-gradient(to bottom, color-mix(in oklch, var(--color-ink) 5%, transparent) 1px, transparent 1px);
+  background-size: 3.5rem 3.5rem;
+  mask-image: radial-gradient(60% 70% at 30% 20%, black, transparent 75%);
+  -webkit-mask-image: radial-gradient(60% 70% at 30% 20%, black, transparent 75%);
+}
+
+/* A short accent rule above the title, the one piece of pure decoration. */
+.landing-rule {
+  display: block;
+  width: 3.5rem;
+  height: 3px;
+  border-radius: var(--radius-pill);
+  background: linear-gradient(
+    to right,
+    var(--color-accent),
+    color-mix(in oklch, var(--color-accent) 25%, transparent)
+  );
+}
+
+/* A viewer who asks for more contrast is asking for fewer washes. */
+@media (prefers-contrast: more) {
+  .landing-wash,
+  .landing::before {
+    display: none;
   }
 }

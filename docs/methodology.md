@@ -66,7 +66,7 @@ database triggers in both PostgreSQL and SQLite; actor attribution on every
 mutation; model and policy version snapshotted into every decision.
 
 ## 9. Operations Research appendix — retained
-The legacy LP, transportation, Hungarian, Johnson sequencing, decision/game
+The LP, transportation, Hungarian, Johnson sequencing, decision/game
 theory, CPM-PERT and replacement modules stay runnable and hand-verifiable for
 the oral examination. They are a section of the product rather than a separate demo, and the
 replacement analysis is what the Hardware screen computes.

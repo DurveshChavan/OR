@@ -1,45 +1,58 @@
-// Screen 4 — administration. Manager-only for every write.
+// Operations — the manager's screen, and only the manager's.
 //
-// A dispatcher can read this screen, because knowing the WIP limits and the
-// policy rates is part of reading a recommendation, but every control is
-// disabled for them and the server refuses the call regardless. The one thing
-// this screen must never imply is that editing a policy retroactively fixes
-// work already decided: a stored deadline does not move, and a recommendation
-// already written keeps the rates it was priced under.
+// It used to be in a dispatcher's navigation with every control greyed out,
+// which is a page that exists to tell somebody they may not use it. The route
+// is now manager-only and the dispatcher is told where a rescore comes from at
+// the point they need one, on the ticket.
+//
+// The policy table is split by what a manager is actually deciding. How long a
+// priority gets, and when risk is worth a review, are policy. The four
+// per-minute rates underneath are how the solver prices a choice - real inputs,
+// but not the sentence "P1 gets four hours", and they sit behind a disclosure
+// rather than in front of it.
+//
+// The one thing this screen must never imply is that editing a policy
+// retroactively fixes work already decided: a stored deadline does not move,
+// and a recommendation already written keeps the rates it was priced under.
 
 import { useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { api } from "../lib/api";
-import { useInvalidateAll, useSession } from "../lib/session";
+import { useInvalidateAll } from "../lib/session";
 import { Banner, Empty, Failure, Loading } from "../components/States";
 import { Section } from "../components/Bits";
 import { formatMinutes } from "../lib/format";
 
+//: What a manager decides: how long each priority gets, and how sure the model
+//: has to be before a ticket is worth putting in front of somebody.
 const POLICY_FIELDS = [
-  ["target_minutes", "target minutes"],
-  ["breach_penalty_per_minute", "breach / min"],
-  ["late_penalty_per_minute", "late / min"],
-  ["overdue_recovery_penalty_per_minute", "overdue recovery / min"],
-  ["holding_cost_per_minute", "holding / min"],
-  ["escalation_threshold", "escalation threshold"],
+  ["target_minutes", "SLA target (minutes)"],
+  ["escalation_threshold", "Escalation threshold (0-1)"],
+];
+
+//: How the solver prices one choice against another. Declared business inputs
+//: in one currency unit per minute, none of them measured from the log - which
+//: is why they are stated as weights and kept out of the policy sentence.
+const COST_FIELDS = [
+  ["breach_penalty_per_minute", "Past the deadline"],
+  ["late_penalty_per_minute", "Late finishing"],
+  ["overdue_recovery_penalty_per_minute", "Recovering an overdue ticket"],
+  ["holding_cost_per_minute", "Waiting in the queue"],
 ];
 
 export default function Administration() {
-  const { actor } = useSession();
-  const isManager = actor.role === "manager";
-
   return (
     <>
-      {isManager ? null : (
-        <Banner title="Read-only.">
-          Administration writes are manager actions. You are signed in as a{" "}
-          {actor.role}, so the controls below are disabled and the API would
-          refuse them anyway.
-        </Banner>
-      )}
-      <Rescore enabled={isManager} />
-      <Policies enabled={isManager} />
-      <Agents enabled={isManager} />
+      <header>
+        <p className="text-sm text-muted">Manager tools</p>
+        <h1 className="font-display text-2xl text-ink">Operations</h1>
+        <p className="mt-1 max-w-2xl text-sm text-muted">
+          Refresh risk estimates, maintain SLA policy, and keep resolver availability current.
+        </p>
+      </header>
+      <Rescore enabled />
+      <Policies enabled />
+      <Agents enabled />
     </>
   );
 }
@@ -76,11 +89,7 @@ function Rescore({ enabled }) {
           artifact is installed.
         </Banner>
       ) : null}
-      <p className="text-xs text-muted">
-        The same operation runs from the command line as{" "}
-        <code>python -m api.servicedesk.cli.rescore_open_tickets</code>. There is no
-        background worker in this build, so nothing rescores on a timer.
-      </p>
+      <p className="text-xs text-muted">Refresh runs only when a manager asks for it. It does not reassign tickets.</p>
     </Section>
   );
 }
@@ -110,7 +119,7 @@ function Policies({ enabled }) {
   return (
     <Section
       title="SLA policy"
-      note="Every number here is a declared business input in one currency unit per minute. None of it is measured from the log."
+      note="How long each priority gets, and how sure the risk model has to be before a ticket is worth reviewing. Every number is a declared business input; none of it is measured from the incident log."
     >
       <Banner tone="warning" title="Edits reach future recommendations only.">
         Deadlines already stored on open tickets do not move, and a
@@ -127,71 +136,116 @@ function Policies({ enabled }) {
         </Banner>
       ) : null}
 
-      <div className="mt-3 overflow-x-auto">
-        <table className="w-full min-w-[860px] border-collapse text-sm">
-          <thead>
-            <tr className="border-b border-rule text-left font-mono-label text-[10px] text-muted">
-              <th scope="col" className="py-2 pr-2">priority</th>
-              {POLICY_FIELDS.map(([key, label]) => (
-                <th key={key} scope="col" className="py-2 pr-2">{label}</th>
-              ))}
-              <th scope="col" className="py-2 pr-2">version</th>
-              <th scope="col" className="py-2 pr-2">save</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((policy) => {
-              const draft = edits[policy.id] || {};
-              return (
-                <tr key={policy.id} className="border-b border-rule">
-                  <td className="py-2 pr-2">
-                    P{policy.priority}
-                    <div className="text-[11px] text-muted">
-                      {formatMinutes(policy.target_minutes)} target
-                    </div>
-                  </td>
-                  {POLICY_FIELDS.map(([key]) => (
-                    <td key={key} className="py-2 pr-2">
-                      <input
-                        type="number"
-                        step="any"
-                        aria-label={`${key} for priority ${policy.priority}`}
-                        disabled={!enabled}
-                        className="w-24 rounded-[var(--radius-control)] border border-rule-2 bg-paper px-2 py-1"
-                        value={draft[key] ?? policy[key]}
-                        onChange={(event) =>
-                          setEdits({
-                            ...edits,
-                            [policy.id]: { ...draft, [key]: event.target.value },
-                          })
-                        }
-                      />
-                    </td>
-                  ))}
-                  <td className="py-2 pr-2">v{policy.version}</td>
-                  <td className="py-2 pr-2">
-                    <button
-                      type="button"
-                      disabled={!enabled || !edits[policy.id] || save.isPending}
-                      onClick={() =>
-                        save.mutate({ id: policy.id, body: numeric(edits[policy.id]) })
-                      }
-                      className="rounded-[var(--radius-control)] border border-accent px-3 py-1 text-xs text-accent disabled:opacity-50"
-                    >
-                      Save
-                    </button>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
+      <PolicyTable
+        fields={POLICY_FIELDS}
+        rows={rows}
+        edits={edits}
+        setEdits={setEdits}
+        enabled={enabled}
+        save={save}
+        withSave
+      />
+
+      <details className="mt-4 border-t border-rule pt-3 text-sm">
+        <summary className="cursor-pointer font-medium text-ink">
+          Cost weights the solver prices with
+        </summary>
+        <p className="mt-2 max-w-3xl text-sm text-muted">
+          One currency unit per minute each. They decide which resolver a
+          recommendation prefers when two are both qualified; they do not change
+          any deadline. Edit them here and save the row above.
+        </p>
+        <PolicyTable
+          fields={COST_FIELDS}
+          rows={rows}
+          edits={edits}
+          setEdits={setEdits}
+          enabled={enabled}
+        />
+      </details>
 
       <p className="mt-2 text-xs text-muted">
         {rows[0]?.source_note}
       </p>
     </Section>
+  );
+}
+
+/** One editable policy table. Two of them exist: what a manager decides, and
+ *  the weights that price a choice. Both write into the same draft, so the one
+ *  Save button above commits whatever was changed in either. */
+function PolicyTable({ fields, rows, edits, setEdits, enabled, save, withSave }) {
+  return (
+    <div className="mt-3 overflow-x-auto">
+      <table className="w-full border-collapse text-sm">
+        <thead>
+          <tr className="border-b border-rule text-left text-xs text-muted">
+            <th scope="col" className="py-2 pr-3 font-medium">Priority</th>
+            {fields.map(([key, label]) => (
+              <th key={key} scope="col" className="py-2 pr-3 font-medium">{label}</th>
+            ))}
+            {withSave ? (
+              <>
+                <th scope="col" className="py-2 pr-3 font-medium">Version</th>
+                <th scope="col" className="py-2 font-medium">
+                  <span className="sr-only">Save</span>
+                </th>
+              </>
+            ) : null}
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((policy) => {
+            const draft = edits[policy.id] || {};
+            return (
+              <tr key={policy.id} className="border-b border-rule">
+                <td className="py-2 pr-3">
+                  P{policy.priority}
+                  <div className="text-xs text-muted">
+                    {formatMinutes(policy.target_minutes)} target
+                  </div>
+                </td>
+                {fields.map(([key, label]) => (
+                  <td key={key} className="py-2 pr-3">
+                    <input
+                      type="number"
+                      step="any"
+                      aria-label={`${label} for priority ${policy.priority}`}
+                      disabled={!enabled}
+                      className="w-28 rounded-[var(--radius-control)] border border-rule-2 bg-paper px-2 py-1"
+                      value={draft[key] ?? policy[key]}
+                      onChange={(event) =>
+                        setEdits({
+                          ...edits,
+                          [policy.id]: { ...draft, [key]: event.target.value },
+                        })
+                      }
+                    />
+                  </td>
+                ))}
+                {withSave ? (
+                  <>
+                    <td className="py-2 pr-3">v{policy.version}</td>
+                    <td className="py-2">
+                      <button
+                        type="button"
+                        disabled={!enabled || !edits[policy.id] || save.isPending}
+                        onClick={() =>
+                          save.mutate({ id: policy.id, body: numeric(edits[policy.id]) })
+                        }
+                        className="rounded-[var(--radius-control)] border border-accent px-3 py-1 text-xs text-accent disabled:opacity-50"
+                      >
+                        Save
+                      </button>
+                    </td>
+                  </>
+                ) : null}
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
   );
 }
 
@@ -248,7 +302,7 @@ function Agents({ enabled }) {
       <div className="overflow-x-auto">
         <table className="w-full min-w-[720px] border-collapse text-sm">
           <thead>
-            <tr className="border-b border-rule text-left font-mono-label text-[10px] text-muted">
+            <tr className="border-b border-rule text-left text-xs text-muted">
               <th scope="col" className="py-2 pr-2">resolver</th>
               <th scope="col" className="py-2 pr-2">skills (speed factor)</th>
               <th scope="col" className="py-2 pr-2">WIP limit</th>
@@ -319,7 +373,7 @@ function Agents({ enabled }) {
         }}
       >
         <label className="flex flex-col gap-1 text-sm">
-          <span className="font-mono-label text-[11px] text-muted">display name</span>
+          <span className="font-medium text-ink">Display name</span>
           <input
             className="rounded-[var(--radius-control)] border border-rule-2 bg-paper px-3 py-2"
             disabled={!enabled}
@@ -331,7 +385,7 @@ function Agents({ enabled }) {
           />
         </label>
         <label className="flex flex-col gap-1 text-sm">
-          <span className="font-mono-label text-[11px] text-muted">first skill</span>
+          <span className="font-medium text-ink">First skill</span>
           <input
             className="rounded-[var(--radius-control)] border border-rule-2 bg-paper px-3 py-2"
             disabled={!enabled}
@@ -341,7 +395,7 @@ function Agents({ enabled }) {
           />
         </label>
         <label className="flex flex-col gap-1 text-sm">
-          <span className="font-mono-label text-[11px] text-muted">WIP limit</span>
+          <span className="font-medium text-ink">WIP limit</span>
           <input
             type="number"
             min="1"

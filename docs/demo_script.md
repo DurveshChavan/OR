@@ -73,9 +73,7 @@ cd client && npm run dev
 ```
 
 Open `http://localhost:5173/`. That is the whole application: Queue, Risk Radar,
-Hardware, Methods and Administration. Paths from before the sections were merged
-(`/assignment`, `/staffing`, `/legacy`, and the rest) redirect to their Methods
-page rather than breaking.
+Hardware, Methods and Administration.
 
 The engine on port 8000 is only needed for the Methods screens; every other
 screen works without it, and each Methods page shows its own error state when it
@@ -106,17 +104,19 @@ zone.
 
 2. **Queue.** Fourteen tickets, soonest deadline first. Each row carries the SLA
    clock as text, the risk as a **band with the model version under it**, and
-   the assignee. Say why it is a band: three fields the model was trained on
-   (`impact`, `urgency`, `u_symptom`) do not exist in this application, so a
-   bare percentage would be more precise than the input deserves.
+   the assignee. Say why it is a band: `u_symptom` does not exist in this
+   application at all, and `impact` and `urgency` exist only when a person sets
+   them, so a bare percentage would be more precise than the input deserves.
 
 3. **Create a ticket** with *New ticket* — P2, skill `Category 42`. The deadline is
    not typed in: it comes from the SLA policy for that priority. The ticket is
    scored in the same transaction that creates it.
 
-4. **Select several tickets and press "Generate recommendations."**
+4. **Select several tickets and press "Preview assignments."**
    The wording matters and there is deliberately no "assign all": this writes
-   one immutable decision per ticket and assigns nobody. Expect a mix of
+   one immutable decision per ticket and assigns nobody. Each suggestion then
+   appears with its own *Assign to <resolver>* button, so a batch review still
+   ends in explicit per-ticket confirmations. Expect a mix of
    `recommended`, `queued` and `no_eligible_agent` — no ticket is dropped.
 
 5. **Open a recommended ticket.** Walk the page in this order:
@@ -136,14 +136,26 @@ zone.
    the resolver it originally recommended, and `ASSIGNMENT_OVERRIDDEN` records
    who chose otherwise and why. The recommendation was not edited.
 
-8. **Risk Radar.** Four separate lists — already overdue (recovery), P1 waiting,
-   high model risk, normal queue. The split is the argument: a breached ticket
-   still needs a person whatever the score says. Use *Acknowledge* on an overdue
-   ticket with a note; it appends one event and changes no status, no assignee
-   and no deadline, and it routes nothing to a vendor.
+8. **At risk.** One ranked list — overdue work and unowned P1 tickets first,
+   because a breached ticket needs a person whatever the score says. Every row
+   offers exactly one next action. On an overdue ticket, choose *Start
+   escalation review*, pick who it goes to, and type why. The status changes to
+   `escalation review`, the row now reads *in review with …*, and the same row
+   offers *Close review*. Close it with an outcome and the ticket returns to the
+   queue with both ends of the review in its history.
 
-9. **Hardware.** The title's third term, and the screen that answers "where did
-   this number come from" fastest. WS-1004 is 57 months old and its own cost
+   If somebody asks whether that is a real escalation: try to close it as *a
+   different resolver now owns it* without reassigning it first. The server
+   refuses. The outcomes are claims about the ticket, not free text.
+
+9. **From the ticket to the machine.** Before leaving a ticket, link its
+   affected machine. The replacement verdict for that machine appears beside the
+   control, and *Replacement decision* becomes available as a review target.
+   This is the join the title's three terms meet at, and it is a person's
+   statement: UCI-498 has no ticket-to-asset key and nothing here guesses one.
+
+10. **Asset planning** (sign in as `manager.demo`). The title's third term, and
+   the screen that answers "where did this number come from" fastest. WS-1004 is 57 months old and its own cost
    figures put the lowest average annual cost at year 3, so the advice is
    *replace now*, 21 months late. Open the verdict: the full year-by-year table
    appears with the minimum marked — 36,000 / 25,500 / 23,333.33 / 24,000 /
@@ -155,13 +167,18 @@ zone.
    renewal table 700 / 560 / 600.67 / 703.55 against 666.67 says a group swap
    every 2 periods is cheaper.
 
-10. **Methods.** Eight pages, one per Operations Research technique, with the
+11. **Methods.** Eight pages, one per Operations Research technique, with the
     syllabus unit named on each. The assignment page is worth opening: within a
     row every permitted cell holds the same number, which is exactly the defect
     the dispatch cost model in the Queue screen fixes.
 
-11. **Administration**, signed in as `manager.demo`. Show that a dispatcher sees
-   the same numbers with every control disabled. Edit an SLA rate and point at
+12. **Operations**, signed in as `manager.demo`. The route is manager-only now:
+   a dispatcher's shell has two entries and this is not one of them, because a
+   page whose every control is disabled exists only to tell somebody they may
+   not use it. Note that the SLA target and the escalation threshold are in
+   front, while the four per-minute cost weights sit behind a disclosure —
+   policy is a sentence a manager can say; the weights are how the solver
+   prices a choice. Edit an SLA rate and point at
    the warning: stored deadlines do not move and decisions already written keep
    the rates they were priced under. Then press **Rescore open tickets** and
    read the result honestly — a large `unchanged` count is expected, because
@@ -169,7 +186,7 @@ zone.
    moves when a ticket is edited, when it was never scored, or when a different
    artifact is installed.
 
-12. **The audit trail is the database's rule, not the application's.** With the
+13. **The audit trail is the database's rule, not the application's.** With the
     API still running:
 
     ```bash
@@ -180,7 +197,7 @@ zone.
     the PostgreSQL path, where the application role additionally holds only
     SELECT and INSERT on that table.
 
-13. **Restart the API** and reload the page. Tickets, decisions, assignments and
+14. **Restart the API** and reload the page. Tickets, decisions, assignments and
     events are all still there: the service desk keeps state in a database, not in
     process memory.
 

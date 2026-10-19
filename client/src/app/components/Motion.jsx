@@ -17,7 +17,7 @@
 // screen full of tables; a spring engine would be a dependency to explain at a
 // viva for motion nobody can interrupt.
 
-import { useEffect, useRef, useState } from "react";
+import { forwardRef, useEffect, useRef, useState } from "react";
 
 //: Critically damped feel, response ~0.35s. Used for anything appearing.
 export const EASE_SETTLE = "cubic-bezier(0.16, 1, 0.3, 1)";
@@ -45,13 +45,13 @@ function releasePress(event) {
 }
 
 /** Button with press feedback and a consistent set of tones. */
-export function Button({
+export const Button = forwardRef(function Button({
   tone = "neutral",
   size = "md",
   className = "",
   children,
   ...rest
-}) {
+}, ref) {
   const tones = {
     accent:
       "bg-accent text-accent-ink border border-transparent hover:brightness-110",
@@ -66,6 +66,7 @@ export function Button({
   };
   return (
     <button
+      ref={ref}
       {...PressableProps()}
       {...rest}
       className={
@@ -78,7 +79,7 @@ export function Button({
       {children}
     </button>
   );
-}
+});
 
 /** Content that materialises rather than snapping in.
  *

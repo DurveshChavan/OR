@@ -59,14 +59,43 @@ DEMO_POLICIES = (
 #: source ("Category 42", not "Network"); renaming them to something that reads
 #: better would be inventing the one field the dispatcher routes on.
 #:
-#: Nine slots across this roster hold Category 42 and ten Category 42 tickets
-#: are seeded, so one of them is always queued rather than assigned.
+#: The multiplier is the thing to read. It scales the duration model's estimate
+#: for that person on that skill, so 0.85 is a resolver who clears that kind of
+#: work in 85% of the predicted time and 1.4 is one who can cover it but is slow
+#: at it. That number, the ticket's predicted duration, and when the person next
+#: comes free are the three inputs the cost model prices a candidate on, which
+#: is what "assigned on performance and expertise" means here concretely.
+#:
+#: Two properties of the shape are load bearing and are asserted in
+#: ``tests/servicedesk/test_demo_seed_provenance.py`` rather than trusted:
+#:
+#: * Every category that has tickets and is staffed has enough slots to take
+#:   all of them. An earlier roster deliberately left the busiest category one
+#:   slot short so a ``queued`` decision would appear in the demo. In practice
+#:   that is not what a reader saw: the three resolvers holding Category 42
+#:   filled up, six idle resolvers could not touch it because the skill was not
+#:   on their row, and most of the queue reported that no resolver was
+#:   available. A demo whose default state is "cannot dispatch" teaches the
+#:   wrong thing. ``queued`` is still reachable - select more tickets at once
+#:   than there are free slots - and it is covered directly in the dispatch
+#:   tests, where it can be set up exactly rather than hoped for.
+#: * No resolver holds Category 23, and one Category 23 ticket is seeded. That
+#:   one refusal is deliberate and stays: a dispatcher has to see what the
+#:   product does when nobody is qualified, and one clear case shows it better
+#:   than a screen full of them.
 DEMO_AGENTS = (
     # display name, wip limit, [(skill, multiplier, is_primary)]
     ("Resolver 12 (demo)", 3, [("Category 42", 0.9, True), ("Category 46", 1.3, False)]),
     ("Resolver 17 (demo)", 4, [("Category 42", 1.0, True)]),
     ("Resolver 21 (demo)", 2, [("Category 26", 0.95, True), ("Category 42", 1.4, False)]),
-    ("Resolver 34 (demo)", 3, [("Category 46", 1.0, True), ("Category 53", 1.1, False)]),
+    ("Resolver 34 (demo)", 3, [("Category 46", 1.0, True), ("Category 53", 1.1, False),
+                               ("Category 42", 1.25, False)]),
+    ("Resolver 08 (demo)", 3, [("Category 46", 0.85, True), ("Category 26", 1.2, False)]),
+    ("Resolver 45 (demo)", 2, [("Category 53", 0.9, True), ("Category 46", 1.15, False)]),
+    ("Resolver 52 (demo)", 3, [("Category 26", 1.05, True), ("Category 53", 1.25, False),
+                               ("Category 42", 1.5, False)]),
+    ("Resolver 63 (demo)", 4, [("Category 46", 1.1, True), ("Category 42", 1.35, False)]),
+    ("Resolver 71 (demo)", 2, [("Category 53", 0.95, True), ("Category 26", 1.3, False)]),
 )
 
 #: Real held-out incidents, printed by ``scripts/select_demo_incidents.py``.
@@ -97,6 +126,37 @@ DEMO_TICKETS = (
     ("INC0029953", 3, "Category 53", "Subcategory 178", "Location 204", "Phone", 10),
     ("INC0030422", 4, "Category 42", "Subcategory 223", "Location 143", "Phone", 5),
 )
+
+#: Each seeded incident's own ITIL impact and urgency, read from the same
+#: held-out records. Priority in UCI-498 is derived from this pair, so carrying
+#: it means the risk model scores these tickets with the fields its test
+#: metrics were measured with, rather than imputing them.
+DEMO_TICKET_LEVELS = {
+    "INC0030036": (1, 1),
+    "INC0030553": (1, 2),
+    "INC0031735": (2, 1),
+    "INC0029952": (2, 2),
+    "INC0029939": (2, 2),
+    "INC0030139": (3, 3),
+    "INC0030987": (1, 1),
+    "INC0032909": (2, 1),
+    "INC0029946": (2, 2),
+    "INC0029947": (2, 2),
+    "INC0030347": (3, 3),
+    "INC0031021": (2, 1),
+    "INC0029953": (2, 2),
+    "INC0030422": (3, 3),
+}
+
+
+def demo_title(category, subcategory, location):
+    """A title made only of the record's own fields.
+
+    UCI-498 has no text, so a seeded ticket's title says what the record says
+    and nothing a caller never wrote.
+    """
+    return "%s / %s at %s" % (category, subcategory, location)
+
 
 #: Where the seeded incidents come from, repeated into every seeded ticket's
 #: creation event so the audit trail carries the provenance itself rather than a
@@ -223,11 +283,15 @@ def seed(force: bool = False) -> dict:
         for row in DEMO_TICKETS:
             reference, priority, category, subcategory, location, contact, age_minutes = row
             opened_at = now - timedelta(minutes=age_minutes)
+            impact, urgency = DEMO_TICKET_LEVELS[reference]
             ticket = models.Ticket(
                 external_reference=reference,
                 source="seed_demo",
+                title=demo_title(category, subcategory, location),
                 status="open",
                 priority=priority,
+                impact=impact,
+                urgency=urgency,
                 category=category,
                 subcategory=subcategory,
                 location=location,

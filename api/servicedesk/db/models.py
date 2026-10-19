@@ -39,6 +39,17 @@ TICKET_STATUSES = ("open", "assigned", "escalation_review", "resolved", "closed"
 TERMINAL_TICKET_STATUSES = ("resolved", "closed")
 RECOMMENDATION_STATES = ("recommended", "no_eligible_agent", "queued")
 
+#: Where an escalation review is sent. Every entry is a route this desk actually
+#: has: two people who work here, and the asset-replacement decision this
+#: project computes. There is no "L2 queue" or "vendor" in the list, because
+#: this application operates neither and a named target it cannot reach would be
+#: the acknowledgement ritual over again with a better label.
+ESCALATION_TARGETS = ("senior_resolver", "duty_manager", "asset_replacement")
+
+#: How an escalation review ends. A review that cannot be closed is a state a
+#: ticket falls into and never leaves, which is why the vocabulary exists.
+ESCALATION_OUTCOMES = ("reassigned", "replacement_raised", "no_action")
+
 #: Event vocabulary. The first eleven are required by spec C.2; MODEL_UNAVAILABLE
 #: is the documented manual-fallback marker described in spec C.3, recorded so a
 #: ticket created without a model score is visibly not a scored ticket.
@@ -196,10 +207,22 @@ class Ticket(Base):
     id: Mapped[str] = mapped_column(IdColumn, primary_key=True, default=new_id)
     external_reference: Mapped[str] = mapped_column(String(64), nullable=True, unique=True)
     source: Mapped[str] = mapped_column(String(16), nullable=False)
+    #: What the caller reported, in their words. Required by the create route;
+    #: nullable here because tickets made before titles existed have none, and
+    #: back-filling one would put words in a caller's mouth. Nothing in risk
+    #: scoring reads either field - only the urgency a person confirmed does.
+    title: Mapped[str] = mapped_column(String(200), nullable=True)
+    description: Mapped[str] = mapped_column(Text, nullable=True)
     status: Mapped[str] = mapped_column(String(24), nullable=False, default="open")
     #: 1 is the highest priority. The convention is stated here because both the
     #: cost model and the UCI priority field depend on reading it the same way.
     priority: Mapped[int] = mapped_column(Integer, nullable=False)
+    #: ITIL impact and urgency, 1 (high) to 3 (low), as UCI-498 records them.
+    #: When both are set, priority is derived from them (services/triage.py).
+    #: Range-checked at the API rather than by a CHECK constraint, so a database
+    #: built fresh and one migrated by revision 0005 carry the same schema.
+    impact: Mapped[int] = mapped_column(Integer, nullable=True)
+    urgency: Mapped[int] = mapped_column(Integer, nullable=True)
     category: Mapped[str] = mapped_column(String(64), nullable=True)
     subcategory: Mapped[str] = mapped_column(String(64), nullable=True)
     location: Mapped[str] = mapped_column(String(64), nullable=True)
@@ -219,6 +242,18 @@ class Ticket(Base):
     machine_id: Mapped[str] = mapped_column(
         IdColumn, ForeignKey("machines.id"), nullable=True
     )
+    #: Who a live escalation review is with, and when it opened. Both are NULL
+    #: unless ``status == "escalation_review"``; closing the review clears them
+    #: and the immutable event history keeps the record of what happened. They
+    #: are columns rather than facts reconstructed from events because the queue
+    #: and the at-risk list have to show them on every row, and an escalation a
+    #: dispatcher has to open a ticket to see is an escalation nobody chases.
+    escalation_target: Mapped[str] = mapped_column(String(32), nullable=True)
+    escalation_opened_at: Mapped[object] = mapped_column(UtcDateTime, nullable=True)
+    #: When the ticket was last resolved. Cleared on reopen; the event history
+    #: keeps every earlier resolution. Compared against the fixed ``sla_due_at``
+    #: it is the SLA outcome.
+    resolved_at: Mapped[object] = mapped_column(UtcDateTime, nullable=True)
     risk_probability: Mapped[float] = mapped_column(Float, nullable=True)
     risk_model_version: Mapped[str] = mapped_column(String(64), nullable=True)
     last_scored_at: Mapped[object] = mapped_column(UtcDateTime, nullable=True)

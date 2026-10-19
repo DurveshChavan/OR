@@ -39,7 +39,10 @@ this inversion is unexplained and is reported rather than smoothed over.
 ## No ticket text
 
 UCI-498 contains no free-text field, so this project cannot perform — and does
-not claim — the text classification the reviewed literature performs.
+not claim — the text classification the reviewed literature performs. Tickets
+created in the application carry a title and description, and no model reads
+them: a text model trained on the public data available does not transfer
+(`docs/results/text-urgency-2026-10-15.md`).
 
 ## Model limitations
 

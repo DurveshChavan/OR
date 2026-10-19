@@ -1,13 +1,13 @@
-"""Ticket CRUD, event history, and escalation acknowledgement.
+"""Ticket CRUD, search, event history, the lifecycle, and escalation review.
 
-Spec D.2 and D.6 for the ticket and history routes; spec B.1 dispatcher story 2
-for the escalation action. Recommendation itself lives in ``routes/decisions``;
-nothing here assigns anybody.
+Spec D.2 and D.6 for the ticket and history routes. Status changes only through
+the named actions here (resolve, close, reopen, escalation review) and through
+assignment in ``routes/decisions``; nothing here assigns anybody.
 """
 from typing import Optional
 
 from fastapi import APIRouter, Depends, Query
-from sqlalchemy import func, select
+from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session as DbSession
 
 from api.servicedesk import deps
@@ -31,8 +31,12 @@ def _ticket_out(ticket: models.Ticket) -> schemas.TicketOut:
         id=ticket.id,
         external_reference=ticket.external_reference,
         source=ticket.source,
+        title=ticket.title,
+        description=ticket.description,
         status=ticket.status,
         priority=ticket.priority,
+        impact=ticket.impact,
+        urgency=ticket.urgency,
         category=ticket.category,
         subcategory=ticket.subcategory,
         location=ticket.location,
@@ -42,6 +46,10 @@ def _ticket_out(ticket: models.Ticket) -> schemas.TicketOut:
         sla_due_at=ticket.sla_due_at,
         current_assignee_id=ticket.current_assignee_id,
         machine_id=ticket.machine_id,
+        escalation_target=ticket.escalation_target,
+        escalation_opened_at=ticket.escalation_opened_at,
+        resolved_at=ticket.resolved_at,
+        sla_met=ticket.resolved_at <= ticket.sla_due_at if ticket.resolved_at else None,
         risk_probability=ticket.risk_probability,
         risk_model_version=ticket.risk_model_version,
         last_scored_at=ticket.last_scored_at,
@@ -69,12 +77,14 @@ def list_tickets(
     status: Optional[str] = Query(default=None),
     priority: Optional[int] = Query(default=None, ge=1, le=4),
     assignee_id: Optional[str] = Query(default=None),
+    q: Optional[str] = Query(default=None, max_length=100,
+                             description="Matches the reference or the title, any case."),
     limit: int = Query(default=DEFAULT_PAGE_SIZE, ge=1, le=MAX_PAGE_SIZE),
     offset: int = Query(default=0, ge=0),
 ):
     query = select(models.Ticket)
     count_query = select(func.count()).select_from(models.Ticket)
-    for condition in _filters(status, priority, assignee_id):
+    for condition in _filters(status, priority, assignee_id, q):
         query = query.where(condition)
         count_query = count_query.where(condition)
     # Soonest deadline first, then id, so two tickets due at the same moment
@@ -88,13 +98,20 @@ def list_tickets(
     )
 
 
-def _filters(status, priority, assignee_id):
+def _filters(status, priority, assignee_id, q):
     if status:
         yield models.Ticket.status == status
     if priority:
         yield models.Ticket.priority == priority
     if assignee_id:
         yield models.Ticket.current_assignee_id == assignee_id
+    if q and q.strip():
+        # Substring match on a few hundred rows; an index cannot serve a
+        # leading wildcard anyway. shortcut: no full-text search, add one if
+        # the desk grows past what a LIKE scan answers quickly.
+        pattern = "%" + q.strip().lower().replace("%", "").replace("_", "") + "%"
+        yield or_(func.lower(models.Ticket.external_reference).like(pattern),
+                  func.lower(models.Ticket.title).like(pattern))
 
 
 @router.get("/{ticket_id}", response_model=schemas.TicketResponse)
@@ -197,27 +214,89 @@ def list_events(
 
 
 @router.post(
-    "/{ticket_id}/escalation-acknowledgement",
-    response_model=schemas.EscalationAcknowledgeResponse,
+    "/{ticket_id}/escalation-review",
+    response_model=schemas.EscalationReviewResponse,
     status_code=201,
 )
-def acknowledge_escalation(
+def start_escalation_review(
     ticket_id: str,
-    payload: schemas.EscalationAcknowledgeRequest,
+    payload: schemas.EscalationReviewRequest,
     db: DbSession = Depends(get_db),
     actor=Depends(deps.current_user),
     request_id: str = Depends(deps.request_id),
 ):
-    """Record a human response to escalation. Nothing is routed anywhere.
-
-    This is the action Risk Radar offers on a flagged or overdue ticket. It
-    appends one immutable event and leaves the ticket's status, assignee and
-    deadline exactly as they were: the system recommends and records, and a
-    person decides what actually happens next (spec B.2).
-    """
+    """Open an internal review with a stated reason and a named target."""
     ticket = ticket_service.get_ticket(db, ticket_id)
-    event, recommendation = escalation_service.acknowledge(db, actor, ticket, payload.note)
-    return schemas.EscalationAcknowledgeResponse(
+    event = escalation_service.start_review(
+        db, actor, ticket, payload.note, payload.target
+    )
+    return _review_response(ticket, event, request_id)
+
+
+@router.post(
+    "/{ticket_id}/escalation-review/close",
+    response_model=schemas.EscalationReviewResponse,
+    status_code=201,
+)
+def close_escalation_review(
+    ticket_id: str,
+    payload: schemas.EscalationReviewCloseRequest,
+    db: DbSession = Depends(get_db),
+    actor=Depends(deps.current_user),
+    request_id: str = Depends(deps.request_id),
+):
+    """End a live review with a stated outcome and return the ticket to work."""
+    ticket = ticket_service.get_ticket(db, ticket_id)
+    event = escalation_service.close_review(
+        db, actor, ticket, payload.note, payload.outcome
+    )
+    return _review_response(ticket, event, request_id)
+
+
+@router.post("/{ticket_id}/resolve", response_model=schemas.TicketResponse, status_code=201)
+def resolve_ticket(
+    ticket_id: str,
+    payload: schemas.TicketTransitionRequest,
+    db: DbSession = Depends(get_db),
+    actor=Depends(deps.current_user),
+    request_id: str = Depends(deps.request_id),
+):
+    """Mark the work done; the response carries the SLA outcome."""
+    return _transition(db, actor, ticket_id, payload.note, ticket_service.resolve_ticket, request_id)
+
+
+@router.post("/{ticket_id}/close", response_model=schemas.TicketResponse, status_code=201)
+def close_ticket(
+    ticket_id: str,
+    payload: schemas.TicketTransitionRequest,
+    db: DbSession = Depends(get_db),
+    actor=Depends(deps.current_user),
+    request_id: str = Depends(deps.request_id),
+):
+    """Confirm a resolved ticket and end it."""
+    return _transition(db, actor, ticket_id, payload.note, ticket_service.close_ticket, request_id)
+
+
+@router.post("/{ticket_id}/reopen", response_model=schemas.TicketResponse, status_code=201)
+def reopen_ticket(
+    ticket_id: str,
+    payload: schemas.TicketTransitionRequest,
+    db: DbSession = Depends(get_db),
+    actor=Depends(deps.current_user),
+    request_id: str = Depends(deps.request_id),
+):
+    """Send a resolved or closed ticket back to the dispatch queue, unassigned."""
+    return _transition(db, actor, ticket_id, payload.note, ticket_service.reopen_ticket, request_id)
+
+
+def _transition(db, actor, ticket_id, note, action, request_id) -> schemas.TicketResponse:
+    ticket = ticket_service.get_ticket(db, ticket_id)
+    action(db, actor, ticket, note)
+    return schemas.TicketResponse(ticket=_ticket_out(ticket), request_id=request_id)
+
+
+def _review_response(ticket, event, request_id) -> schemas.EscalationReviewResponse:
+    return schemas.EscalationReviewResponse(
         ticket_id=ticket.id,
         event=schemas.EventOut(
             id=event.id,
@@ -228,7 +307,7 @@ def acknowledge_escalation(
             payload=event.payload_json,
             occurred_at=event.occurred_at,
         ),
-        following_recommendation=recommendation is not None,
         ticket_status=ticket.status,
+        escalation_target=ticket.escalation_target,
         request_id=request_id,
     )

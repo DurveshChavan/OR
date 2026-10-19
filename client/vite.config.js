@@ -7,10 +7,10 @@ export default defineConfig({
   server: {
     port: 5173,
     proxy: {
-      // Two servers, two prefixes, and the order matters: Vite matches proxy
-      // keys in insertion order, so the more specific "/or-api" is registered
-      // first. It carries the Operations Research engine's own routes, with the
-      // prefix stripped before forwarding; "/api" is the service desk.
+      // Two servers, two prefixes. "/or-api" carries the Operations Research
+      // engine's own routes, with the prefix stripped before forwarding;
+      // "/api" is the service desk. Vite matches a key by prefix, and neither
+      // prefix starts with the other, so their order does not matter.
       "/or-api": {
         target: "http://localhost:8000",
         changeOrigin: true,

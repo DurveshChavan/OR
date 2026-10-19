@@ -9,18 +9,17 @@ export function SlaState({ dueAt }) {
     <span
       className={
         clock.overdue
-          ? "font-mono-label text-[11px] text-critical"
-          : "font-mono-label text-[11px] text-ink-2"
+          ? "text-sm font-medium text-critical"
+          : "text-sm text-ink-2"
       }
     >
-      {clock.overdue ? "⚠ " : ""}
       {clock.label}
     </span>
   );
 }
 
-/** The risk score as a band and a number, with the model that produced it. */
-export function RiskCell({ probability, modelVersion }) {
+/** The risk score is operational language first; provenance stays on details. */
+export function RiskCell({ probability }) {
   const band = riskBand(probability);
   const tones = {
     high: "border-critical text-critical",
@@ -29,33 +28,26 @@ export function RiskCell({ probability, modelVersion }) {
     unscored: "border-rule-2 text-muted",
   };
   return (
-    <span className="inline-flex flex-col gap-0.5">
-      <span
-        className={`inline-block w-fit rounded-[var(--radius-pill)] border px-2 py-0.5 text-[11px] ${tones[band]}`}
-      >
-        {riskLabel(probability)}
-      </span>
-      <span className="font-mono-label text-[10px] text-muted">
-        {modelVersion || "no model version"}
-      </span>
+    <span
+      className={`inline-block w-fit rounded-[var(--radius-pill)] border px-2 py-0.5 text-[11px] ${tones[band]}`}
+    >
+      {riskLabel(probability)}
     </span>
   );
 }
 
 export function PriorityTag({ priority }) {
-  return (
-    <span className="font-mono-label text-[11px] text-ink">P{priority}</span>
-  );
+  return <span className="font-medium text-ink">P{priority}</span>;
 }
 
-export function Section({ title, note, children, actions }) {
+export function Section({ title, note, children, actions, className = "" }) {
   return (
-    <section className="rounded-[var(--radius-card)] border border-rule bg-surface p-4">
+    <section className={`border-t border-rule pt-4 ${className}`}>
       <header className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
         <h2 className="font-display text-lg text-ink">{title}</h2>
         {actions}
       </header>
-      {note ? <p className="mb-3 text-sm text-muted">{note}</p> : null}
+      {note ? <p className="mb-3 max-w-3xl text-sm text-muted">{note}</p> : null}
       {children}
     </section>
   );

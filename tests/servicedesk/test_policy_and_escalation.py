@@ -142,92 +142,234 @@ def test_the_version_is_not_something_a_manager_can_type(
     assert db.get(models.SlaPolicy, policy.id).version == 2
 
 
-# --- escalation acknowledgement --------------------------------------------
+# --- escalation review --------------------------------------------------------
 
 
-def _acknowledge(client, ticket_id, note="Paged the network on-call engineer."):
-    return client.post(
-        "/api/tickets/%s/escalation-acknowledgement" % ticket_id,
-        json={"note": note},
+def test_starting_escalation_review_changes_ticket_state_and_records_the_reason(
+    client, db, signed_in, make_ticket
+):
+    """A real in-product escalation must alter visible ticket state.
+
+    The UI must never call a record-only acknowledgement an escalation. Starting
+    review changes this application's state to ``escalation_review`` and leaves
+    an immutable event with the human's stated reason. It still does not claim
+    that an external L2 or vendor system was contacted.
+    """
+    signed_in("dispatcher")
+    ticket = make_ticket(status="open")
+
+    response = client.post(
+        "/api/tickets/%s/escalation-review" % ticket.id,
+        json={
+            "note": "Network on-call needs to review the repeated outage.",
+            "target": "senior_resolver",
+        },
     )
 
-
-def test_acknowledging_appends_an_event_and_changes_nothing_else(
-    client, db, signed_in, make_ticket, make_agent
-):
-    """Spec B.2: escalation is a recorded human decision, not a system action."""
-    signed_in("dispatcher")
-    agent = make_agent()
-    ticket = make_ticket(priority=1, status="assigned", current_assignee_id=agent.id)
-
-    response = _acknowledge(client, ticket.id)
     assert response.status_code == 201, response.text
     body = response.json()
-    assert body["event"]["event_type"] == "ESCALATION_ACKNOWLEDGED"
+    assert body["ticket_status"] == "escalation_review"
+    assert body["escalation_target"] == "senior_resolver"
+    assert body["event"]["event_type"] == "TICKET_UPDATED"
+    assert body["event"]["payload"]["action"] == "escalation_review_started"
+    assert body["event"]["payload"]["escalation_target"] == "senior_resolver"
+    assert body["event"]["payload"]["note"] == (
+        "Network on-call needs to review the repeated outage."
+    )
+
+    db.expire_all()
+    stored = db.get(models.Ticket, ticket.id)
+    assert stored.status == "escalation_review"
+    assert stored.escalation_target == "senior_resolver"
+    assert stored.escalation_opened_at is not None
+
+
+def test_a_review_can_be_closed_and_the_ticket_returns_to_the_working_queue(
+    client, db, signed_in, make_ticket, make_agent
+):
+    """An escalation a ticket cannot leave is the acknowledgement ritual again.
+
+    Closing states an outcome, clears the live target and puts the ticket back
+    where a dispatcher will see it: ``assigned`` when it has an owner.
+    """
+    signed_in("dispatcher")
+    agent = make_agent(skills=["network"])
+    ticket = make_ticket(status="open", current_assignee_id=agent.id)
+    client.post(
+        "/api/tickets/%s/escalation-review" % ticket.id,
+        json={"note": "Second outage this week.", "target": "duty_manager"},
+    )
+
+    response = client.post(
+        "/api/tickets/%s/escalation-review/close" % ticket.id,
+        json={"note": "Duty manager confirmed the owner.", "outcome": "no_action"},
+    )
+
+    assert response.status_code == 201, response.text
+    body = response.json()
     assert body["ticket_status"] == "assigned"
+    assert body["escalation_target"] is None
+    assert body["event"]["payload"]["action"] == "escalation_review_closed"
+    assert body["event"]["payload"]["outcome"] == "no_action"
+    assert body["event"]["payload"]["escalation_target"] == "duty_manager"
 
     db.expire_all()
     stored = db.get(models.Ticket, ticket.id)
     assert stored.status == "assigned"
-    assert stored.current_assignee_id == agent.id
+    assert stored.escalation_target is None
+    assert stored.escalation_opened_at is None
 
 
-def test_the_history_says_whether_the_model_flagged_it_first(
-    client, db, signed_in, make_ticket, make_event
+def test_closing_as_reassigned_without_a_new_owner_is_refused(
+    client, db, signed_in, make_ticket, make_agent
 ):
-    """An agreement and a first move are different entries in an audit trail.
+    """An outcome is a claim about the ticket, and a false claim is refused.
 
-    "A human agreed with the model" and "a human went first" must not read the
-    same afterwards, so the payload records which one happened.
+    "A different resolver now owns it" has to be visible in the row, or the
+    audit entry says something the database contradicts - which is the
+    record-only acknowledgement defect one level up.
     """
     signed_in("dispatcher")
-    flagged = make_ticket(priority=2)
-    unflagged = make_ticket(priority=2)
-    make_event(flagged, event_type="ESCALATION_RECOMMENDED",
-               payload={"risk_probability": 0.91})
-
-    following = _acknowledge(client, flagged.id).json()
-    leading = _acknowledge(client, unflagged.id, note="Caller escalated by phone.").json()
-
-    assert following["following_recommendation"] is True
-    assert following["event"]["payload"]["acknowledged_event_id"] is not None
-    assert leading["following_recommendation"] is False
-    assert leading["event"]["payload"]["acknowledged_event_id"] is None
-
-
-def test_an_acknowledgement_without_a_note_is_refused(client, signed_in, make_ticket):
-    """Same rule as an override: an unexplained entry is not an audit trail."""
-    signed_in("dispatcher")
-    ticket = make_ticket()
-    response = client.post(
-        "/api/tickets/%s/escalation-acknowledgement" % ticket.id, json={"note": ""}
+    agent = make_agent(skills=["network"])
+    ticket = make_ticket(status="open", current_assignee_id=agent.id)
+    client.post(
+        "/api/tickets/%s/escalation-review" % ticket.id,
+        json={"note": "Owner may be wrong.", "target": "senior_resolver"},
     )
-    assert response.status_code == 422, response.text
 
+    response = client.post(
+        "/api/tickets/%s/escalation-review/close" % ticket.id,
+        json={"note": "Handed over.", "outcome": "reassigned"},
+    )
 
-def test_a_closed_ticket_has_no_live_escalation(client, signed_in, make_ticket):
-    signed_in("dispatcher")
-    ticket = make_ticket(status="closed")
-    response = _acknowledge(client, ticket.id)
     assert response.status_code == 409, response.text
-    assert response.json()["error"]["code"] == "TICKET_NOT_OPEN"
+    assert response.json()["error"]["code"] == "ESCALATION_OUTCOME_NOT_TRUE"
+
+    db.expire_all()
+    assert db.get(models.Ticket, ticket.id).status == "escalation_review"
 
 
-def test_acknowledging_requires_a_signed_in_actor(client, make_ticket):
-    ticket = make_ticket()
-    assert _acknowledge(client, ticket.id).status_code == 401
+def test_closing_as_reassigned_is_allowed_once_the_owner_really_changed(
+    client, db, signed_in, make_ticket, make_agent
+):
+    """The same guard must not block the case it exists to describe."""
+    signed_in("dispatcher")
+    first = make_agent(display_name="Resolver A", skills=["network"])
+    second = make_agent(display_name="Resolver B", skills=["network"])
+    ticket = make_ticket(status="open", current_assignee_id=first.id)
+    client.post(
+        "/api/tickets/%s/escalation-review" % ticket.id,
+        json={"note": "Owner may be wrong.", "target": "senior_resolver"},
+    )
+
+    stored = db.get(models.Ticket, ticket.id)
+    stored.current_assignee_id = second.id
+    db.commit()
+
+    response = client.post(
+        "/api/tickets/%s/escalation-review/close" % ticket.id,
+        json={"note": "Resolver B took it.", "outcome": "reassigned"},
+    )
+
+    assert response.status_code == 201, response.text
+    assert response.json()["ticket_status"] == "assigned"
 
 
-def test_the_acknowledgement_is_readable_in_the_ticket_history(
+def test_closing_a_ticket_that_is_not_in_review_is_refused(
     client, signed_in, make_ticket
 ):
-    """Risk Radar's action has to be visible on the ticket page afterwards."""
+    """The close route must not be a way to rewrite an ordinary ticket's status."""
     signed_in("dispatcher")
-    ticket = make_ticket()
-    _acknowledge(client, ticket.id, note="Vendor contacted, awaiting a callback.")
+    ticket = make_ticket(status="open")
 
-    events = client.get("/api/tickets/%s/events" % ticket.id).json()["events"]
-    acknowledged = [e for e in events if e["event_type"] == "ESCALATION_ACKNOWLEDGED"]
-    assert len(acknowledged) == 1
-    assert acknowledged[0]["payload"]["note"] == "Vendor contacted, awaiting a callback."
-    assert acknowledged[0]["actor_user_id"]
+    response = client.post(
+        "/api/tickets/%s/escalation-review/close" % ticket.id,
+        json={"note": "Nothing to close.", "outcome": "no_action"},
+    )
+
+    assert response.status_code == 409
+    assert response.json()["error"]["code"] == "ESCALATION_REVIEW_NOT_ACTIVE"
+
+
+def test_a_target_this_desk_cannot_reach_is_refused(client, signed_in, make_ticket):
+    """No L2 queue and no vendor exist here, so neither may be named as a target."""
+    signed_in("dispatcher")
+    ticket = make_ticket(status="open")
+
+    response = client.post(
+        "/api/tickets/%s/escalation-review" % ticket.id,
+        json={"note": "Send it out.", "target": "vendor"},
+    )
+
+    assert response.status_code == 422
+    assert response.json()["error"]["code"] == "ESCALATION_TARGET_UNKNOWN"
+
+
+def test_the_replacement_route_requires_the_ticket_to_asset_link(
+    client, signed_in, make_ticket
+):
+    """The one bridge between dispatch and the asset register is a human's link.
+
+    Without it there is no machine to decide about, so the review is refused
+    rather than opened against nothing.
+    """
+    signed_in("dispatcher")
+    ticket = make_ticket(status="open")
+
+    response = client.post(
+        "/api/tickets/%s/escalation-review" % ticket.id,
+        json={"note": "This laptop keeps failing.", "target": "asset_replacement"},
+    )
+
+    assert response.status_code == 422
+    assert response.json()["error"]["code"] == "TICKET_HAS_NO_MACHINE"
+
+
+def test_raising_a_replacement_stores_the_verdict_computed_at_that_moment(
+    client, db, signed_in, make_ticket
+):
+    """The history must say what the arithmetic said on the day.
+
+    A machine's advice moves as it ages, so an event that only pointed at the
+    machine would read differently months later. The verdict is copied into the
+    event beside the asset tag.
+    """
+    from datetime import timedelta
+
+    from api.servicedesk.db.types import utcnow
+
+    signed_in("dispatcher")
+    machine = models.Machine(
+        asset_tag="LAP-0142",
+        location="HQ",
+        machine_type="laptop",
+        age_months=60,
+        age_recorded_at=utcnow() - timedelta(days=1),
+        purchase_cost=10000.0,
+        scrap_value_by_year_json=[2000.0],
+        running_cost_by_year_json=[1000.0, 2000.0, 3000.0, 5000.0],
+        source_note="asset register export, 2026-09",
+    )
+    db.add(machine)
+    db.commit()
+    ticket = make_ticket(status="open", machine_id=machine.id)
+
+    client.post(
+        "/api/tickets/%s/escalation-review" % ticket.id,
+        json={"note": "Third failure on this laptop.", "target": "asset_replacement"},
+    )
+    response = client.post(
+        "/api/tickets/%s/escalation-review/close" % ticket.id,
+        json={
+            "note": "Replacement raised with asset planning.",
+            "outcome": "replacement_raised",
+        },
+    )
+
+    assert response.status_code == 201, response.text
+    replacement = response.json()["event"]["payload"]["replacement"]
+    assert replacement["asset_tag"] == "LAP-0142"
+    # Five years old against an optimal replacement year of 3: overdue.
+    assert replacement["verdict"] == "replace_now"
+    assert replacement["optimal_replacement_year"] == 3
+    assert replacement["source_note"] == "asset register export, 2026-09"

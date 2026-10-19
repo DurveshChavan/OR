@@ -1,0 +1,154 @@
+{
+  "base_rate": 0.5434173669467787,
+  "grouped_cv": {
+    "folds": [
+      0.6404405979543667,
+      0.7037037037037037,
+      0.573015873015873,
+      0.6889952153110048,
+      0.7185483870967743
+    ],
+    "mean": 0.6649407554163446,
+    "projects": 119
+  },
+  "nested_cv": {
+    "pr_auc": {
+      "mean": 0.7755340111198362,
+      "sd": 0.03530064729074261
+    },
+    "precision": {
+      "mean": 0.8179436429844483,
+      "sd": 0.07842243512242453
+    },
+    "recall": {
+      "mean": 0.399136302294197,
+      "sd": 0.09202719144916245
+    },
+    "roc_auc": {
+      "mean": 0.7248843700159489,
+      "sd": 0.04518394085215759
+    },
+    "threshold": {
+      "mean": 0.5986906244973859,
+      "sd": 0.015017505413376922
+    }
+  },
+  "strongest_features": {
+    "expected_words": {
+      "blocked": 0.0,
+      "critical": -0.0,
+      "down": 0.06,
+      "urgent": 0.32
+    },
+    "toward_high": [
+      [
+        "dears",
+        0.98
+      ],
+      [
+        "transaction",
+        0.9
+      ],
+      [
+        "note",
+        0.77
+      ],
+      [
+        "mobile",
+        0.68
+      ],
+      [
+        "dears kindly",
+        0.65
+      ],
+      [
+        "kindly note",
+        0.63
+      ],
+      [
+        "that",
+        0.59
+      ],
+      [
+        "note that",
+        0.56
+      ],
+      [
+        "default",
+        0.56
+      ],
+      [
+        "mobile number",
+        0.55
+      ],
+      [
+        "customer",
+        0.49
+      ],
+      [
+        "set",
+        0.48
+      ]
+    ],
+    "toward_not_high": [
+      [
+        "to be",
+        -0.64
+      ],
+      [
+        "greetings kindly",
+        -0.6
+      ],
+      [
+        "in",
+        -0.6
+      ],
+      [
+        "greetings",
+        -0.6
+      ],
+      [
+        "for",
+        -0.6
+      ],
+      [
+        "time",
+        -0.56
+      ],
+      [
+        "password",
+        -0.55
+      ],
+      [
+        "behalf",
+        -0.5
+      ],
+      [
+        "team",
+        -0.48
+      ],
+      [
+        "issues",
+        -0.48
+      ],
+      [
+        "on behalf",
+        -0.48
+      ],
+      [
+        "users",
+        -0.46
+      ]
+    ]
+  },
+  "synthetic_transfer": {
+    "real_roc_auc_real_plus_synthetic": 0.6746393591788329,
+    "real_roc_auc_trained_on_synthetic": 0.4512681044842198,
+    "synthetic_held_out_roc_auc": 0.7897304568497537,
+    "synthetic_rows": 16338
+  },
+  "uci_carryover": {
+    "flagged_share": 0.11070383864470146,
+    "precision": 0.061062029212813104
+  }
+}

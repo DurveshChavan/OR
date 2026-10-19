@@ -18,16 +18,16 @@
   --color-rule: oklch(89% 0.007 255);
   --color-rule-2: oklch(80% 0.009 255);
 
-  /* the one signal — electric cobalt, used sparingly.
+  /* the one signal: restrained operational blue, used sparingly.
      L tuned to 52% (not the canonical theme's 58%): at 58% both
      accent-as-text-on-paper and accent-ink-on-accent-fill measured
      4.17:1 / 4.24:1 against real rendered pixels — under the 4.5:1 AA
      floor for normal-size text. 52% clears both with margin (~5.3-5.8:1)
      while keeping the same hue/chroma "electric cobalt" identity. */
-  --color-accent: oklch(52% 0.2 256);
+  --color-accent: oklch(45% 0.13 252);
   --color-accent-ink: oklch(99% 0.006 256);
   --color-accent-soft: oklch(94% 0.03 256);
-  --color-focus: oklch(52% 0.2 256);
+  --color-focus: oklch(45% 0.13 252);
 
   /* one dark graphite band per page (HardwareHealth / MajorIncident diagrams) */
   --color-graphite: oklch(22% 0.016 260);
@@ -47,9 +47,9 @@
   --color-data-neutral: oklch(60% 0.01 256);
 
   /* type */
-  --font-display: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
-  --font-body: "Inter", ui-sans-serif, system-ui, sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", monospace;
+  --font-display: "IBM Plex Sans", "Aptos", ui-sans-serif, system-ui, sans-serif;
+  --font-body: "IBM Plex Sans", "Aptos", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", monospace;
 
   /* radii — drawn with a ruler, not Coral's pills */
   --radius-control: 6px;

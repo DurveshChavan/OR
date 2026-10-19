@@ -16,6 +16,11 @@ import { useInvalidateAll, useSession } from "../lib/session";
 import { Banner, Empty, Failure, Loading } from "../components/States";
 import { Section } from "../components/Bits";
 import { Appear, Button } from "../components/Motion";
+import {
+  AverageCostCurve,
+  FleetVerdicts,
+  ReplacementTimeline,
+} from "../components/ReplacementCharts";
 import { formatCost, formatMinutes } from "../lib/format";
 
 const VERDICTS = {
@@ -56,23 +61,53 @@ export default function Hardware() {
   }
 
   const rows = machines.data.machines;
-  const due = (fleet.data?.advice || []).filter(
-    (row) => row.verdict === "replace_now"
-  ).length;
+  const adviceRows = fleet.data?.advice || [];
+  const due = adviceRows.filter((row) => row.verdict === "replace_now").length;
+  // The curve shows one machine, so it shows the one a manager would open
+  // first: whichever is furthest past its cheapest year, or failing that the
+  // one closest to reaching it. `fleetAdvice` already returns them in that
+  // order, so this is the head of the list rather than a second ranking.
+  const focus = adviceRows.find((row) => row.machine_id === openMachine) || adviceRows[0];
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-6">
+      <header>
+        <p className="text-sm text-muted">Asset planning</p>
+        <h1 className="mt-0.5 font-display text-2xl text-ink">
+          Hardware replacement
+        </h1>
+        <p className="mt-1 max-w-3xl text-sm text-ink-2">
+          A service desk closes tickets. It rarely asks whether the machine
+          producing them should still be in the building. This screen does: it
+          works out when each registered machine stops being worth keeping, from
+          the life-cycle costs a manager entered against it, and a ticket reaches
+          it when a dispatcher links the affected machine and sends the
+          escalation review to the replacement decision.
+        </p>
+      </header>
+
+      {fleet.data?.advice?.length ? (
+        <Section
+          title="Fleet at a glance"
+          note="Every figure below comes from the replacement method in the Operations Research engine, applied to the register. The charts and the table read the same response, so they cannot disagree."
+        >
+          <FleetVerdicts advice={fleet.data.advice} />
+          <div className="mt-6 grid gap-8 xl:grid-cols-2">
+            <ReplacementTimeline advice={fleet.data.advice} />
+            {focus ? <AverageCostCurve advice={focus} /> : null}
+          </div>
+        </Section>
+      ) : null}
+
       <Section
         title="Machine register"
-        note="Every figure here is entered by an operator from their own purchasing and maintenance records. Nothing on this screen is predicted, and nothing is derived from the incident log — it carries no hardware telemetry and no ticket-to-asset key."
+        note="Every figure below was typed in by an operator from their own purchasing and maintenance records — nothing here is predicted or mined, because the incident data carries no hardware telemetry. What the product adds is the arithmetic, and it shows its whole table."
       >
-        <Banner tone={due ? "warning" : "neutral"} title={due ? "Attention." : "Register."}>
+        <Banner tone={due ? "warning" : "neutral"} title={due ? "Replacement review." : "Asset register."}>
           {due
             ? `${due} machine(s) are past the replacement age their own cost figures imply.`
             : "No machine is past the replacement age its cost figures imply."}{" "}
-          A recommendation here changes what a manager is told. It changes no
-          ticket, no deadline and no assignment: dispatch never reads this
-          register.
+          Linked-ticket counts come from explicit ticket-to-asset records.
         </Banner>
 
         {rows.length === 0 ? (
@@ -81,21 +116,28 @@ export default function Hardware() {
             {isManager ? " Add one below." : " A manager can add one."}
           </Empty>
         ) : (
-          <div className="mt-3 overflow-x-auto">
+          <>
+          <MobileRegister
+            rows={rows}
+            adviceByMachine={adviceByMachine}
+            openMachine={openMachine}
+            setOpenMachine={setOpenMachine}
+          />
+          <div className="mt-3 hidden overflow-x-auto lg:block">
             <table className="w-full min-w-[820px] border-collapse text-sm">
               <caption className="sr-only">
                 Registered machines with replacement advice
               </caption>
               <thead>
-                <tr className="border-b border-rule text-left font-mono-label text-[10px] text-muted">
-                  <th scope="col" className="py-2 pr-3">asset</th>
-                  <th scope="col" className="py-2 pr-3">location</th>
-                  <th scope="col" className="py-2 pr-3">type</th>
-                  <th scope="col" className="py-2 pr-3">age</th>
-                  <th scope="col" className="py-2 pr-3">optimal year</th>
-                  <th scope="col" className="py-2 pr-3">due in</th>
-                  <th scope="col" className="py-2 pr-3">linked tickets</th>
-                  <th scope="col" className="py-2 pr-3">advice</th>
+                <tr className="border-b border-rule text-left text-xs text-muted">
+                  <th scope="col" className="py-2 pr-3 font-medium">Asset</th>
+                  <th scope="col" className="py-2 pr-3 font-medium">Location</th>
+                  <th scope="col" className="py-2 pr-3 font-medium">Type</th>
+                  <th scope="col" className="py-2 pr-3 font-medium">Age</th>
+                  <th scope="col" className="py-2 pr-3 font-medium">Optimal year</th>
+                  <th scope="col" className="py-2 pr-3 font-medium">Due in</th>
+                  <th scope="col" className="py-2 pr-3 font-medium">Linked tickets</th>
+                  <th scope="col" className="py-2 pr-3 font-medium">Advice</th>
                 </tr>
               </thead>
               <tbody>
@@ -150,6 +192,7 @@ export default function Hardware() {
               </tbody>
             </table>
           </div>
+          </>
         )}
       </Section>
 
@@ -163,6 +206,60 @@ export default function Hardware() {
 
       {isManager ? <NewMachine /> : null}
     </div>
+  );
+}
+
+/** The register on a phone. A nine-column table does not become readable by
+ *  scrolling sideways, so below the desktop breakpoint each machine is a card
+ *  carrying the same four numbers a manager actually reads. */
+function MobileRegister({ rows, adviceByMachine, openMachine, setOpenMachine }) {
+  return (
+    <ul className="mt-3 divide-y divide-rule lg:hidden">
+      {rows.map((machine) => {
+        const advice = adviceByMachine.get(machine.id);
+        const verdict = advice ? VERDICTS[advice.verdict] : null;
+        return (
+          <li key={machine.id} className="py-3">
+            <div className="flex flex-wrap items-start justify-between gap-2">
+              <div>
+                <p className="font-medium text-ink">{machine.asset_tag}</p>
+                <p className="mt-0.5 text-xs text-muted">
+                  {machine.machine_type}
+                  {machine.location ? ` · ${machine.location}` : ""} ·{" "}
+                  {machine.current_age_months.toFixed(0)} months old
+                </p>
+              </div>
+              {verdict ? (
+                <button
+                  type="button"
+                  onClick={() =>
+                    setOpenMachine(openMachine === machine.id ? null : machine.id)
+                  }
+                  aria-expanded={openMachine === machine.id}
+                  className={
+                    "rounded-[var(--radius-pill)] border px-2.5 py-1 text-xs " +
+                    verdict.tone
+                  }
+                >
+                  {verdict.label}
+                </button>
+              ) : (
+                <span className="text-xs text-muted">no cost figures</span>
+              )}
+            </div>
+            <p className="mt-2 text-sm text-ink-2">
+              {advice
+                ? advice.months_until_due >= 0
+                  ? `Cheapest at year ${advice.optimal_replacement_year}, due in ${advice.months_until_due.toFixed(0)} months.`
+                  : `Cheapest at year ${advice.optimal_replacement_year}, passed ${Math.abs(advice.months_until_due).toFixed(0)} months ago.`
+                : "No replacement age can be computed without yearly cost figures."}{" "}
+              {machine.linked_tickets} linked ticket
+              {machine.linked_tickets === 1 ? "" : "s"}.
+            </p>
+          </li>
+        );
+      })}
+    </ul>
   );
 }
 
@@ -195,11 +292,11 @@ function MachineAdvice({ machineId, onClose }) {
       <div className="overflow-x-auto">
         <table className="w-full min-w-[520px] border-collapse text-sm">
           <thead>
-            <tr className="border-b border-rule text-left font-mono-label text-[10px] text-muted">
-              <th scope="col" className="py-2 pr-3">year</th>
-              <th scope="col" className="py-2 pr-3">cumulative running cost</th>
-              <th scope="col" className="py-2 pr-3">total cost</th>
-              <th scope="col" className="py-2 pr-3">average annual cost</th>
+            <tr className="border-b border-rule text-left text-xs text-muted">
+              <th scope="col" className="py-2 pr-3 font-medium">Year</th>
+              <th scope="col" className="py-2 pr-3 font-medium">Cumulative running cost</th>
+              <th scope="col" className="py-2 pr-3 font-medium">Total cost</th>
+              <th scope="col" className="py-2 pr-3 font-medium">Average annual cost</th>
             </tr>
           </thead>
           <tbody>
@@ -225,9 +322,9 @@ function MachineAdvice({ machineId, onClose }) {
       </div>
 
       <dl className="mt-4 grid gap-3 sm:grid-cols-3">
-        <Fact label="linked tickets">{row.evidence.linked_tickets}</Fact>
-        <Fact label="still open">{row.evidence.open_linked_tickets}</Fact>
-        <Fact label="mean ticket risk">
+        <Fact label="Linked tickets">{row.evidence.linked_tickets}</Fact>
+        <Fact label="Still open">{row.evidence.open_linked_tickets}</Fact>
+        <Fact label="Mean ticket risk">
           {row.evidence.mean_risk_probability === null
             ? "—"
             : `${(row.evidence.mean_risk_probability * 100).toFixed(1)}%`}
@@ -276,7 +373,7 @@ function GroupReplacement({ fleetSize }) {
           run.mutate();
         }}
       >
-        <Field label="items in the fleet">
+        <Field label="Items in the fleet">
           <input
             type="number"
             min="1"
@@ -285,7 +382,7 @@ function GroupReplacement({ fleetSize }) {
             onChange={(event) => setForm({ ...form, n_items: event.target.value })}
           />
         </Field>
-        <Field label="failure probability per period">
+        <Field label="Failure probability per period">
           <input
             className="field"
             value={form.failure_prob_by_period}
@@ -294,7 +391,7 @@ function GroupReplacement({ fleetSize }) {
             }
           />
         </Field>
-        <Field label="cost to replace one">
+        <Field label="Cost to replace one">
           <input
             type="number"
             step="any"
@@ -305,7 +402,7 @@ function GroupReplacement({ fleetSize }) {
             }
           />
         </Field>
-        <Field label="cost per unit in a group swap">
+        <Field label="Cost per unit in a group swap">
           <input
             type="number"
             step="any"
@@ -347,7 +444,7 @@ function GroupReplacement({ fleetSize }) {
           <div className="mt-3 overflow-x-auto">
             <table className="w-full min-w-[360px] border-collapse text-sm">
               <thead>
-                <tr className="border-b border-rule text-left font-mono-label text-[10px] text-muted">
+                <tr className="border-b border-rule text-left text-xs text-muted">
                   <th scope="col" className="py-2 pr-3">group interval</th>
                   <th scope="col" className="py-2 pr-3">average cost per period</th>
                 </tr>
@@ -418,7 +515,7 @@ function NewMachine() {
           create.mutate();
         }}
       >
-        <Field label="asset tag">
+        <Field label="Asset tag">
           <input
             className="field"
             required
@@ -427,14 +524,14 @@ function NewMachine() {
             placeholder="WS-1005"
           />
         </Field>
-        <Field label="location">
+        <Field label="Location">
           <input
             className="field"
             value={form.location}
             onChange={(event) => setForm({ ...form, location: event.target.value })}
           />
         </Field>
-        <Field label="type">
+        <Field label="Type">
           <select
             className="field"
             value={form.machine_type}
@@ -447,7 +544,7 @@ function NewMachine() {
             ))}
           </select>
         </Field>
-        <Field label="age in months">
+        <Field label="Age in months">
           <input
             type="number"
             min="0"
@@ -456,7 +553,7 @@ function NewMachine() {
             onChange={(event) => setForm({ ...form, age_months: event.target.value })}
           />
         </Field>
-        <Field label="purchase cost">
+        <Field label="Purchase cost">
           <input
             type="number"
             step="any"
@@ -465,7 +562,7 @@ function NewMachine() {
             onChange={(event) => setForm({ ...form, purchase_cost: event.target.value })}
           />
         </Field>
-        <Field label="resale value by year">
+        <Field label="Resale value by year">
           <input
             className="field"
             value={form.scrap_value_by_year}
@@ -474,7 +571,7 @@ function NewMachine() {
             }
           />
         </Field>
-        <Field label="running cost by year">
+        <Field label="Running cost by year">
           <input
             className="field"
             value={form.running_cost_by_year}
@@ -483,7 +580,7 @@ function NewMachine() {
             }
           />
         </Field>
-        <Field label="where these figures came from">
+        <Field label="Where these figures came from">
           <input
             className="field"
             required
@@ -520,7 +617,7 @@ function numbers(text) {
 function Field({ label, children }) {
   return (
     <label className="flex flex-col gap-1 text-sm">
-      <span className="font-mono-label text-[11px] text-muted">{label}</span>
+      <span className="font-medium text-ink">{label}</span>
       {children}
     </label>
   );
@@ -529,7 +626,7 @@ function Field({ label, children }) {
 function Fact({ label, children }) {
   return (
     <div>
-      <dt className="font-mono-label text-[10px] text-muted">{label}</dt>
+      <dt className="text-xs text-muted">{label}</dt>
       <dd className="mt-0.5 text-sm text-ink">{children}</dd>
     </div>
   );

@@ -13,12 +13,14 @@ status 503. No caller invents a probability, and the one documented path that
 still writes a ticket without a score records a ``MODEL_UNAVAILABLE`` event
 saying which of those four things went wrong.
 
-Three feature columns the model was trained on do not exist in the service desk ticket
-table: ``impact``, ``urgency`` and ``u_symptom``. They are UCI fields with no
-operational equivalent in this build, so they are passed as missing and the
-artifact's own imputer fills them, exactly as it fills a missing value in
-training data. That is a real limitation and it is stated in the model note the
-API returns, not hidden behind a plausible number.
+``u_symptom`` is a feature the model was trained on that the ticket table does
+not have: it is passed as missing and the artifact's own imputer fills it,
+exactly as it fills a missing value in training data. ``impact`` and
+``urgency`` are passed in UCI's own label form when a person set them, and as
+missing otherwise. The test metrics in the model card were measured with both
+present, so a ticket with the pair set is scored the way the model was
+evaluated. Every ``RISK_SCORED`` event lists which features were missing for
+that ticket.
 """
 from dataclasses import dataclass
 from typing import Dict, List, Sequence
@@ -28,10 +30,13 @@ import pandas as pd
 from api.servicedesk.errors import ApiError
 from api.servicedesk.ml import predict
 from api.servicedesk.ml.feature_spec import INCIDENT_FEATURES_V1
+from api.servicedesk.services.triage import LEVEL_LABELS
 
 #: Feature columns the operational ticket table has no column for. Named here so
 #: the gap is a declared constant a reader can find, not an omission in a dict.
-UNAVAILABLE_AT_DISPATCH = ("impact", "urgency", "u_symptom")
+UNAVAILABLE_AT_DISPATCH = ("u_symptom",)
+#: Features a person may or may not have supplied on a given ticket.
+OPERATOR_SET_LEVELS = ("impact", "urgency")
 
 #: Loaded artifacts, keyed by (model name, requested version). One process, one
 #: unpickle per model.
@@ -96,9 +101,17 @@ def feature_row(ticket) -> dict:
         "contact_type": ticket.contact_type,
         "opened_at": ticket.opened_at,
     }
+    for column in OPERATOR_SET_LEVELS:
+        row[column] = LEVEL_LABELS.get(getattr(ticket, column, None))
     for column in UNAVAILABLE_AT_DISPATCH:
         row[column] = None
     return row
+
+
+def unavailable_features(ticket) -> List[str]:
+    """The model features this ticket reached the artifact without."""
+    missing = [c for c in OPERATOR_SET_LEVELS if getattr(ticket, c, None) is None]
+    return missing + list(UNAVAILABLE_AT_DISPATCH)
 
 
 def feature_frame(tickets: Sequence) -> pd.DataFrame:

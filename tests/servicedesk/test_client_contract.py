@@ -11,7 +11,7 @@ Two supporting checks are here for the same reason. ``credentials: "include"``
 is what makes the session cookie travel, and a client without it signs in and
 then gets a 401 on everything afterwards - a failure that looks like an auth
 bug and is not. And the Vite proxy has to send ``/api`` to the service-desk
-server before the broader ``/api`` rule sends it to the legacy one.
+server and ``/or-api`` to the Operations Research engine.
 """
 import json
 import re
@@ -82,6 +82,7 @@ def test_the_four_screens_can_reach_what_they_need(client_paths):
         "/api/tickets",
         "/api/tickets/{}",
         "/api/tickets/{}/events",
+        "/api/tickets/{}/escalation-review",
         "/api/tickets/rescore",
         "/api/assignment-decisions",
         "/api/assignment-decisions/{}",
@@ -98,10 +99,8 @@ def test_the_client_sends_the_session_cookie(client_source):
     assert 'credentials: "include"' in client_source
 
 
-def test_the_dev_proxy_routes_v2_before_the_legacy_prefix():
+def test_the_dev_proxy_sends_each_prefix_to_its_own_server():
     config = VITE_CONFIG.read_text(encoding="utf-8")
-    assert '"/api"' in config, "the dev server has no service-desk proxy rule"
-    assert config.index('"/api"') < config.index('"/api":'), (
-        "Vite matches proxy keys in insertion order, so /api must be "
-        "registered before /api or every engine call reaches the service desk"
-    )
+    rule = r'"%s":\s*\{[^}]*target:\s*"http://localhost:%d"'
+    assert re.search(rule % ("/api", 8001), config), "/api must reach the service desk on 8001"
+    assert re.search(rule % ("/or-api", 8000), config), "/or-api must reach the engine on 8000"

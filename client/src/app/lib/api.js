@@ -84,8 +84,13 @@ export const api = {
   getTicket: (id) => get(`/api/tickets/${id}`),
   patchTicket: (id, body) => patch(`/api/tickets/${id}`, body),
   listEvents: (id) => get(`/api/tickets/${id}/events`),
-  acknowledgeEscalation: (id, note) =>
-    post(`/api/tickets/${id}/escalation-acknowledgement`, { note }),
+  resolveTicket: (id, note) => post(`/api/tickets/${id}/resolve`, { note }),
+  closeTicket: (id, note) => post(`/api/tickets/${id}/close`, { note }),
+  reopenTicket: (id, note) => post(`/api/tickets/${id}/reopen`, { note }),
+  startEscalationReview: (id, note, target) =>
+    post(`/api/tickets/${id}/escalation-review`, { note, target }),
+  closeEscalationReview: (id, note, outcome) =>
+    post(`/api/tickets/${id}/escalation-review/close`, { note, outcome }),
   rescore: (body) => post("/api/tickets/rescore", body ?? {}),
 
   recommend: (ticketIds, mode) =>

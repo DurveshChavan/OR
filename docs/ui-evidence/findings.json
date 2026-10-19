@@ -1,0 +1,1576 @@
+{
+  "overflow": [
+    {
+      "scrollWidth": 360,
+      "clientWidth": 360,
+      "clipped": [],
+      "screen": "queue@360"
+    },
+    {
+      "scrollWidth": 360,
+      "clientWidth": 360,
+      "clipped": [],
+      "screen": "at-risk@360"
+    },
+    {
+      "scrollWidth": 360,
+      "clientWidth": 360,
+      "clipped": [],
+      "screen": "ticket@360"
+    },
+    {
+      "scrollWidth": 768,
+      "clientWidth": 768,
+      "clipped": [],
+      "screen": "queue@768"
+    },
+    {
+      "scrollWidth": 768,
+      "clientWidth": 768,
+      "clipped": [],
+      "screen": "at-risk@768"
+    },
+    {
+      "scrollWidth": 768,
+      "clientWidth": 768,
+      "clipped": [],
+      "screen": "ticket@768"
+    },
+    {
+      "scrollWidth": 1024,
+      "clientWidth": 1024,
+      "clipped": [],
+      "screen": "queue@1024"
+    },
+    {
+      "scrollWidth": 1024,
+      "clientWidth": 1024,
+      "clipped": [],
+      "screen": "at-risk@1024"
+    },
+    {
+      "scrollWidth": 1024,
+      "clientWidth": 1024,
+      "clipped": [],
+      "screen": "ticket@1024"
+    },
+    {
+      "scrollWidth": 1440,
+      "clientWidth": 1440,
+      "clipped": [],
+      "screen": "queue@1440"
+    },
+    {
+      "scrollWidth": 1440,
+      "clientWidth": 1440,
+      "clipped": [],
+      "screen": "at-risk@1440"
+    },
+    {
+      "scrollWidth": 1440,
+      "clientWidth": 1440,
+      "clipped": [],
+      "screen": "ticket@1440"
+    },
+    {
+      "scrollWidth": 640,
+      "clientWidth": 640,
+      "clipped": [],
+      "screen": "queue@200%zoom(640css)"
+    },
+    {
+      "scrollWidth": 1440,
+      "clientWidth": 1440,
+      "clipped": [],
+      "screen": "asset-planning@1440"
+    },
+    {
+      "scrollWidth": 1440,
+      "clientWidth": 1440,
+      "clipped": [],
+      "screen": "operations@1440"
+    },
+    {
+      "scrollWidth": 1440,
+      "clientWidth": 1440,
+      "clipped": [],
+      "screen": "research-appendix@1440"
+    },
+    {
+      "scrollWidth": 360,
+      "clientWidth": 360,
+      "clipped": [],
+      "screen": "asset-planning@360"
+    }
+  ],
+  "axe": {
+    "queue@360": [],
+    "queue": [],
+    "at-risk": [],
+    "ticket": [],
+    "asset-planning": [],
+    "operations": [],
+    "sign-in": []
+  },
+  "keyboard": {
+    "queue": {
+      "stops": 40,
+      "without_visible_focus": [],
+      "first_ten": [
+        {
+          "tag": "A",
+          "name": "Skip to main content",
+          "visibleFocus": true
+        },
+        {
+          "tag": "BUTTON",
+          "name": "Sign out",
+          "visibleFocus": true
+        },
+        {
+          "tag": "A",
+          "name": "Queue",
+          "visibleFocus": true
+        },
+        {
+          "tag": "A",
+          "name": "At risk",
+          "visibleFocus": true
+        },
+        {
+          "tag": "BUTTON",
+          "name": "New ticket",
+          "visibleFocus": true
+        },
+        {
+          "tag": "SELECT",
+          "name": "All statuses\nopen\nassigned\nescalation re",
+          "visibleFocus": true
+        },
+        {
+          "tag": "SELECT",
+          "name": "All priorities\nP1\nP2\nP3\nP4",
+          "visibleFocus": true
+        },
+        {
+          "tag": "SELECT",
+          "name": "Any SLA state\nOverdue\nDue within 2h\nOn t",
+          "visibleFocus": true
+        },
+        {
+          "tag": "BUTTON",
+          "name": "Select dispatchable",
+          "visibleFocus": true
+        },
+        {
+          "tag": "INPUT",
+          "name": "Select INC0030987",
+          "visibleFocus": true
+        }
+      ]
+    },
+    "ticket": {
+      "stops": 14,
+      "without_visible_focus": [],
+      "first_ten": [
+        {
+          "tag": "A",
+          "name": "Back to queue",
+          "visibleFocus": true
+        },
+        {
+          "tag": "BUTTON",
+          "name": "Prepare assignment",
+          "visibleFocus": true
+        },
+        {
+          "tag": "BUTTON",
+          "name": "Choose another resolver",
+          "visibleFocus": true
+        },
+        {
+          "tag": "SUMMARY",
+          "name": "View decision details",
+          "visibleFocus": true
+        },
+        {
+          "tag": "BUTTON",
+          "name": "Open escalation review",
+          "visibleFocus": true
+        },
+        {
+          "tag": "SELECT",
+          "name": "No machine linked\nWS-1001 \u00b7 HQ floor 2\nW",
+          "visibleFocus": true
+        },
+        {
+          "tag": "BUTTON",
+          "name": "Save link",
+          "visibleFocus": true
+        },
+        {
+          "tag": "SUMMARY",
+          "name": "View technical record",
+          "visibleFocus": true
+        },
+        {
+          "tag": "SUMMARY",
+          "name": "View technical record",
+          "visibleFocus": true
+        },
+        {
+          "tag": "SUMMARY",
+          "name": "View technical record",
+          "visibleFocus": true
+        }
+      ]
+    }
+  },
+  "contrast": [
+    {
+      "sample": "Skip to main content",
+      "color": "rgb(251, 253, 255)",
+      "background": "rgb(25, 32, 41)",
+      "fontSize": 16,
+      "fontWeight": 400,
+      "large": false,
+      "ratio": 16.09,
+      "required": 4.5,
+      "passes": true,
+      "screen": "queue"
+    },
+    {
+      "sample": "SLA Service Desk",
+      "color": "rgb(25, 32, 41)",
+      "background": "rgb(248, 250, 253)",
+      "fontSize": 18,
+      "fontWeight": 400,
+      "large": false,
+      "ratio": 15.69,
+      "required": 4.5,
+      "passes": true,
+      "screen": "queue"
+    },
+    {
+      "sample": "Local time: Asia/Calcutta",
+      "color": "rgb(100, 105, 113)",
+      "background": "rgb(248, 250, 253)",
+      "fontSize": 12,
+      "fontWeight": 400,
+      "large": false,
+      "ratio": 5.28,
+      "required": 4.5,
+      "passes": true,
+      "screen": "queue"
+    },
+    {
+      "sample": "dispatcher.demo / dispatcher",
+      "color": "rgb(100, 105, 113)",
+      "background": "rgb(248, 250, 253)",
+      "fontSize": 14,
+      "fontWeight": 400,
+      "large": false,
+      "ratio": 5.28,
+      "required": 4.5,
+      "passes": true,
+      "screen": "queue"
+    },
+    {
+      "sample": "Sign out",
+      "color": "rgb(25, 32, 41)",
+      "background": "rgb(251, 253, 255)",
+      "fontSize": 13,
+      "fontWeight": 500,
+      "large": false,
+      "ratio": 16.09,
+      "required": 4.5,
+      "passes": true,
+      "screen": "queue"
+    },
+    {
+      "sample": "Queue",
+      "color": "rgb(249, 252, 255)",
+      "background": "rgb(8, 86, 154)",
+      "fontSize": 14,
+      "fontWeight": 500,
+      "large": false,
+      "ratio": 7.26,
+      "required": 4.5,
+      "passes": true,
+      "screen": "queue"
+    },
+    {
+      "sample": "At risk",
+      "color": "rgb(50, 56, 65)",
+      "background": "rgb(248, 250, 253)",
+      "fontSize": 14,
+      "fontWeight": 500,
+      "large": false,
+      "ratio": 11.3,
+      "required": 4.5,
+      "passes": true,
+      "screen": "queue"
+    },
+    {
+      "sample": "Work queue",
+      "color": "rgb(25, 32, 41)",
+      "background": "rgb(248, 250, 253)",
+      "fontSize": 24,
+      "fontWeight": 400,
+      "large": true,
+      "ratio": 15.69,
+      "required": 3,
+      "passes": true,
+      "screen": "queue"
+    },
+    {
+      "sample": "Select dispatchable",
+      "color": "rgb(50, 56, 65)",
+      "background": "rgb(248, 250, 253)",
+      "fontSize": 13,
+      "fontWeight": 500,
+      "large": false,
+      "ratio": 11.3,
+      "required": 4.5,
+      "passes": true,
+      "screen": "queue"
+    },
+    {
+      "sample": "Auto-assign (0)",
+      "color": "rgb(249, 252, 255)",
+      "background": "rgb(8, 86, 154)",
+      "fontSize": 13,
+      "fontWeight": 500,
+      "large": false,
+      "ratio": 7.26,
+      "required": 4.5,
+      "passes": true,
+      "screen": "queue"
+    },
+    {
+      "sample": "Select",
+      "color": "rgb(100, 105, 113)",
+      "background": "rgb(248, 250, 253)",
+      "fontSize": 12,
+      "fontWeight": 700,
+      "large": false,
+      "ratio": 5.28,
+      "required": 4.5,
+      "passes": true,
+      "screen": "queue"
+    },
+    {
+      "sample": "INC0030987",
+      "color": "rgb(8, 86, 154)",
+      "background": "rgb(248, 250, 253)",
+      "fontSize": 14,
+      "fontWeight": 500,
+      "large": false,
+      "ratio": 7.15,
+      "required": 4.5,
+      "passes": true,
+      "screen": "queue"
+    },
+    {
+      "sample": "P1",
+      "color": "rgb(25, 32, 41)",
+      "background": "rgb(248, 250, 253)",
+      "fontSize": 12,
+      "fontWeight": 500,
+      "large": false,
+      "ratio": 15.69,
+      "required": 4.5,
+      "passes": true,
+      "screen": "queue"
+    },
+    {
+      "sample": "overdue by 2h 42m",
+      "color": "rgb(172, 25, 34)",
+      "background": "rgb(248, 250, 253)",
+      "fontSize": 14,
+      "fontWeight": 500,
+      "large": false,
+      "ratio": 6.89,
+      "required": 4.5,
+      "passes": true,
+      "screen": "queue"
+    },
+    {
+      "sample": "low \u00b7 19.0%",
+      "color": "rgb(0, 103, 39)",
+      "background": "rgb(248, 250, 253)",
+      "fontSize": 11,
+      "fontWeight": 400,
+      "large": false,
+      "ratio": 6.76,
+      "required": 4.5,
+      "passes": true,
+      "screen": "queue"
+    },
+    {
+      "sample": "Resolver 12",
+      "color": "rgb(50, 56, 65)",
+      "background": "rgb(248, 250, 253)",
+      "fontSize": 14,
+      "fontWeight": 400,
+      "large": false,
+      "ratio": 11.3,
+      "required": 4.5,
+      "passes": true,
+      "screen": "queue"
+    },
+    {
+      "sample": "Review",
+      "color": "rgb(8, 86, 154)",
+      "background": "rgb(248, 250, 253)",
+      "fontSize": 14,
+      "fontWeight": 400,
+      "large": false,
+      "ratio": 7.15,
+      "required": 4.5,
+      "passes": true,
+      "screen": "queue"
+    },
+    {
+      "sample": "high \u00b7 73.3%",
+      "color": "rgb(172, 25, 34)",
+      "background": "rgb(248, 250, 253)",
+      "fontSize": 11,
+      "fontWeight": 400,
+      "large": false,
+      "ratio": 6.89,
+      "required": 4.5,
+      "passes": true,
+      "screen": "queue"
+    },
+    {
+      "sample": "medium \u00b7 34.6%",
+      "color": "rgb(145, 72, 0)",
+      "background": "rgb(248, 250, 253)",
+      "fontSize": 11,
+      "fontWeight": 400,
+      "large": false,
+      "ratio": 6.41,
+      "required": 4.5,
+      "passes": true,
+      "screen": "queue"
+    },
+    {
+      "sample": "Skip to main content",
+      "color": "rgb(251, 253, 255)",
+      "background": "rgb(25, 32, 41)",
+      "fontSize": 16,
+      "fontWeight": 400,
+      "large": false,
+      "ratio": 16.09,
+      "required": 4.5,
+      "passes": true,
+      "screen": "at-risk"
+    },
+    {
+      "sample": "SLA Service Desk",
+      "color": "rgb(25, 32, 41)",
+      "background": "rgb(248, 250, 253)",
+      "fontSize": 18,
+      "fontWeight": 400,
+      "large": false,
+      "ratio": 15.69,
+      "required": 4.5,
+      "passes": true,
+      "screen": "at-risk"
+    },
+    {
+      "sample": "Local time: Asia/Calcutta",
+      "color": "rgb(100, 105, 113)",
+      "background": "rgb(248, 250, 253)",
+      "fontSize": 12,
+      "fontWeight": 400,
+      "large": false,
+      "ratio": 5.28,
+      "required": 4.5,
+      "passes": true,
+      "screen": "at-risk"
+    },
+    {
+      "sample": "dispatcher.demo / dispatcher",
+      "color": "rgb(100, 105, 113)",
+      "background": "rgb(248, 250, 253)",
+      "fontSize": 14,
+      "fontWeight": 400,
+      "large": false,
+      "ratio": 5.28,
+      "required": 4.5,
+      "passes": true,
+      "screen": "at-risk"
+    },
+    {
+      "sample": "Sign out",
+      "color": "rgb(25, 32, 41)",
+      "background": "rgb(251, 253, 255)",
+      "fontSize": 13,
+      "fontWeight": 500,
+      "large": false,
+      "ratio": 16.09,
+      "required": 4.5,
+      "passes": true,
+      "screen": "at-risk"
+    },
+    {
+      "sample": "Queue",
+      "color": "rgb(50, 56, 65)",
+      "background": "rgb(248, 250, 253)",
+      "fontSize": 14,
+      "fontWeight": 500,
+      "large": false,
+      "ratio": 11.3,
+      "required": 4.5,
+      "passes": true,
+      "screen": "at-risk"
+    },
+    {
+      "sample": "At risk",
+      "color": "rgb(249, 252, 255)",
+      "background": "rgb(8, 86, 154)",
+      "fontSize": 14,
+      "fontWeight": 500,
+      "large": false,
+      "ratio": 7.26,
+      "required": 4.5,
+      "passes": true,
+      "screen": "at-risk"
+    },
+    {
+      "sample": "At risk",
+      "color": "rgb(25, 32, 41)",
+      "background": "rgb(248, 250, 253)",
+      "fontSize": 24,
+      "fontWeight": 400,
+      "large": true,
+      "ratio": 15.69,
+      "required": 3,
+      "passes": true,
+      "screen": "at-risk"
+    },
+    {
+      "sample": "Start with overdue work and unowned P1 t",
+      "color": "rgb(50, 56, 65)",
+      "background": "rgb(248, 250, 253)",
+      "fontSize": 14,
+      "fontWeight": 400,
+      "large": false,
+      "ratio": 11.3,
+      "required": 4.5,
+      "passes": true,
+      "screen": "at-risk"
+    },
+    {
+      "sample": "All work",
+      "color": "rgb(249, 252, 255)",
+      "background": "rgb(8, 86, 154)",
+      "fontSize": 13,
+      "fontWeight": 500,
+      "large": false,
+      "ratio": 7.26,
+      "required": 4.5,
+      "passes": true,
+      "screen": "at-risk"
+    },
+    {
+      "sample": "Needs owner",
+      "color": "rgb(50, 56, 65)",
+      "background": "rgb(248, 250, 253)",
+      "fontSize": 13,
+      "fontWeight": 500,
+      "large": false,
+      "ratio": 11.3,
+      "required": 4.5,
+      "passes": true,
+      "screen": "at-risk"
+    },
+    {
+      "sample": "Ticket",
+      "color": "rgb(100, 105, 113)",
+      "background": "rgb(248, 250, 253)",
+      "fontSize": 12,
+      "fontWeight": 500,
+      "large": false,
+      "ratio": 5.28,
+      "required": 4.5,
+      "passes": true,
+      "screen": "at-risk"
+    },
+    {
+      "sample": "INC0030987",
+      "color": "rgb(8, 86, 154)",
+      "background": "rgb(248, 250, 253)",
+      "fontSize": 14,
+      "fontWeight": 500,
+      "large": false,
+      "ratio": 7.15,
+      "required": 4.5,
+      "passes": true,
+      "screen": "at-risk"
+    },
+    {
+      "sample": "P1",
+      "color": "rgb(25, 32, 41)",
+      "background": "rgb(248, 250, 253)",
+      "fontSize": 12,
+      "fontWeight": 500,
+      "large": false,
+      "ratio": 15.69,
+      "required": 4.5,
+      "passes": true,
+      "screen": "at-risk"
+    },
+    {
+      "sample": "overdue by 2h 42m",
+      "color": "rgb(172, 25, 34)",
+      "background": "rgb(248, 250, 253)",
+      "fontSize": 14,
+      "fontWeight": 500,
+      "large": false,
+      "ratio": 6.89,
+      "required": 4.5,
+      "passes": true,
+      "screen": "at-risk"
+    },
+    {
+      "sample": "low \u00b7 19.0%",
+      "color": "rgb(0, 103, 39)",
+      "background": "rgb(248, 250, 253)",
+      "fontSize": 11,
+      "fontWeight": 400,
+      "large": false,
+      "ratio": 6.76,
+      "required": 4.5,
+      "passes": true,
+      "screen": "at-risk"
+    },
+    {
+      "sample": "high \u00b7 73.3%",
+      "color": "rgb(172, 25, 34)",
+      "background": "rgb(248, 250, 253)",
+      "fontSize": 11,
+      "fontWeight": 400,
+      "large": false,
+      "ratio": 6.89,
+      "required": 4.5,
+      "passes": true,
+      "screen": "at-risk"
+    },
+    {
+      "sample": "Skip to main content",
+      "color": "rgb(251, 253, 255)",
+      "background": "rgb(25, 32, 41)",
+      "fontSize": 16,
+      "fontWeight": 400,
+      "large": false,
+      "ratio": 16.09,
+      "required": 4.5,
+      "passes": true,
+      "screen": "ticket"
+    },
+    {
+      "sample": "SLA Service Desk",
+      "color": "rgb(25, 32, 41)",
+      "background": "rgb(248, 250, 253)",
+      "fontSize": 18,
+      "fontWeight": 400,
+      "large": false,
+      "ratio": 15.69,
+      "required": 4.5,
+      "passes": true,
+      "screen": "ticket"
+    },
+    {
+      "sample": "Local time: Asia/Calcutta",
+      "color": "rgb(100, 105, 113)",
+      "background": "rgb(248, 250, 253)",
+      "fontSize": 12,
+      "fontWeight": 400,
+      "large": false,
+      "ratio": 5.28,
+      "required": 4.5,
+      "passes": true,
+      "screen": "ticket"
+    },
+    {
+      "sample": "dispatcher.demo / dispatcher",
+      "color": "rgb(100, 105, 113)",
+      "background": "rgb(248, 250, 253)",
+      "fontSize": 14,
+      "fontWeight": 400,
+      "large": false,
+      "ratio": 5.28,
+      "required": 4.5,
+      "passes": true,
+      "screen": "ticket"
+    },
+    {
+      "sample": "Sign out",
+      "color": "rgb(25, 32, 41)",
+      "background": "rgb(251, 253, 255)",
+      "fontSize": 13,
+      "fontWeight": 500,
+      "large": false,
+      "ratio": 16.09,
+      "required": 4.5,
+      "passes": true,
+      "screen": "ticket"
+    },
+    {
+      "sample": "Queue",
+      "color": "rgb(50, 56, 65)",
+      "background": "rgb(248, 250, 253)",
+      "fontSize": 14,
+      "fontWeight": 500,
+      "large": false,
+      "ratio": 11.3,
+      "required": 4.5,
+      "passes": true,
+      "screen": "ticket"
+    },
+    {
+      "sample": "Back to queue",
+      "color": "rgb(8, 86, 154)",
+      "background": "rgb(248, 250, 253)",
+      "fontSize": 14,
+      "fontWeight": 400,
+      "large": false,
+      "ratio": 7.15,
+      "required": 4.5,
+      "passes": true,
+      "screen": "ticket"
+    },
+    {
+      "sample": "INC0030987",
+      "color": "rgb(25, 32, 41)",
+      "background": "rgb(248, 250, 253)",
+      "fontSize": 24,
+      "fontWeight": 400,
+      "large": true,
+      "ratio": 15.69,
+      "required": 3,
+      "passes": true,
+      "screen": "ticket"
+    },
+    {
+      "sample": "P1",
+      "color": "rgb(25, 32, 41)",
+      "background": "rgb(248, 250, 253)",
+      "fontSize": 16,
+      "fontWeight": 500,
+      "large": false,
+      "ratio": 15.69,
+      "required": 4.5,
+      "passes": true,
+      "screen": "ticket"
+    },
+    {
+      "sample": "assigned",
+      "color": "rgb(50, 56, 65)",
+      "background": "rgb(248, 250, 253)",
+      "fontSize": 12,
+      "fontWeight": 400,
+      "large": false,
+      "ratio": 11.3,
+      "required": 4.5,
+      "passes": true,
+      "screen": "ticket"
+    },
+    {
+      "sample": "overdue by 2h 42m",
+      "color": "rgb(172, 25, 34)",
+      "background": "rgb(248, 250, 253)",
+      "fontSize": 14,
+      "fontWeight": 500,
+      "large": false,
+      "ratio": 6.89,
+      "required": 4.5,
+      "passes": true,
+      "screen": "ticket"
+    },
+    {
+      "sample": "low \u00b7 19.0%",
+      "color": "rgb(0, 103, 39)",
+      "background": "rgb(248, 250, 253)",
+      "fontSize": 11,
+      "fontWeight": 400,
+      "large": false,
+      "ratio": 6.76,
+      "required": 4.5,
+      "passes": true,
+      "screen": "ticket"
+    },
+    {
+      "sample": "Resolver 12",
+      "color": "rgb(25, 32, 41)",
+      "background": "rgb(248, 250, 253)",
+      "fontSize": 14,
+      "fontWeight": 400,
+      "large": false,
+      "ratio": 15.69,
+      "required": 4.5,
+      "passes": true,
+      "screen": "ticket"
+    },
+    {
+      "sample": "Prepare assignment",
+      "color": "rgb(249, 252, 255)",
+      "background": "rgb(8, 86, 154)",
+      "fontSize": 13,
+      "fontWeight": 500,
+      "large": false,
+      "ratio": 7.26,
+      "required": 4.5,
+      "passes": true,
+      "screen": "ticket"
+    },
+    {
+      "sample": "Suggested action",
+      "color": "rgb(100, 105, 113)",
+      "background": "rgb(238, 242, 246)",
+      "fontSize": 12,
+      "fontWeight": 400,
+      "large": false,
+      "ratio": 4.91,
+      "required": 4.5,
+      "passes": true,
+      "screen": "ticket"
+    },
+    {
+      "sample": "Resolver 12",
+      "color": "rgb(25, 32, 41)",
+      "background": "rgb(238, 242, 246)",
+      "fontSize": 18,
+      "fontWeight": 400,
+      "large": false,
+      "ratio": 14.58,
+      "required": 4.5,
+      "passes": true,
+      "screen": "ticket"
+    },
+    {
+      "sample": "Resolver 12 is the suggested resolver. A",
+      "color": "rgb(50, 56, 65)",
+      "background": "rgb(238, 242, 246)",
+      "fontSize": 14,
+      "fontWeight": 400,
+      "large": false,
+      "ratio": 10.5,
+      "required": 4.5,
+      "passes": true,
+      "screen": "ticket"
+    },
+    {
+      "sample": "Refresh this suggestion before assigning",
+      "color": "rgb(145, 72, 0)",
+      "background": "rgb(252, 229, 191)",
+      "fontSize": 14,
+      "fontWeight": 400,
+      "large": false,
+      "ratio": 5.46,
+      "required": 4.5,
+      "passes": true,
+      "screen": "ticket"
+    },
+    {
+      "sample": "Assign to Resolver 12",
+      "color": "rgb(249, 252, 255)",
+      "background": "rgb(8, 86, 154)",
+      "fontSize": 14,
+      "fontWeight": 500,
+      "large": false,
+      "ratio": 7.26,
+      "required": 4.5,
+      "passes": true,
+      "screen": "ticket"
+    },
+    {
+      "sample": "Choose another resolver",
+      "color": "rgb(50, 56, 65)",
+      "background": "rgb(248, 250, 253)",
+      "fontSize": 13,
+      "fontWeight": 500,
+      "large": false,
+      "ratio": 11.3,
+      "required": 4.5,
+      "passes": true,
+      "screen": "ticket"
+    },
+    {
+      "sample": "View decision details",
+      "color": "rgb(25, 32, 41)",
+      "background": "rgb(248, 250, 253)",
+      "fontSize": 14,
+      "fontWeight": 500,
+      "large": false,
+      "ratio": 15.69,
+      "required": 4.5,
+      "passes": true,
+      "screen": "ticket"
+    },
+    {
+      "sample": "",
+      "color": "rgb(50, 56, 65)",
+      "background": "rgb(248, 250, 253)",
+      "fontSize": 14,
+      "fontWeight": 400,
+      "large": false,
+      "ratio": 11.3,
+      "required": 4.5,
+      "passes": true,
+      "screen": "ticket"
+    },
+    {
+      "sample": "",
+      "color": "rgb(25, 32, 41)",
+      "background": "rgb(248, 250, 253)",
+      "fontSize": 12,
+      "fontWeight": 400,
+      "large": false,
+      "ratio": 15.69,
+      "required": 4.5,
+      "passes": true,
+      "screen": "ticket"
+    },
+    {
+      "sample": "",
+      "color": "rgb(100, 105, 113)",
+      "background": "rgb(248, 250, 253)",
+      "fontSize": 12,
+      "fontWeight": 500,
+      "large": false,
+      "ratio": 5.28,
+      "required": 4.5,
+      "passes": true,
+      "screen": "ticket"
+    },
+    {
+      "sample": "Open escalation review",
+      "color": "rgb(25, 32, 41)",
+      "background": "rgb(251, 253, 255)",
+      "fontSize": 14,
+      "fontWeight": 500,
+      "large": false,
+      "ratio": 16.09,
+      "required": 4.5,
+      "passes": true,
+      "screen": "ticket"
+    },
+    {
+      "sample": "Skip to main content",
+      "color": "rgb(251, 253, 255)",
+      "background": "rgb(25, 32, 41)",
+      "fontSize": 16,
+      "fontWeight": 400,
+      "large": false,
+      "ratio": 16.09,
+      "required": 4.5,
+      "passes": true,
+      "screen": "asset-planning"
+    },
+    {
+      "sample": "SLA Service Desk",
+      "color": "rgb(25, 32, 41)",
+      "background": "rgb(248, 250, 253)",
+      "fontSize": 18,
+      "fontWeight": 400,
+      "large": false,
+      "ratio": 15.69,
+      "required": 4.5,
+      "passes": true,
+      "screen": "asset-planning"
+    },
+    {
+      "sample": "Local time: Asia/Calcutta",
+      "color": "rgb(100, 105, 113)",
+      "background": "rgb(248, 250, 253)",
+      "fontSize": 12,
+      "fontWeight": 400,
+      "large": false,
+      "ratio": 5.28,
+      "required": 4.5,
+      "passes": true,
+      "screen": "asset-planning"
+    },
+    {
+      "sample": "manager.demo / manager",
+      "color": "rgb(100, 105, 113)",
+      "background": "rgb(248, 250, 253)",
+      "fontSize": 14,
+      "fontWeight": 400,
+      "large": false,
+      "ratio": 5.28,
+      "required": 4.5,
+      "passes": true,
+      "screen": "asset-planning"
+    },
+    {
+      "sample": "Sign out",
+      "color": "rgb(25, 32, 41)",
+      "background": "rgb(251, 253, 255)",
+      "fontSize": 13,
+      "fontWeight": 500,
+      "large": false,
+      "ratio": 16.09,
+      "required": 4.5,
+      "passes": true,
+      "screen": "asset-planning"
+    },
+    {
+      "sample": "Queue",
+      "color": "rgb(50, 56, 65)",
+      "background": "rgb(248, 250, 253)",
+      "fontSize": 14,
+      "fontWeight": 500,
+      "large": false,
+      "ratio": 11.3,
+      "required": 4.5,
+      "passes": true,
+      "screen": "asset-planning"
+    },
+    {
+      "sample": "Hardware replacement",
+      "color": "rgb(249, 252, 255)",
+      "background": "rgb(8, 86, 154)",
+      "fontSize": 14,
+      "fontWeight": 500,
+      "large": false,
+      "ratio": 7.26,
+      "required": 4.5,
+      "passes": true,
+      "screen": "asset-planning"
+    },
+    {
+      "sample": "Hardware replacement",
+      "color": "rgb(25, 32, 41)",
+      "background": "rgb(248, 250, 253)",
+      "fontSize": 24,
+      "fontWeight": 400,
+      "large": true,
+      "ratio": 15.69,
+      "required": 3,
+      "passes": true,
+      "screen": "asset-planning"
+    },
+    {
+      "sample": "A service desk closes tickets. It rarely",
+      "color": "rgb(50, 56, 65)",
+      "background": "rgb(248, 250, 253)",
+      "fontSize": 14,
+      "fontWeight": 400,
+      "large": false,
+      "ratio": 11.3,
+      "required": 4.5,
+      "passes": true,
+      "screen": "asset-planning"
+    },
+    {
+      "sample": "Replace now",
+      "color": "rgb(100, 105, 113)",
+      "background": "rgb(251, 253, 255)",
+      "fontSize": 14,
+      "fontWeight": 400,
+      "large": false,
+      "ratio": 5.42,
+      "required": 4.5,
+      "passes": true,
+      "screen": "asset-planning"
+    },
+    {
+      "sample": "1",
+      "color": "rgb(172, 25, 34)",
+      "background": "rgb(251, 253, 255)",
+      "fontSize": 30,
+      "fontWeight": 400,
+      "large": true,
+      "ratio": 7.06,
+      "required": 3,
+      "passes": true,
+      "screen": "asset-planning"
+    },
+    {
+      "sample": "1",
+      "color": "rgb(145, 72, 0)",
+      "background": "rgb(251, 253, 255)",
+      "fontSize": 30,
+      "fontWeight": 400,
+      "large": true,
+      "ratio": 6.58,
+      "required": 3,
+      "passes": true,
+      "screen": "asset-planning"
+    },
+    {
+      "sample": "2",
+      "color": "rgb(0, 103, 39)",
+      "background": "rgb(251, 253, 255)",
+      "fontSize": 30,
+      "fontWeight": 400,
+      "large": true,
+      "ratio": 6.94,
+      "required": 3,
+      "passes": true,
+      "screen": "asset-planning"
+    },
+    {
+      "sample": "WS-1004",
+      "color": "rgb(25, 32, 41)",
+      "background": "rgb(248, 250, 253)",
+      "fontSize": 14,
+      "fontWeight": 500,
+      "large": false,
+      "ratio": 15.69,
+      "required": 4.5,
+      "passes": true,
+      "screen": "asset-planning"
+    },
+    {
+      "sample": "Replacement review.",
+      "color": "rgb(145, 72, 0)",
+      "background": "rgb(252, 229, 191)",
+      "fontSize": 14,
+      "fontWeight": 400,
+      "large": false,
+      "ratio": 5.46,
+      "required": 4.5,
+      "passes": true,
+      "screen": "asset-planning"
+    },
+    {
+      "sample": "Asset",
+      "color": "rgb(100, 105, 113)",
+      "background": "rgb(248, 250, 253)",
+      "fontSize": 12,
+      "fontWeight": 500,
+      "large": false,
+      "ratio": 5.28,
+      "required": 4.5,
+      "passes": true,
+      "screen": "asset-planning"
+    },
+    {
+      "sample": "Keep",
+      "color": "rgb(0, 103, 39)",
+      "background": "rgb(211, 241, 217)",
+      "fontSize": 11,
+      "fontWeight": 400,
+      "large": false,
+      "ratio": 5.84,
+      "required": 4.5,
+      "passes": true,
+      "screen": "asset-planning"
+    },
+    {
+      "sample": "Replace soon",
+      "color": "rgb(145, 72, 0)",
+      "background": "rgb(252, 229, 191)",
+      "fontSize": 11,
+      "fontWeight": 400,
+      "large": false,
+      "ratio": 5.46,
+      "required": 4.5,
+      "passes": true,
+      "screen": "asset-planning"
+    },
+    {
+      "sample": "Replace now",
+      "color": "rgb(172, 25, 34)",
+      "background": "rgb(255, 220, 215)",
+      "fontSize": 11,
+      "fontWeight": 400,
+      "large": false,
+      "ratio": 5.65,
+      "required": 4.5,
+      "passes": true,
+      "screen": "asset-planning"
+    },
+    {
+      "sample": "0",
+      "color": "rgb(50, 56, 65)",
+      "background": "rgb(248, 250, 253)",
+      "fontSize": 11,
+      "fontWeight": 400,
+      "large": false,
+      "ratio": 11.3,
+      "required": 4.5,
+      "passes": true,
+      "screen": "asset-planning"
+    },
+    {
+      "sample": "Skip to main content",
+      "color": "rgb(251, 253, 255)",
+      "background": "rgb(25, 32, 41)",
+      "fontSize": 16,
+      "fontWeight": 400,
+      "large": false,
+      "ratio": 16.09,
+      "required": 4.5,
+      "passes": true,
+      "screen": "operations"
+    },
+    {
+      "sample": "SLA Service Desk",
+      "color": "rgb(25, 32, 41)",
+      "background": "rgb(248, 250, 253)",
+      "fontSize": 18,
+      "fontWeight": 400,
+      "large": false,
+      "ratio": 15.69,
+      "required": 4.5,
+      "passes": true,
+      "screen": "operations"
+    },
+    {
+      "sample": "Local time: Asia/Calcutta",
+      "color": "rgb(100, 105, 113)",
+      "background": "rgb(248, 250, 253)",
+      "fontSize": 12,
+      "fontWeight": 400,
+      "large": false,
+      "ratio": 5.28,
+      "required": 4.5,
+      "passes": true,
+      "screen": "operations"
+    },
+    {
+      "sample": "manager.demo / manager",
+      "color": "rgb(100, 105, 113)",
+      "background": "rgb(248, 250, 253)",
+      "fontSize": 14,
+      "fontWeight": 400,
+      "large": false,
+      "ratio": 5.28,
+      "required": 4.5,
+      "passes": true,
+      "screen": "operations"
+    },
+    {
+      "sample": "Sign out",
+      "color": "rgb(25, 32, 41)",
+      "background": "rgb(251, 253, 255)",
+      "fontSize": 13,
+      "fontWeight": 500,
+      "large": false,
+      "ratio": 16.09,
+      "required": 4.5,
+      "passes": true,
+      "screen": "operations"
+    },
+    {
+      "sample": "Queue",
+      "color": "rgb(50, 56, 65)",
+      "background": "rgb(248, 250, 253)",
+      "fontSize": 14,
+      "fontWeight": 500,
+      "large": false,
+      "ratio": 11.3,
+      "required": 4.5,
+      "passes": true,
+      "screen": "operations"
+    },
+    {
+      "sample": "Operations",
+      "color": "rgb(249, 252, 255)",
+      "background": "rgb(8, 86, 154)",
+      "fontSize": 14,
+      "fontWeight": 500,
+      "large": false,
+      "ratio": 7.26,
+      "required": 4.5,
+      "passes": true,
+      "screen": "operations"
+    },
+    {
+      "sample": "Operations",
+      "color": "rgb(25, 32, 41)",
+      "background": "rgb(248, 250, 253)",
+      "fontSize": 24,
+      "fontWeight": 400,
+      "large": true,
+      "ratio": 15.69,
+      "required": 3,
+      "passes": true,
+      "screen": "operations"
+    },
+    {
+      "sample": "Rescore open tickets",
+      "color": "rgb(249, 252, 255)",
+      "background": "rgb(8, 86, 154)",
+      "fontSize": 14,
+      "fontWeight": 400,
+      "large": false,
+      "ratio": 7.26,
+      "required": 4.5,
+      "passes": true,
+      "screen": "operations"
+    },
+    {
+      "sample": "Edits reach future recommendations only.",
+      "color": "rgb(145, 72, 0)",
+      "background": "rgb(252, 229, 191)",
+      "fontSize": 14,
+      "fontWeight": 400,
+      "large": false,
+      "ratio": 5.46,
+      "required": 4.5,
+      "passes": true,
+      "screen": "operations"
+    },
+    {
+      "sample": "Priority",
+      "color": "rgb(100, 105, 113)",
+      "background": "rgb(248, 250, 253)",
+      "fontSize": 12,
+      "fontWeight": 500,
+      "large": false,
+      "ratio": 5.28,
+      "required": 4.5,
+      "passes": true,
+      "screen": "operations"
+    },
+    {
+      "sample": "P1\n1h 00m target",
+      "color": "rgb(50, 56, 65)",
+      "background": "rgb(248, 250, 253)",
+      "fontSize": 14,
+      "fontWeight": 400,
+      "large": false,
+      "ratio": 11.3,
+      "required": 4.5,
+      "passes": true,
+      "screen": "operations"
+    },
+    {
+      "sample": "Save",
+      "color": "rgb(8, 86, 154)",
+      "background": "rgb(248, 250, 253)",
+      "fontSize": 12,
+      "fontWeight": 400,
+      "large": false,
+      "ratio": 7.15,
+      "required": 4.5,
+      "passes": true,
+      "screen": "operations"
+    },
+    {
+      "sample": "Cost weights the solver prices with",
+      "color": "rgb(25, 32, 41)",
+      "background": "rgb(248, 250, 253)",
+      "fontSize": 14,
+      "fontWeight": 500,
+      "large": false,
+      "ratio": 15.69,
+      "required": 4.5,
+      "passes": true,
+      "screen": "operations"
+    },
+    {
+      "sample": "resolver",
+      "color": "rgb(100, 105, 113)",
+      "background": "rgb(248, 250, 253)",
+      "fontSize": 12,
+      "fontWeight": 700,
+      "large": false,
+      "ratio": 5.28,
+      "required": 4.5,
+      "passes": true,
+      "screen": "operations"
+    },
+    {
+      "sample": "active \u2014 deactivate",
+      "color": "rgb(50, 56, 65)",
+      "background": "rgb(248, 250, 253)",
+      "fontSize": 12,
+      "fontWeight": 400,
+      "large": false,
+      "ratio": 11.3,
+      "required": 4.5,
+      "passes": true,
+      "screen": "operations"
+    },
+    {
+      "sample": "0",
+      "color": "rgb(50, 56, 65)",
+      "background": "rgb(248, 250, 253)",
+      "fontSize": 11,
+      "fontWeight": 400,
+      "large": false,
+      "ratio": 11.3,
+      "required": 4.5,
+      "passes": true,
+      "screen": "operations"
+    },
+    {
+      "sample": "Skip to main content",
+      "color": "rgb(251, 253, 255)",
+      "background": "rgb(25, 32, 41)",
+      "fontSize": 16,
+      "fontWeight": 400,
+      "large": false,
+      "ratio": 16.09,
+      "required": 4.5,
+      "passes": true,
+      "screen": "sign-in"
+    },
+    {
+      "sample": "SLA Service Desk",
+      "color": "rgb(25, 32, 41)",
+      "background": "rgb(248, 250, 253)",
+      "fontSize": 18,
+      "fontWeight": 400,
+      "large": false,
+      "ratio": 15.69,
+      "required": 4.5,
+      "passes": true,
+      "screen": "sign-in"
+    },
+    {
+      "sample": "Local time: Asia/Calcutta",
+      "color": "rgb(100, 105, 113)",
+      "background": "rgb(248, 250, 253)",
+      "fontSize": 12,
+      "fontWeight": 400,
+      "large": false,
+      "ratio": 5.28,
+      "required": 4.5,
+      "passes": true,
+      "screen": "sign-in"
+    },
+    {
+      "sample": "AI-Driven SLA\nOptimization",
+      "color": "rgb(25, 32, 41)",
+      "background": "rgb(248, 250, 253)",
+      "fontSize": 52,
+      "fontWeight": 400,
+      "large": true,
+      "ratio": 15.69,
+      "required": 3,
+      "passes": true,
+      "screen": "sign-in"
+    },
+    {
+      "sample": "Predictive ticket allocation, escalation",
+      "color": "rgb(50, 56, 65)",
+      "background": "rgb(248, 250, 253)",
+      "fontSize": 15,
+      "fontWeight": 400,
+      "large": false,
+      "ratio": 11.3,
+      "required": 4.5,
+      "passes": true,
+      "screen": "sign-in"
+    },
+    {
+      "sample": "01",
+      "color": "rgb(100, 105, 113)",
+      "background": "rgb(251, 253, 255)",
+      "fontSize": 12,
+      "fontWeight": 400,
+      "large": false,
+      "ratio": 5.42,
+      "required": 4.5,
+      "passes": true,
+      "screen": "sign-in"
+    },
+    {
+      "sample": "Predictive allocation",
+      "color": "rgb(25, 32, 41)",
+      "background": "rgb(251, 253, 255)",
+      "fontSize": 15,
+      "fontWeight": 400,
+      "large": false,
+      "ratio": 16.09,
+      "required": 4.5,
+      "passes": true,
+      "screen": "sign-in"
+    },
+    {
+      "sample": "Models price every qualified resolver; t",
+      "color": "rgb(100, 105, 113)",
+      "background": "rgb(251, 253, 255)",
+      "fontSize": 13,
+      "fontWeight": 400,
+      "large": false,
+      "ratio": 5.42,
+      "required": 4.5,
+      "passes": true,
+      "screen": "sign-in"
+    },
+    {
+      "sample": "03",
+      "color": "rgb(8, 86, 154)",
+      "background": "rgb(251, 253, 255)",
+      "fontSize": 12,
+      "fontWeight": 400,
+      "large": false,
+      "ratio": 7.33,
+      "required": 4.5,
+      "passes": true,
+      "screen": "sign-in"
+    },
+    {
+      "sample": "New here",
+      "color": "rgb(249, 252, 255)",
+      "background": "rgb(8, 86, 154)",
+      "fontSize": 11,
+      "fontWeight": 500,
+      "large": false,
+      "ratio": 7.26,
+      "required": 4.5,
+      "passes": true,
+      "screen": "sign-in"
+    },
+    {
+      "sample": "Sign in",
+      "color": "rgb(25, 32, 41)",
+      "background": "rgb(251, 253, 255)",
+      "fontSize": 20,
+      "fontWeight": 400,
+      "large": false,
+      "ratio": 16.09,
+      "required": 4.5,
+      "passes": true,
+      "screen": "sign-in"
+    },
+    {
+      "sample": "Every recommendation, confirmation and o",
+      "color": "rgb(100, 105, 113)",
+      "background": "rgb(251, 253, 255)",
+      "fontSize": 14,
+      "fontWeight": 400,
+      "large": false,
+      "ratio": 5.42,
+      "required": 4.5,
+      "passes": true,
+      "screen": "sign-in"
+    },
+    {
+      "sample": "Username",
+      "color": "rgb(25, 32, 41)",
+      "background": "rgb(251, 253, 255)",
+      "fontSize": 14,
+      "fontWeight": 500,
+      "large": false,
+      "ratio": 16.09,
+      "required": 4.5,
+      "passes": true,
+      "screen": "sign-in"
+    },
+    {
+      "sample": "Sign in",
+      "color": "rgb(249, 252, 255)",
+      "background": "rgb(8, 86, 154)",
+      "fontSize": 16,
+      "fontWeight": 500,
+      "large": false,
+      "ratio": 7.26,
+      "required": 4.5,
+      "passes": true,
+      "screen": "sign-in"
+    }
+  ],
+  "notes": []
+}

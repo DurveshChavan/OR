@@ -69,14 +69,26 @@ def test_seeded_fields_are_the_records_own_values(dataset):
         assert record["contact_type"] == contact, reference
 
 
-def test_the_seed_still_reaches_every_dispatch_outcome():
-    """Real records only help if the demo still shows what the product does.
+def test_seeded_impact_and_urgency_are_the_records_own_and_agree_with_priority(dataset):
+    from api.servicedesk.services.triage import priority_from_impact_urgency
 
-    Ten tickets in the busiest category against nine slots for it force a
-    queued decision; one ticket in a category no resolver holds forces the
-    refusal. Both are properties of these two tables together, so a later edit
-    to either one fails here rather than quietly reducing the demo to the happy
-    path.
+    assert set(seed_demo.DEMO_TICKET_LEVELS) == {row[0] for row in seed_demo.DEMO_TICKETS}
+    for reference, priority, *_ in seed_demo.DEMO_TICKETS:
+        impact, urgency = seed_demo.DEMO_TICKET_LEVELS[reference]
+        record = dataset.loc[reference]
+        assert (int(record["impact"][0]), int(record["urgency"][0])) == (impact, urgency), reference
+        assert priority_from_impact_urgency(impact, urgency) == priority, reference
+
+
+def test_every_staffed_category_can_actually_be_dispatched():
+    """A demo whose default state is "cannot dispatch" teaches the wrong thing.
+
+    An earlier roster left the busiest category one slot short so that a
+    ``queued`` decision would show up. What a reader actually saw was most of
+    the queue refusing to dispatch, because the three resolvers holding that
+    skill filled up and the other six could not take it. So the rule is now the
+    opposite: if a category is staffed at all, it is staffed well enough to take
+    every seeded ticket in it.
     """
     slots = collections.Counter()
     for _, wip_limit, skills in seed_demo.DEMO_AGENTS:
@@ -85,11 +97,28 @@ def test_the_seed_still_reaches_every_dispatch_outcome():
 
     demand = collections.Counter(row[2] for row in seed_demo.DEMO_TICKETS)
 
-    oversubscribed = [c for c in demand if demand[c] > slots[c]]
-    assert oversubscribed, "no category is oversubscribed, so nothing is ever queued"
+    short = {
+        category: (demand[category], slots[category])
+        for category in demand
+        if slots[category] and demand[category] > slots[category]
+    }
+    assert not short, "staffed but oversubscribed, so the demo cannot dispatch: %s" % short
 
-    unstaffed = [c for c in demand if slots[c] == 0]
+
+def test_one_category_is_deliberately_unstaffed():
+    """The refusal path needs exactly one clear case, and keeps it."""
+    slots = collections.Counter()
+    for _, wip_limit, skills in seed_demo.DEMO_AGENTS:
+        for skill, _multiplier, _primary in skills:
+            slots[skill] += wip_limit
+
+    demand = collections.Counter(row[2] for row in seed_demo.DEMO_TICKETS)
+    unstaffed = [category for category in demand if slots[category] == 0]
     assert unstaffed, "every category is staffed, so no_eligible_agent never occurs"
+    assert len(unstaffed) == 1, (
+        "more than one category has nobody qualified, which reads as a broken "
+        "roster rather than a demonstrated outcome: %s" % unstaffed
+    )
 
 
 def test_two_seeded_tickets_open_far_enough_back_to_be_overdue():

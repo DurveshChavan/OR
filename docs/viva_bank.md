@@ -31,7 +31,7 @@ which a manager can edit on screen.
 It put the ticket's own predicted resolution time in every qualified agent's
 column, so the row was constant. A constant row carries no information: the
 solver could not prefer one resolver over another, so the assignment step was
-decoration. You can see it on `/legacy/assignment` — within a row, every
+decoration. You can see it on `/methods/assignment` — within a row, every
 permitted cell holds the same number.
 `test_the_cost_row_is_not_constant_across_agents` fails if that returns.
 
@@ -73,7 +73,7 @@ the same arithmetic that nothing checks.
 
 **A9. Where is the LP?**
 `api/engine/capacity.py`, PuLP with CBC — the staffing/capacity allocation
-problem, Unit I. It funds an agent headcount, which the legacy pipeline then
+problem, Unit I. It funds an agent headcount, which the engine pipeline then
 feeds to the assignment step.
 
 **A10. Explain the M7 → M3 feedback loop, your original contribution.**
@@ -101,6 +101,16 @@ A manager types it in, from their own asset register: age, purchase cost, resale
 value by year, running cost by year, and a required note saying where the figures
 came from. UCI-498 has no hardware telemetry and no ticket-to-asset key, so
 nothing here could honestly be mined. The screen says that above the table.
+
+**H1a. The dataset has no ticket-to-asset key — so how does a ticket reach a
+machine at all?**
+A person says so. The ticket page has an *Affected machine* control, and using
+it writes an auditable link naming who made it. That is the only connection
+between a ticket and a machine in this system, and it is a statement rather than
+an inference from beginning to end. Once it exists, the ticket shows that
+machine's replacement verdict, an escalation review can be addressed to the
+replacement decision, and closing the review as a replacement records the
+verdict as it stood that day.
 
 **H2. Then what is the contribution, if the data is typed in?**
 The decision. Given an organisation's own economics, the system says when each
@@ -232,12 +242,23 @@ number still looked reasonable. `normalise_priority` now maps both forms and
 raises otherwise, with five tests scoring request-shaped payloads.
 
 **C7. Why does a manually created P2 ticket score 0.999?**
-Because `impact`, `urgency` and `u_symptom` are UCI fields with no equivalent in
-this application, so they reach the artifact as missing and its imputer fills
-them; priority 2 breaches 97.1% of the time in the log and nothing counters it.
-Every `RISK_SCORED` payload lists them under `unavailable_features`, and the
-interface shows the score as a band with its model version rather than as a bare
-percentage.
+Priority 2 breaches 97.1% of the time in the log, and when the ticket's impact
+and urgency were not assessed, they and `u_symptom` reach the artifact as missing
+and its imputer fills them, so nothing counters the priority. A dispatcher who
+sets impact and urgency gives the model two of the fields its test metrics were
+measured with; priority is then derived by the ITIL matrix
+`min(4, impact + urgency - 1)`, which reproduces all seven pairs in the log.
+Every `RISK_SCORED` payload lists what was missing for that ticket under
+`unavailable_features`, and the interface shows the score as a band with its
+model version rather than as a bare percentage.
+
+**C8. Why doesn't the model read the ticket's title or description?**
+Because no public data supports it, and that was measured rather than assumed
+(`docs/results/text-urgency-2026-10-15.md`). On 357 real tickets a TF-IDF model reaches ROC-AUC 0.725,
+but 0.665 once each client is held out, and its strongest words are greetings
+such as "dears" and "kindly note" - it partly recognises who is writing. A model
+trained on 16,338 synthetic tickets scores 0.451 on the real ones. Labelled text
+from a real IT desk is what would change the answer, and the same script runs on it.
 
 ---
 
@@ -339,10 +360,27 @@ and both re-verify eligibility at that moment, because an earlier accept in the
 same batch may have taken the last slot.
 
 **E4. What does escalation do?**
-Records. `ESCALATION_RECOMMENDED` when calibrated risk crosses the priority's
-manager-editable threshold, `ESCALATION_ACKNOWLEDGED` when a human answers it
-with a note. Nothing is routed to L2 or to a vendor, and the acknowledgement
-changes no status, no assignee and no deadline.
+It moves the ticket. `ESCALATION_RECOMMENDED` is written when calibrated risk
+crosses the priority's manager-editable threshold; a dispatcher answers it by
+opening a review, which sets the status to `escalation_review` and records which
+route the review went to and when it opened. Closing it states an outcome and
+returns the ticket to the queue.
+
+**E4a. Is that not just an acknowledgement with a new name?**
+No, and the difference is testable. An acknowledgement changed no status, no
+assignee and no deadline — it was a button that let the interface simulate
+control while the incident stayed untouched. A review changes a column the queue
+reads, names a reviewer, and cannot be left open silently. Two of the three
+closing outcomes are refused when the ticket does not show what they claim:
+`replacement_raised` needs the asset link (`TICKET_HAS_NO_MACHINE`) and
+`reassigned` needs an owner that changed (`ESCALATION_OUTCOME_NOT_TRUE`).
+
+**E4b. Why is there no "escalate to L2" or "raise with the vendor"?**
+Because this application operates neither, and a target it cannot reach would be
+the acknowledgement ritual with a better label. The vocabulary is three routes
+that exist here: a senior resolver, the duty manager, and the replacement
+decision. The old acknowledgement endpoint is still served so historic entries
+keep resolving, and it is deliberately unreachable from the interface.
 
 **E5. Why can a recommendation become un-acceptable?**
 Because the policy version or the model version behind it moved, in which case

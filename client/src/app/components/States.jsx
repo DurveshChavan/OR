@@ -31,7 +31,7 @@ export function Failure({ error, onRetry }) {
       className="rounded-[var(--radius-card)] border border-critical bg-critical-soft p-4 text-critical"
     >
       <p className="font-display text-base">{error.message}</p>
-      <p className="mt-1 font-mono-label text-[11px]">
+      <p className="mt-1 text-xs">
         {error.code || "REQUEST_FAILED"}
         {error.requestId ? ` · request ${error.requestId}` : ""}
       </p>

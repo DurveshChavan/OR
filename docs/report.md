@@ -92,7 +92,11 @@ the decision this project is trying to evaluate.
 **There is no ticket text.** No `description`, no `short_description`. Every
 paper in the accompanying literature review performs text classification, and
 none of it is possible on this log. The pivot to the decision layer is forced by
-the data, not chosen.
+the data, not chosen. The application now stores a title and description on
+every new ticket, but no model reads them: whether public ticket text could
+teach a model to suggest urgency was tested on 357 real tickets and 16,338
+synthetic ones, and it could not (ROC-AUC 0.665 with each client held out, and
+0.451 for the synthetic model on real tickets; `docs/results/text-urgency-2026-10-15.md`).
 
 One more property matters and is reported rather than smoothed: **priority 2
 breaches more often than priority 1** (97.11% against 80.54%), and priority 3 is
@@ -272,10 +276,10 @@ its slots before P2–P4 see the matrix. Ties are broken by a deterministic
 epsilon derived from sorted identifiers, eight orders of magnitude below the
 declared material cost quantum.
 
-**The defect this replaces.** The earlier build put the *ticket's* predicted
-resolution time into every qualified agent's column. A constant row carries no
-information, so the assignment step could not prefer one resolver over another
-and the solve was decoration. The `/legacy/assignment` screen still shows that
+**The defect this replaces.** The engine's Hungarian module puts the *ticket's*
+predicted resolution time into every qualified agent's column. A constant row
+carries no information, so that assignment step cannot prefer one resolver over
+another for a given ticket. The `/methods/assignment` screen still shows that
 shape, which makes it a useful thing to demonstrate rather than hide. Here the
 cost depends on the pair: when that resolver can start, how fast they are on
 that skill, how late that combination finishes.
@@ -499,16 +503,41 @@ model, the tiered cost model and the per-tier Hungarian assignment, delivered as
 recommendation, acceptance and override with an immutable record of each.
 
 **Escalation** — an `ESCALATION_RECOMMENDED` event when calibrated risk crosses
-the priority's manager-editable threshold, and an
-`ESCALATION_ACKNOWLEDGED` event when a human answers it. The system recommends
-and records. It routes nothing to a vendor or to L2 automatically, and the
-acknowledgement changes no status, no assignee and no deadline.
+the priority's manager-editable threshold, and a review a person opens in answer
+to it. The review is a real state change: the ticket's status becomes
+`escalation_review`, the row records **which of this desk's own routes** the
+review went to — a senior resolver, the duty manager, or the replacement
+decision — and when it opened. It is closed with a stated outcome, which returns
+the ticket to the working queue.
+
+Two of the three outcomes are claims about the ticket, and the server refuses
+them when the ticket does not show the claim: *a hardware replacement was
+raised* requires the operator-stated asset link, and *a different resolver now
+owns it* requires an owner that actually changed since the review opened. An
+audit entry asserting a change the row contradicts would be the record-only
+acknowledgement it replaced.
+
+Nothing is routed to a vendor or to an external L2 queue, and no target in the
+vocabulary names one, because this application operates neither. The earlier
+`ESCALATION_ACKNOWLEDGED` endpoint is retained so historic entries keep
+resolving; it is not reachable from the interface, because an action that
+records a note and changes nothing must not be called escalation.
 
 **Hardware Replacement** — the machine register and its replacement advice,
 described in section 7A. `api/engine/replacement.py` supplies the arithmetic;
 the application supplies the register, the linked-ticket evidence and the
-screen. A dispatcher sees which machines are past the replacement age their own
+screen. A manager sees which machines are past the replacement age their own
 cost figures imply, and the table that says why.
+
+The link between a ticket and a machine is stated by a person, on the ticket —
+UCI-498 has no ticket-to-asset key, so nothing infers it. That link is what
+connects the title's third term to its first two: a ticket shows its machine's
+replacement verdict beside the asset control, an escalation review can be
+addressed to the replacement decision, and closing that review as a replacement
+stores the verdict computed at that moment. The decision boundary is unchanged
+and deliberate: replacement advice informs a manager's asset decision and never
+reroutes a ticket, because ageing a whole cost-matrix row moves the total and
+not the choice.
 
 The honest qualification, stated here rather than left for a question: **the
 old degradation loop could not change which resolver serves a ticket.** The
@@ -529,7 +558,7 @@ loop.
 
 The eight syllabus modules stay runnable and hand-verifiable in `api/engine/`,
 each on its own page under `/methods`, with the module-to-unit table in
-`legacy/or_demo/README.md`. The worked instances are not in a notebook: each one
+`docs/or_methods.md`. The worked instances are not in a notebook: each one
 lives in the docstring of the test that checks it, so the expected answer is
 written out by hand before the code runs and a regression in the arithmetic
 fails the suite rather than sitting unread in a saved cell.
@@ -555,7 +584,7 @@ Reported here rather than left implied by a green-looking checklist.
 
 | Item | Status |
 |---|---|
-| Method pages runnable at their previous routes | **Closed.** They are the `/methods` section; all seven old paths and `/legacy` redirect there; verified in a browser with the engine process live. |
+| Method pages runnable | **Closed.** They are the `/methods` section; verified in a browser with the engine process live. The old-path redirects were removed on 2026-10-15. |
 | Service-desk SQLite demo works fully offline | **Closed.** Full path driven end to end; no step touches the network. |
 | Audit-trigger rejection proven in SQLite | **Closed.** `ticket_events is append-only`. |
 | Model cards, metrics and manifests exist | **Closed.** |
@@ -568,7 +597,7 @@ Reported here rather than left implied by a green-looking checklist.
 | Demo seeded from real held-out records | **Closed.** All fourteen seeded tickets are UCI-498 incidents from the `test` split, fields unchanged, checked field by field against the dataset by `tests/servicedesk/test_demo_seed_provenance.py`. A live batch returns 11 recommended, 2 queued, 1 no eligible agent. |
 | Dependency advisories | **Closed** on 2026-09-10. `npm audit` reported two moderate advisories in `react-router-dom` 6.30.6 (open redirect via `<Link>`/`useNavigate`, and constructor injection in SSR hydration). Neither was reachable — this build has no SSR and every navigation target is an internal constant or a server-issued identifier — but the router was moved to 7.x and Vite to 7.x regardless. `npm audit` now reports zero. |
 | Secrets and exposed files | **Closed.** No `.env`, key, certificate or database file is tracked, and none appears anywhere in the history. The only credentials in the repository are the demo passwords the seed command prints on purpose. Passwords are Argon2id; the session cookie is `httponly`, `samesite=lax`, and `secure` whenever the scheme is HTTPS. |
-| One application, no separate demo | **Closed.** The Operations Research pages are the `/methods` section; every path they used to live at redirects there. Verified in a browser with both processes running. |
+| One application, no separate demo | **Closed.** The Operations Research pages are the `/methods` section. Verified in a browser with both processes running. |
 
 The viva runs on the SQLite path, which is closed. The open items are real and
 are not hidden behind a summary.
@@ -601,4 +630,4 @@ artifacts and a seeded SQLite database with no network at all.
 | `docs/results/replay-2026-09-10-a1.md` | full replay tables and bootstrap intervals |
 | `docs/performance.md` | benchmark, generated |
 | `docs/demo_script.md` | the offline walk-through |
-| `legacy/or_demo/README.md` | the OR modules and how to run them |
+| `docs/or_methods.md` | the OR modules and how to run them |

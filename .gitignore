@@ -8,3 +8,4 @@ notes/
 .pytest_cache/
 client/dist/
 client/.hallmark/
+CLAUDE.md

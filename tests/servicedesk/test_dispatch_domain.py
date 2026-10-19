@@ -145,7 +145,7 @@ def test_candidate_costs_match_the_hand_calculation():
 
 
 def test_a_busier_agent_costs_more_for_the_same_ticket():
-    """Availability changes candidate cost - the legacy build's constant row bug."""
+    """Availability changes candidate cost - the constant row of api/engine/assignment.py."""
     from dataclasses import replace
 
     idle = dispatch.candidate_cost(TICKET_A, FAST, POLICY)

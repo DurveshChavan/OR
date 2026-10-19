@@ -8,6 +8,7 @@ from api.servicedesk.db.types import utcnow
 def _create(client, **overrides):
     body = {
         "external_reference": "INC-TEST-0001",
+        "title": "Branch router drops connections",
         "priority": 2,
         "category": "Network",
         "required_skill": "network",
@@ -68,18 +69,44 @@ def test_creation_writes_its_events_in_the_same_transaction(
     assert scored["payload"]["predicted_duration_minutes"] >= 0.0
 
 
+def test_a_reference_that_identifies_nothing_is_refused(client, signed_in, make_policy):
+    """A demo database picked up a ticket called "sedrftgghuj" from somebody
+    testing the form, and it then sat in the queue where a record number belongs.
+    A reference has to be a code with a number in it, or there must be none."""
+    signed_in("dispatcher")
+    make_policy(priority=2)
+
+    response = _create(client, external_reference="sedrftgghuj")
+
+    assert response.status_code == 422, response.text
+    assert "INC0031234" in response.text
+
+
+def test_a_lowercase_reference_is_stored_as_the_code_it_is(
+    client, signed_in, make_policy
+):
+    """Case is a typing accident, not a different ticket."""
+    signed_in("dispatcher")
+    make_policy(priority=2)
+
+    created = _create(client, external_reference=" inc0031234 ")
+
+    assert created.status_code == 201, created.text
+    assert created.json()["ticket"]["external_reference"] == "INC0031234"
+
+
 def test_a_duplicate_external_reference_is_refused(client, db, signed_in, make_policy):
     signed_in("dispatcher")
     make_policy(priority=2)
-    _create(client, external_reference="INC-TEST-DUP")
+    _create(client, external_reference="INC-TEST-0002")
 
-    duplicate = _create(client, external_reference="INC-TEST-DUP")
+    duplicate = _create(client, external_reference="INC-TEST-0002")
     assert duplicate.status_code == 409
     assert duplicate.json()["error"]["code"] == "EXTERNAL_REFERENCE_IN_USE"
 
     matching = (
         db.query(models.Ticket)
-        .filter(models.Ticket.external_reference == "INC-TEST-DUP")
+        .filter(models.Ticket.external_reference == "INC-TEST-0002")
         .count()
     )
     assert matching == 1
@@ -108,7 +135,7 @@ def test_a_failure_after_the_insert_leaves_no_ticket_behind(
     monkeypatch.setattr(ticket_service.events, "record", _explode)
 
     try:
-        _create(client, external_reference="INC-TEST-ROLLBACK")
+        _create(client, external_reference="INC-TEST-0003")
     except RuntimeError:
         pass  # the client re-raises the unhandled error rather than returning 500
 
@@ -116,7 +143,7 @@ def test_a_failure_after_the_insert_leaves_no_ticket_behind(
     assert db.query(models.Ticket).count() == before
     assert (
         db.query(models.Ticket)
-        .filter(models.Ticket.external_reference == "INC-TEST-ROLLBACK")
+        .filter(models.Ticket.external_reference == "INC-TEST-0003")
         .count()
         == 0
     )
@@ -157,18 +184,18 @@ def test_list_is_ordered_by_deadline_then_id(client, signed_in, make_policy):
     signed_in("dispatcher")
     make_policy(priority=1, target_minutes=60)
     make_policy(priority=3, target_minutes=480)
-    _create(client, external_reference="INC-TEST-LATE", priority=3)
-    _create(client, external_reference="INC-TEST-SOON", priority=1)
+    _create(client, external_reference="INC-TEST-0005", priority=3)
+    _create(client, external_reference="INC-TEST-0004", priority=1)
 
     tickets = client.get("/api/tickets").json()["tickets"]
-    assert [t["external_reference"] for t in tickets] == ["INC-TEST-SOON", "INC-TEST-LATE"]
+    assert [t["external_reference"] for t in tickets] == ["INC-TEST-0004", "INC-TEST-0005"]
 
 
 def test_event_history_is_ascending_and_stable(client, signed_in, make_policy):
     signed_in("dispatcher")
     make_policy(priority=2)
     ticket_id = _create(client).json()["ticket"]["id"]
-    client.patch("/api/tickets/%s" % ticket_id, json={"status": "assigned"})
+    client.patch("/api/tickets/%s" % ticket_id, json={"required_skill": "database"})
 
     first = client.get("/api/tickets/%s/events" % ticket_id).json()["events"]
     second = client.get("/api/tickets/%s/events" % ticket_id).json()["events"]

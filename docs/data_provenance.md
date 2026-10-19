@@ -28,6 +28,18 @@ lifecycle timestamps, an `made_sla` compliance flag, and per-event state.
 `short_description` column. This is a hard structural property of the dataset and
 it determines what tasks are possible — see `literature_gap_audit.md`.
 
+## Ticket-text datasets (evaluation only, nothing ships from them)
+
+Used once, by `python -m api.servicedesk.eval.text_urgency`, to test whether ticket
+text could suggest urgency. It could not (`docs/results/text-urgency-2026-10-15.md`), so no model trained on either
+set is in the product. Both are pinned by revision and SHA-256 in
+`data/manifests/ticket_text.json` and neither is committed.
+
+| Dataset | Licence | Role |
+|---|---|---|
+| M. Abdellatif, *Help Desk Tickets*, Mendeley Data v3, doi:10.17632/btm76zndnt.3 (via `tasksource/help-desk-tickets`) | CC BY 4.0 | 357 real, masked tickets with reporter text and priority; cross-validated |
+| `Tobi-Bueck/customer-support-tickets` (Hugging Face), English rows | CC BY-NC 4.0 | 16,338 synthetic tickets; transfer check only |
+
 ### Preparation rules (fixed, audited)
 
 1. Order each incident's rows by `(sys_updated_at, sys_mod_count, row_index)`,
@@ -88,7 +100,7 @@ a separately labelled storage-asset appendix, and only if the project title
 cannot be changed and every core gate is already green. See
 `FINAL_IMPLEMENTATION.md` §L.
 
-**The legacy synthetic universe.** The previous build sampled real distributions
+**The engine's synthetic universe.** The engine pipeline samples real distributions
 into a randomly generated ticket/agent/workstation population. It is retained as
 Operations Research viva material only and supplies no number in the service desk result.
 

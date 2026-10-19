@@ -432,29 +432,64 @@
         "title": "DecisionOut",
         "type": "object"
       },
-      "EscalationAcknowledgeRequest": {
-        "description": "A human answering an escalation recommendation, or raising one.",
+      "EscalationReviewCloseRequest": {
+        "description": "Close a review: say what happened.",
         "properties": {
           "note": {
             "minLength": 1,
             "title": "Note",
             "type": "string"
+          },
+          "outcome": {
+            "minLength": 1,
+            "title": "Outcome",
+            "type": "string"
           }
         },
         "required": [
-          "note"
+          "note",
+          "outcome"
         ],
-        "title": "EscalationAcknowledgeRequest",
+        "title": "EscalationReviewCloseRequest",
         "type": "object"
       },
-      "EscalationAcknowledgeResponse": {
+      "EscalationReviewRequest": {
+        "description": "Open a review: say why, and say who it is with.",
         "properties": {
+          "note": {
+            "minLength": 1,
+            "title": "Note",
+            "type": "string"
+          },
+          "target": {
+            "minLength": 1,
+            "title": "Target",
+            "type": "string"
+          }
+        },
+        "required": [
+          "note",
+          "target"
+        ],
+        "title": "EscalationReviewRequest",
+        "type": "object"
+      },
+      "EscalationReviewResponse": {
+        "description": "The state change created by an internal escalation review.\n\nThis is intentionally not an L2 or vendor integration response. The desk\ncan put a ticket into its own review state and name which of its own routes\nthe review is with; it cannot truthfully claim to have contacted another\nsystem it does not operate.",
+        "properties": {
+          "escalation_target": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Escalation Target"
+          },
           "event": {
             "$ref": "#/components/schemas/EventOut"
-          },
-          "following_recommendation": {
-            "title": "Following Recommendation",
-            "type": "boolean"
           },
           "request_id": {
             "title": "Request Id",
@@ -472,11 +507,10 @@
         "required": [
           "ticket_id",
           "event",
-          "following_recommendation",
           "ticket_status",
           "request_id"
         ],
-        "title": "EscalationAcknowledgeResponse",
+        "title": "EscalationReviewResponse",
         "type": "object"
       },
       "EventListResponse": {
@@ -1402,6 +1436,17 @@
             ],
             "title": "Current Assignee Id"
           },
+          "escalation_target": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Escalation Target"
+          },
           "external_reference": {
             "anyOf": [
               {
@@ -1772,6 +1817,18 @@
             ],
             "title": "Contact Type"
           },
+          "description": {
+            "anyOf": [
+              {
+                "maxLength": 5000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
           "external_reference": {
             "anyOf": [
               {
@@ -1782,6 +1839,19 @@
               }
             ],
             "title": "External Reference"
+          },
+          "impact": {
+            "anyOf": [
+              {
+                "maximum": 3.0,
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Impact"
           },
           "location": {
             "anyOf": [
@@ -1807,10 +1877,17 @@
             "title": "Opened At"
           },
           "priority": {
-            "maximum": 4.0,
-            "minimum": 1.0,
-            "title": "Priority",
-            "type": "integer"
+            "anyOf": [
+              {
+                "maximum": 4.0,
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Priority"
           },
           "required_skill": {
             "anyOf": [
@@ -1833,10 +1910,29 @@
               }
             ],
             "title": "Subcategory"
+          },
+          "title": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Title",
+            "type": "string"
+          },
+          "urgency": {
+            "anyOf": [
+              {
+                "maximum": 3.0,
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Urgency"
           }
         },
         "required": [
-          "priority"
+          "title"
         ],
         "title": "TicketCreate",
         "type": "object"
@@ -1925,6 +2021,40 @@
             ],
             "title": "Current Assignee Id"
           },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "escalation_opened_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Escalation Opened At"
+          },
+          "escalation_target": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Escalation Target"
+          },
           "external_reference": {
             "anyOf": [
               {
@@ -1939,6 +2069,17 @@
           "id": {
             "title": "Id",
             "type": "string"
+          },
+          "impact": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Impact"
           },
           "last_scored_at": {
             "anyOf": [
@@ -1994,6 +2135,18 @@
             ],
             "title": "Required Skill"
           },
+          "resolved_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resolved At"
+          },
           "risk_model_version": {
             "anyOf": [
               {
@@ -2021,6 +2174,17 @@
             "title": "Sla Due At",
             "type": "string"
           },
+          "sla_met": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sla Met"
+          },
           "source": {
             "title": "Source",
             "type": "string"
@@ -2040,10 +2204,32 @@
             ],
             "title": "Subcategory"
           },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          },
           "updated_at": {
             "format": "date-time",
             "title": "Updated At",
             "type": "string"
+          },
+          "urgency": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Urgency"
           }
         },
         "required": [
@@ -2071,7 +2257,8 @@
         "type": "object"
       },
       "TicketPatch": {
-        "description": "The fields a dispatcher may correct after creation.\n\nPriority is here and the deadline is not: changing a priority is a triage\ndecision that gets recorded as an event, while ``sla_due_at`` stays fixed at\nthe value the policy produced when the ticket was opened.",
+        "additionalProperties": false,
+        "description": "The fields a dispatcher may correct after creation.\n\nPriority is here and the deadline is not: changing a priority is a triage\ndecision that gets recorded as an event, while ``sla_due_at`` stays fixed at\nthe value the policy produced when the ticket was opened.\n\nStatus is not here. It moves only through the actions that give it meaning\n- assignment, escalation review, resolve, close, reopen - and an unknown\nfield is refused rather than ignored, so a client still sending ``status``\nlearns that instead of reading a 200 that changed nothing.",
         "properties": {
           "category": {
             "anyOf": [
@@ -2094,6 +2281,18 @@
               }
             ],
             "title": "Contact Type"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "maxLength": 5000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
           },
           "location": {
             "anyOf": [
@@ -2130,17 +2329,6 @@
             ],
             "title": "Required Skill"
           },
-          "status": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Status"
-          },
           "subcategory": {
             "anyOf": [
               {
@@ -2151,6 +2339,19 @@
               }
             ],
             "title": "Subcategory"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
           }
         },
         "title": "TicketPatch",
@@ -2171,6 +2372,22 @@
           "request_id"
         ],
         "title": "TicketResponse",
+        "type": "object"
+      },
+      "TicketTransitionRequest": {
+        "description": "Resolve, close or reopen: each one says why.\n\nRequired for the same reason an override reason is required: an\nunexplained entry in the audit trail is not an audit trail.",
+        "properties": {
+          "note": {
+            "maxLength": 2000,
+            "minLength": 1,
+            "title": "Note",
+            "type": "string"
+          }
+        },
+        "required": [
+          "note"
+        ],
+        "title": "TicketTransitionRequest",
         "type": "object"
       },
       "ValidationError": {
@@ -3167,6 +3384,25 @@
             }
           },
           {
+            "description": "Matches the reference or the title, any case.",
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 100,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Matches the reference or the title, any case.",
+              "title": "Q"
+            }
+          },
+          {
             "in": "query",
             "name": "limit",
             "required": false,
@@ -3390,10 +3626,10 @@
         ]
       }
     },
-    "/api/tickets/{ticket_id}/escalation-acknowledgement": {
+    "/api/tickets/{ticket_id}/close": {
       "post": {
-        "description": "Record a human response to escalation. Nothing is routed anywhere.\n\nThis is the action Risk Radar offers on a flagged or overdue ticket. It\nappends one immutable event and leaves the ticket's status, assignee and\ndeadline exactly as they were: the system recommends and records, and a\nperson decides what actually happens next (spec B.2).",
-        "operationId": "acknowledge_escalation_api_tickets__ticket_id__escalation_acknowledgement_post",
+        "description": "Confirm a resolved ticket and end it.",
+        "operationId": "close_ticket_api_tickets__ticket_id__close_post",
         "parameters": [
           {
             "in": "path",
@@ -3409,7 +3645,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/EscalationAcknowledgeRequest"
+                "$ref": "#/components/schemas/TicketTransitionRequest"
               }
             }
           },
@@ -3420,7 +3656,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/EscalationAcknowledgeResponse"
+                  "$ref": "#/components/schemas/TicketResponse"
                 }
               }
             },
@@ -3437,7 +3673,113 @@
             "description": "Validation Error"
           }
         },
-        "summary": "Acknowledge Escalation",
+        "summary": "Close Ticket",
+        "tags": [
+          "tickets"
+        ]
+      }
+    },
+    "/api/tickets/{ticket_id}/escalation-review": {
+      "post": {
+        "description": "Open an internal review with a stated reason and a named target.",
+        "operationId": "start_escalation_review_api_tickets__ticket_id__escalation_review_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "ticket_id",
+            "required": true,
+            "schema": {
+              "title": "Ticket Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EscalationReviewRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EscalationReviewResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Start Escalation Review",
+        "tags": [
+          "tickets"
+        ]
+      }
+    },
+    "/api/tickets/{ticket_id}/escalation-review/close": {
+      "post": {
+        "description": "End a live review with a stated outcome and return the ticket to work.",
+        "operationId": "close_escalation_review_api_tickets__ticket_id__escalation_review_close_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "ticket_id",
+            "required": true,
+            "schema": {
+              "title": "Ticket Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EscalationReviewCloseRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EscalationReviewResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Close Escalation Review",
         "tags": [
           "tickets"
         ]
@@ -3534,6 +3876,112 @@
           }
         },
         "summary": "Link Machine",
+        "tags": [
+          "tickets"
+        ]
+      }
+    },
+    "/api/tickets/{ticket_id}/reopen": {
+      "post": {
+        "description": "Send a resolved or closed ticket back to the dispatch queue, unassigned.",
+        "operationId": "reopen_ticket_api_tickets__ticket_id__reopen_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "ticket_id",
+            "required": true,
+            "schema": {
+              "title": "Ticket Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TicketTransitionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TicketResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Reopen Ticket",
+        "tags": [
+          "tickets"
+        ]
+      }
+    },
+    "/api/tickets/{ticket_id}/resolve": {
+      "post": {
+        "description": "Mark the work done; the response carries the SLA outcome.",
+        "operationId": "resolve_ticket_api_tickets__ticket_id__resolve_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "ticket_id",
+            "required": true,
+            "schema": {
+              "title": "Ticket Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TicketTransitionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TicketResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Resolve Ticket",
         "tags": [
           "tickets"
         ]

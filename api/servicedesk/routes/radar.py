@@ -102,6 +102,7 @@ def _radar_row(ticket, policies, as_of) -> schemas.RiskRadarRow:
             dispatch.urgency_cost_per_minute(view, policy), 4
         ),
         current_assignee_id=ticket.current_assignee_id,
+        escalation_target=ticket.escalation_target,
     )
 
 

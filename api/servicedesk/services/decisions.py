@@ -584,6 +584,7 @@ def rescore(db: DbSession, actor: models.User, only_stale: bool = True,
                 "previous_risk_probability": previous,
                 "predicted_duration_minutes": score.predicted_duration_minutes,
                 "risk_model_version": score.risk_model_version,
+                "unavailable_features": scoring.unavailable_features(ticket),
                 "trigger": "manual_rescore",
             },
         )

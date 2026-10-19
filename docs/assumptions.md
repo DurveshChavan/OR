@@ -43,7 +43,7 @@ It therefore biases **against** the proposed policy, which makes it the
 conservative choice rather than a flattering one. Stated in `limitations.md` and
 required in the report.
 
-## Retired — legacy build only, no longer used
+## Engine pipeline only — not used by the service desk
 
 Hardware ageing alpha, workstation ages, degradation threshold, purchase/scrap
 economics, capacity cost per agent, routing overhead matrix, support-centre

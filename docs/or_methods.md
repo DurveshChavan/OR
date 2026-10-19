@@ -1,18 +1,7 @@
 # The Operations Research methods — where they live and how to run them
 
-This directory is a **pointer**, not a copy, and the methods it points at are not
-archived: they are the `/methods` section of the application.
-
-## Why the code was not duplicated here
-
-`tests/test_m0.py` through `tests/test_m7.py`, `tests/test_pipeline.py` and
-`tests/test_api.py` import `api.engine` and `api.main` by their real paths. 95
-of the repository's tests are these. Moving the modules would break all of them;
-copying them would create two definitions of the same eight OR modules, and the
-copy would quietly drift from the one the tests actually exercise.
-
-So the modules stay exactly where they always were, still runnable, still tested
-on every commit:
+The eight OR modules are the `/methods` section of the application, still
+runnable and tested on every commit:
 
 | What | Where |
 |---|---|
@@ -21,7 +10,6 @@ on every commit:
 | The screens, now the `/methods` section | `client/src/pages/`, `client/src/components/`, `client/src/hooks/` |
 | Their tests | `tests/test_m*.py`, `tests/test_pipeline.py`, `tests/test_api.py` |
 | Worked examples for the oral exam | test docstrings in `tests/test_m*.py` and `tests/servicedesk/test_hardware.py` |
-| State before the sections were merged | git tag `legacy-or-final` (local, at `b82a7cc`) |
 
 ## Running them
 
@@ -36,9 +24,6 @@ cd client && npm run dev                       # then open /methods
 Check it is alive with `curl http://localhost:8000/api/health`. Without that
 process the Methods pages render their own error states rather than blank; every
 other screen works without it.
-
-Paths from before the sections were merged — `/assignment`, `/staffing`,
-`/legacy` and the rest — redirect to their Methods page.
 
 ## The eight modules and their syllabus units
 
@@ -60,11 +45,11 @@ The replacement arithmetic, and only that. `services/hardware.py` calls
 `api/engine/replacement.py` so the Hardware screen and the oral examination read
 the same code. Nothing else is imported: dispatch, scoring and the replay share
 no code with the engine, and no number in a dispatch result comes from the
-legacy pipeline.
+engine pipeline.
 
 ## The M7 → M3 loop, described accurately
 
-The legacy contribution is the degradation feedback loop: `replacement.py`
+The engine's contribution is the degradation feedback loop: `replacement.py`
 exposes `workstation_factors()`, and `assignment.py` multiplies each
 expected-resolution-time entry by the factor of the workstation the ticket runs
 on. Ageing hardware raises cost; replacing it resets the factor to `1.0` and the
@@ -76,7 +61,7 @@ stage and falls after replacement.
 multiplies a whole cost-matrix *row* — every qualified agent's column for that
 ticket by the same number. A row scaled by a constant has the same ordering it
 had before, so the loop moves the total cost without changing which agent serves
-the ticket. The `/legacy/assignment` screen shows this plainly: within a row,
+the ticket. The `/methods/assignment` screen shows this plainly: within a row,
 every permitted cell holds the same number.
 
 The service desk's dispatch is the fix, and explaining that transition is a stronger

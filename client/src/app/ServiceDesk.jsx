@@ -1,31 +1,38 @@
 // The application shell.
 //
-// One product, six sections: the dispatch queue, a ticket, the risk radar, the
-// hardware register, the Operations Research methods the dispatch and
-// replacement decisions are built from, and administration. There is no second
-// application behind a second nav any more; the methods that used to live in a
-// separate demo are a section of this one.
+// The project this is built for is called "AI-Driven SLA Optimization:
+// Predictive Ticket Allocation, Escalation and Hardware Replacement in IT
+// Service Desks", and the shell is arranged so a person can see those three
+// things without being told the title. Queue is the allocation. At risk is the
+// escalation. Asset planning is the hardware replacement. Each page names its
+// own part above its heading; the full title itself is stated where somebody
+// arrives - the sign-in screen - and in the research appendix, rather than
+// pinned across the top of every screen a dispatcher works in.
+//
+// What is *not* in the shell is as deliberate. The Operations Research
+// worksheets live at /methods and are reachable only from the footer, and
+// Operations - SLA policy, the roster, the manual rescore - is manager-only.
+// A person who cannot act on a screen is not offered it.
 //
 // The chrome is a translucent layer with content scrolling under it rather than
-// an opaque strip that eats a fixed band of the page, and the boundary between
-// the two is a fading mask instead of a hairline rule - both straight out of
-// Apple's material guidance, and both degraded properly when a viewer asks for
-// reduced transparency.
+// an opaque strip that eats a fixed band of the page - Apple's material
+// guidance, with the reduced-transparency and increased-contrast fallbacks that
+// make it a request rather than a suggestion (see index.css, .chrome-layer).
 //
 // Where the data comes from is stated once, in the footer, rather than as an
-// alert repeated on all six screens. The disclosure is not weaker for being
-// quiet: the tickets are real held-out records and the footer names the log
-// they come from, the seed script records the provenance on every ticket's
-// creation event, and the report carries the full account. An alert bar is for
-// something a reader has to act on. The one warning that survives as a banner
-// is the one that meets that test - no risk artifact loaded, dispatch blocked.
+// alert repeated on every screen. The disclosure is not weaker for being quiet:
+// the tickets are real held-out records and the footer names the log they come
+// from, the seed script records the provenance on every ticket's creation
+// event, and the report carries the full account. An alert bar is for something
+// a reader has to act on, and the one warning that survives as a banner is the
+// one that meets that test - no risk artifact loaded, dispatch blocked.
 
-import { NavLink, Route, Routes, useNavigate } from "react-router-dom";
+import { Link, NavLink, Navigate, Route, Routes, useNavigate } from "react-router-dom";
 import { SessionContext, useHealth, useSessionQuery, isOfflineDemo } from "./lib/session";
-import { NAV_ITEMS } from "./routes";
+import { navigationForRole } from "./routes";
 import { api } from "./lib/api";
 import { Banner, Failure, Loading } from "./components/States";
-import { Appear, Button } from "./components/Motion";
+import { Button } from "./components/Motion";
 import { DISPLAY_ZONE } from "./lib/format";
 import Login from "./pages/Login";
 import Queue from "./pages/Queue";
@@ -68,10 +75,10 @@ export default function ServiceDesk() {
         <Routes>
           <Route index element={<Queue />} />
           <Route path="tickets/:ticketId" element={<TicketDetail />} />
-          <Route path="radar" element={<RiskRadar />} />
+          <Route path="at-risk" element={<RiskRadar />} />
           <Route path="hardware" element={<Hardware />} />
           <Route path="methods/*" element={<Methods />} />
-          <Route path="admin" element={<Administration />} />
+          <Route path="operations" element={<ManagerOnly><Administration /></ManagerOnly>} />
         </Routes>
       </Shell>
     </SessionContext.Provider>
@@ -80,44 +87,24 @@ export default function ServiceDesk() {
 
 function Shell({ actor, health, children }) {
   const navigate = useNavigate();
+  const navItems = actor ? navigationForRole(actor.role) : [];
   return (
     <div className="min-h-screen bg-paper">
-      <header className="sticky top-0 z-40 chrome-layer">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-5 gap-y-2 px-4 py-3 sm:px-6">
-          <div className="shrink-0">
-            <p className="font-display text-[17px] leading-tight tracking-[-0.02em] text-ink">
+      <a className="skip-link" href="#desk-content">Skip to main content</a>
+      <header className="chrome-layer sticky top-0 z-40">
+        <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-6">
+          <div>
+            <p className="font-display text-[18px] leading-tight text-ink">
               SLA Service Desk
             </p>
-            <p className="font-mono-label text-[10px] text-muted">
-              times shown in {DISPLAY_ZONE}
+            <p className="text-xs text-muted">
+              Local time: {DISPLAY_ZONE}
             </p>
           </div>
-
           {actor ? (
-            <nav className="flex min-w-0 flex-1 gap-0.5 overflow-x-auto" aria-label="Sections">
-              {NAV_ITEMS.map((item) => (
-                <NavLink
-                  key={item.to}
-                  to={item.to}
-                  end={item.end}
-                  className={({ isActive }) =>
-                    "shrink-0 rounded-[var(--radius-control)] px-3 py-1.5 text-sm " +
-                    "transition-colors duration-150 " +
-                    (isActive
-                      ? "bg-accent text-accent-ink"
-                      : "text-ink-2 hover:bg-paper-2")
-                  }
-                >
-                  {item.label}
-                </NavLink>
-              ))}
-            </nav>
-          ) : null}
-
-          {actor ? (
-            <div className="flex shrink-0 items-center gap-3 text-sm">
-              <span className="text-muted">
-                {actor.username} · {actor.role}
+            <div className="flex items-center gap-3 text-sm">
+              <span className="hidden text-muted sm:inline">
+                {actor.username} <span aria-hidden="true">/</span> {actor.role}
               </span>
               <Button
                 size="sm"
@@ -131,14 +118,49 @@ function Shell({ actor, health, children }) {
             </div>
           ) : null}
         </div>
-        {/* Where floating chrome meets content, a fading mask rather than a rule. */}
         <div className="scroll-edge" aria-hidden="true" />
       </header>
 
-      <main className="mx-auto flex max-w-6xl flex-col gap-4 px-4 py-6 sm:px-6">
-        {health ? <BuildBanners health={health} /> : null}
-        <Appear>{children}</Appear>
-      </main>
+      <div
+        className={
+          "mx-auto w-full px-4 py-5 sm:px-6 " +
+          (actor
+            ? "max-w-7xl lg:grid lg:grid-cols-[12rem_minmax(0,1fr)] lg:gap-10"
+            : "max-w-6xl")
+        }
+      >
+        {actor ? (
+          <aside className="mb-5 lg:mb-0" aria-label="Primary navigation">
+            <nav className="flex flex-wrap gap-1 border-b border-rule pb-3 lg:sticky lg:top-20 lg:flex-col lg:border-b-0 lg:border-r lg:pb-0 lg:pr-5" aria-label="Sections">
+              {navItems.map((item) => (
+                <NavLink
+                  key={item.to}
+                  to={item.to}
+                  end={item.end}
+                  className={({ isActive }) =>
+                    "rounded-[var(--radius-control)] px-3 py-2 text-sm font-medium transition-colors " +
+                    (isActive
+                      ? "bg-accent text-accent-ink"
+                      : "text-ink-2 hover:bg-paper-2 hover:text-ink")
+                  }
+                >
+                  {item.label}
+                </NavLink>
+              ))}
+            </nav>
+          </aside>
+        ) : null}
+
+        <main
+          id="desk-content"
+          className={
+            "flex min-w-0 flex-col gap-5 " + (actor ? "" : "items-stretch")
+          }
+        >
+          {health ? <BuildBanners health={health} /> : null}
+          {children}
+        </main>
+      </div>
 
       {health ? <Provenance health={health} /> : null}
     </div>
@@ -161,16 +183,17 @@ function BuildBanners({ health }) {
 function Provenance({ health }) {
   if (!isOfflineDemo(health)) return null;
   return (
-    <footer className="mx-auto max-w-6xl px-4 pb-8 text-xs leading-relaxed text-muted sm:px-6">
-      <p>
-        Demo build. The tickets are real incidents from the held-out split of the
-        UCI-498 incident management process enriched event log; their fields are
-        the records&rsquo; own and each one is opened at a stated offset inside
-        the demo window, because the records date from 2016. The resolvers, the
-        SLA policy and the machine register are illustrative, and each row says
-        so in its own source note. The full account is in{" "}
-        <code>docs/report.md</code>.
-      </p>
+    <footer className="mx-auto flex max-w-7xl flex-wrap items-center gap-x-4 gap-y-2 border-t border-rule px-4 py-5 text-xs text-muted sm:px-6">
+      <span>Local sample: held-out UCI-498 incident records.</span>
+      <Link className="underline hover:text-ink" to="/methods">
+        Research appendix
+      </Link>
     </footer>
   );
+}
+
+function ManagerOnly({ children }) {
+  const session = useSessionQuery();
+  if (session.data?.actor?.role !== "manager") return <Navigate to="/" replace />;
+  return children;
 }

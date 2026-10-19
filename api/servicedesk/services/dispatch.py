@@ -5,11 +5,11 @@ session, no ORM row, no clock. That is deliberate: the grader has to be able to
 take one small instance, work the cost matrix out on paper, and check that the
 assignment this module returns is the one the Hungarian method gives.
 
-The legacy build's defect, stated so it is not repeated
--------------------------------------------------------
-It put the *ticket's* predicted resolution time into every qualified agent's
-column. A matrix row that is constant carries no information, so the assignment
-step could not prefer one agent over another and the whole solve was decoration.
+The engine's Hungarian module's limit, stated so it is not repeated
+-------------------------------------------------------------------
+``api/engine/assignment.py`` puts the *ticket's* predicted resolution time into
+every qualified agent's column. A constant row carries no information about
+agents, so that solve cannot prefer one agent over another for a given ticket.
 Here a candidate's cost depends on the pair: when that agent can start, how long
 that agent takes on that skill, and how late that combination finishes.
 
